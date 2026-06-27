@@ -6,6 +6,7 @@ import { Providers } from "@/components/app/providers";
 import { AppShell } from "@/components/app/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
+import { Analytics } from "@vercel/analytics/next";
 
 const cloudflareWebAnalyticsToken =
   process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
@@ -68,6 +69,7 @@ export default function RootLayout({
             })}
           />
         : null}
+        <Analytics />
       </body>
     </html>
   );
