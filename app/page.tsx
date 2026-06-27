@@ -114,14 +114,14 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="shrink-0 self-start rounded-xl bg-white p-3 shadow-xl ring-1 ring-black/10 md:self-end">
+          <div className="shrink-0 self-center rounded-xl bg-white p-2.5 shadow-xl ring-1 ring-black/10 sm:p-3 md:self-end">
             <Image
               src="/fifa-credix.png"
               alt="FIFA 26 × Credix"
               width={1536}
               height={1024}
               priority
-              className="h-auto w-full max-w-[240px]"
+              className="h-auto w-full max-w-[190px] sm:max-w-[180px] md:max-w-[240px]"
             />
           </div>
         </div>
