@@ -13,7 +13,7 @@ import {
   XIcon,
   ListChecksIcon,
 } from "lucide-react";
-import { FifaCard } from "@/components/fifa-card";
+import { FifaCard } from "@/components/shared/fifa-card";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";

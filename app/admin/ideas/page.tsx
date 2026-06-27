@@ -2,9 +2,9 @@ import Link from "next/link";
 import { ArrowLeftIcon } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
-import { AdminLogin } from "@/components/admin-login";
-import { AdminIdeas } from "@/components/admin-ideas";
-import { LogoutButton } from "@/components/logout-button";
+import { AdminLogin } from "@/components/features/admin/admin-login";
+import { AdminIdeas } from "@/components/features/admin/admin-ideas";
+import { LogoutButton } from "@/components/features/admin/logout-button";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Ideas · Admin" };

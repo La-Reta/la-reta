@@ -13,7 +13,7 @@ import {
   DownloadIcon,
 } from "lucide-react";
 import { selectedIdsAtom } from "@/lib/state/atoms";
-import { MatchupPitch } from "@/components/matchup-pitch";
+import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
 import {
   balanceTeams,
   type BalancedTeams,

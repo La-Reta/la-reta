@@ -1,6 +1,7 @@
-import { notFound } from "next/navigation";
+import { notFound, redirect } from "next/navigation";
 import { getPlayerById } from "@/lib/queries";
-import { PlayerForm } from "@/components/player-form";
+import { isAdmin } from "@/lib/admin";
+import { PlayerForm } from "@/components/features/players/player-form";
 
 export const dynamic = "force-dynamic";
 
@@ -10,6 +11,10 @@ export default async function EditPlayerPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
+  if (!(await isAdmin())) {
+    redirect(`/players/${id}`);
+  }
+
   const player = await getPlayerById(Number(id));
   if (!player) notFound();
 

@@ -1,5 +1,5 @@
 import { getPlayers } from "@/lib/queries";
-import { TeamBuilder } from "@/components/team-builder";
+import { TeamBuilder } from "@/components/features/teams/team-builder";
 
 export const metadata = { title: "Armar equipos · Reta Fútbol" };
 export const dynamic = "force-dynamic";

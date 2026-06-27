@@ -29,7 +29,25 @@ export type EditMatch = {
   scorers: { playerId: number; goals: number }[];
 };
 
-type ScorerRow = { playerId: string; goals: number };
+type ScorerRow = { playerId: string; goals: string };
+
+function subscribe() {
+  return () => {};
+}
+
+function parseNumberInput(value: string) {
+  if (!value.trim()) return Number.NaN;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function useTodayDate() {
+  return React.useSyncExternalStore(
+    subscribe,
+    () => new Date().toISOString().slice(0, 10),
+    () => "",
+  );
+}
 
 function balanceLabel(v: number) {
   if (v >= 80) return "Parejísimo ⚖️";
@@ -49,26 +67,22 @@ export function MatchForm({
   const router = useRouter();
   const isEdit = Boolean(match);
   const [pending, startTransition] = React.useTransition();
+  const today = useTodayDate();
 
   const [playedAt, setPlayedAt] = React.useState(match?.playedAt ?? "");
   const [teamAName, setTeamAName] = React.useState(match?.teamAName ?? "Equipo A");
   const [teamBName, setTeamBName] = React.useState(match?.teamBName ?? "Equipo B");
-  const [scoreA, setScoreA] = React.useState(match?.scoreA ?? 0);
-  const [scoreB, setScoreB] = React.useState(match?.scoreB ?? 0);
+  const [scoreA, setScoreA] = React.useState(String(match?.scoreA ?? 0));
+  const [scoreB, setScoreB] = React.useState(String(match?.scoreB ?? 0));
   const [balance, setBalance] = React.useState(match?.balance ?? 50);
   const [notes, setNotes] = React.useState(match?.notes ?? "");
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
-    match?.scorers.map((s) => ({ playerId: String(s.playerId), goals: s.goals })) ??
+    match?.scorers.map((s) => ({ playerId: String(s.playerId), goals: String(s.goals) })) ??
       [],
   );
 
-  // Default the date to today on create (avoids SSR hydration mismatch).
-  React.useEffect(() => {
-    if (!isEdit) setPlayedAt(new Date().toISOString().slice(0, 10));
-  }, [isEdit]);
-
   function addScorer() {
-    setScorers((s) => [...s, { playerId: "", goals: 1 }]);
+    setScorers((s) => [...s, { playerId: "", goals: "1" }]);
   }
   function updateScorer(i: number, patch: Partial<ScorerRow>) {
     setScorers((s) => s.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
@@ -81,17 +95,20 @@ export function MatchForm({
     e.preventDefault();
     startTransition(async () => {
       const input = {
-        playedAt,
+        playedAt: playedAt || (!isEdit ? today : ""),
         teamAName,
         teamBName,
-        scoreA,
-        scoreB,
+        scoreA: parseNumberInput(scoreA),
+        scoreB: parseNumberInput(scoreB),
         balance,
         durationSec: match?.durationSec ?? null,
         notes,
         scorers: scorers
           .filter((s) => s.playerId)
-          .map((s) => ({ playerId: Number(s.playerId), goals: Number(s.goals) || 0 })),
+          .map((s) => ({
+            playerId: Number(s.playerId),
+            goals: parseNumberInput(s.goals),
+          })),
       };
       const res = isEdit
         ? await updateMatch(match!.id, input)
@@ -102,8 +119,8 @@ export function MatchForm({
           router.push("/matches");
           router.refresh();
         } else {
-          setScoreA(0);
-          setScoreB(0);
+          setScoreA("0");
+          setScoreB("0");
           setBalance(50);
           setNotes("");
           setScorers([]);
@@ -131,7 +148,7 @@ export function MatchForm({
             type="number"
             min={0}
             value={scoreA}
-            onChange={(e) => setScoreA(Number(e.target.value))}
+            onChange={(e) => setScoreA(e.target.value)}
             className="w-16 text-center text-lg font-bold"
           />
           <span className="pb-2 text-muted-foreground">–</span>
@@ -139,7 +156,7 @@ export function MatchForm({
             type="number"
             min={0}
             value={scoreB}
-            onChange={(e) => setScoreB(Number(e.target.value))}
+            onChange={(e) => setScoreB(e.target.value)}
             className="w-16 text-center text-lg font-bold"
           />
         </div>
@@ -154,7 +171,7 @@ export function MatchForm({
           <Label className="mb-1.5 block text-xs">Fecha</Label>
           <Input
             type="date"
-            value={playedAt}
+            value={playedAt || (!isEdit ? today : "")}
             onChange={(e) => setPlayedAt(e.target.value)}
           />
         </div>
@@ -218,9 +235,7 @@ export function MatchForm({
                   type="number"
                   min={0}
                   value={row.goals}
-                  onChange={(e) =>
-                    updateScorer(i, { goals: Number(e.target.value) })
-                  }
+                  onChange={(e) => updateScorer(i, { goals: e.target.value })}
                   className="w-16 text-center"
                   aria-label="Goles"
                 />

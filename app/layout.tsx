@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono, Raleway, Oswald } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
-import { Providers } from "@/components/providers";
-import { AppShell } from "@/components/app-shell";
+import { Providers } from "@/components/app/providers";
+import { AppShell } from "@/components/app/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-sans" });

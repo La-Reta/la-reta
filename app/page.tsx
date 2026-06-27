@@ -9,10 +9,10 @@ import {
   RadioIcon,
 } from "lucide-react";
 import { getPlayers, getBannerWords, getTopScorers } from "@/lib/queries";
-import { FifaCard } from "@/components/fifa-card";
-import { LineupBoard } from "@/components/lineup-board";
-import { Commentator } from "@/components/commentator";
-import { RotatingWord } from "@/components/rotating-word";
+import { FifaCard } from "@/components/shared/fifa-card";
+import { LineupBoard } from "@/components/features/dashboard/lineup-board";
+import { Commentator } from "@/components/features/dashboard/commentator";
+import { RotatingWord } from "@/components/features/dashboard/rotating-word";
 import { Button } from "@/components/ui/button";
 import { flagEmoji } from "@/lib/format";
 import {

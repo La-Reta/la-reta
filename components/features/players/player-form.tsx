@@ -19,7 +19,7 @@ import {
 } from "@/lib/constants";
 import { computeOverall } from "@/lib/ratings";
 import type { Player } from "@/lib/db/schema";
-import { FifaCard } from "@/components/fifa-card";
+import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -39,10 +39,16 @@ type FormState = {
   preferredFoot: string;
   nationality: string;
   photoUrl: string;
-  age: number;
-  heightCm: number;
-  weightKg: number;
+  age: string;
+  heightCm: string;
+  weightKg: string;
 } & Record<StatKey, number>;
+
+function parseNumberInput(value: string) {
+  if (!value.trim()) return Number.NaN;
+  const parsed = Number(value);
+  return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
 
 function initialState(player?: Player): FormState {
   return {
@@ -53,9 +59,9 @@ function initialState(player?: Player): FormState {
     preferredFoot: player?.preferredFoot ?? "right",
     nationality: player?.nationality ?? "mx",
     photoUrl: player?.photoUrl ?? "",
-    age: player?.age ?? 25,
-    heightCm: player?.heightCm ?? 175,
-    weightKg: player?.weightKg ?? 75,
+    age: String(player?.age ?? 25),
+    heightCm: String(player?.heightCm ?? 175),
+    weightKg: String(player?.weightKg ?? 75),
     pace: player?.pace ?? 38,
     shooting: player?.shooting ?? 38,
     passing: player?.passing ?? 38,
@@ -84,18 +90,26 @@ export function PlayerForm({ player }: { player?: Player }) {
     physical: form.physical,
   };
   const overall = computeOverall(form.position as Player["position"], stats);
+  const age = parseNumberInput(form.age);
+  const heightCm = parseNumberInput(form.heightCm);
+  const weightKg = parseNumberInput(form.weightKg);
 
   const preview: Player = {
     id: player?.id ?? 0,
-    ...form,
     displayName: (form.displayName || form.name || "JUGADOR").toUpperCase(),
+    name: form.name,
     position: form.position as Player["position"],
     position2:
       form.position2 && form.position2 !== form.position
         ? (form.position2 as Player["position"])
         : null,
     preferredFoot: form.preferredFoot as Player["preferredFoot"],
+    nationality: form.nationality,
     photoUrl: form.photoUrl || null,
+    age: Number.isFinite(age) ? age : (player?.age ?? 25),
+    heightCm: Number.isFinite(heightCm) ? heightCm : (player?.heightCm ?? 175),
+    weightKg: Number.isFinite(weightKg) ? weightKg : (player?.weightKg ?? 75),
+    ...stats,
     overall,
     createdAt: player?.createdAt ?? new Date(),
     updatedAt: player?.updatedAt ?? new Date(),
@@ -108,7 +122,12 @@ export function PlayerForm({ player }: { player?: Player }) {
       return;
     }
     startTransition(async () => {
-      const input: PlayerInput = { ...form };
+      const input: PlayerInput = {
+        ...form,
+        age,
+        heightCm,
+        weightKg,
+      };
       const res = isEdit
         ? await updatePlayer(player!.id, input)
         : await createPlayer(input);
@@ -217,21 +236,21 @@ export function PlayerForm({ player }: { player?: Player }) {
               <Input
                 type="number"
                 value={form.age}
-                onChange={(e) => set("age", Number(e.target.value))}
+                onChange={(e) => set("age", e.target.value)}
               />
             </Labeled>
             <Labeled label="Altura (cm)">
               <Input
                 type="number"
                 value={form.heightCm}
-                onChange={(e) => set("heightCm", Number(e.target.value))}
+                onChange={(e) => set("heightCm", e.target.value)}
               />
             </Labeled>
             <Labeled label="Peso (kg)">
               <Input
                 type="number"
                 value={form.weightKg}
-                onChange={(e) => set("weightKg", Number(e.target.value))}
+                onChange={(e) => set("weightKg", e.target.value)}
               />
             </Labeled>
           </div>

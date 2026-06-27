@@ -1,5 +1,5 @@
 import { getRetaWords } from "@/lib/queries";
-import { WordForm } from "@/components/word-form";
+import { WordForm } from "@/components/features/words/word-form";
 
 export const metadata = { title: "La Reta ____ · Reta Fútbol" };
 export const dynamic = "force-dynamic";

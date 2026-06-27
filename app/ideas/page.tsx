@@ -1,7 +1,7 @@
 import { getIdeas } from "@/lib/queries";
 import { isAdmin } from "@/lib/admin";
-import { IdeaForm } from "@/components/idea-form";
-import { IdeaRowActions } from "@/components/idea-row-actions";
+import { IdeaForm } from "@/components/features/ideas/idea-form";
+import { IdeaRowActions } from "@/components/features/ideas/idea-row-actions";
 import {
   Table,
   TableBody,

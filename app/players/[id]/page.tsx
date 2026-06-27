@@ -7,13 +7,13 @@ import {
   getPlayerComments,
 } from "@/lib/queries";
 import { isAdmin } from "@/lib/admin";
-import { FifaCard } from "@/components/fifa-card";
-import { PlayerRadar } from "@/components/player-radar";
-import { PlayerHistory } from "@/components/player-history";
-import { PlayerComments } from "@/components/player-comments";
-import { Pitch } from "@/components/pitch";
-import { DeletePlayerButton } from "@/components/delete-player-button";
-import { SelectForTeamsButton } from "@/components/select-for-teams-button";
+import { FifaCard } from "@/components/shared/fifa-card";
+import { PlayerRadar } from "@/components/features/players/player-radar";
+import { PlayerHistory } from "@/components/features/players/player-history";
+import { PlayerComments } from "@/components/features/players/player-comments";
+import { Pitch } from "@/components/shared/pitch";
+import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
+import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -104,13 +104,15 @@ export default async function PlayerDetailPage({
           </div>
 
           <div className="flex flex-wrap gap-2">
-            <Button
-              size="sm"
-              render={<Link href={`/players/${player.id}/edit`} />}
-            >
-              <PencilIcon />
-              Editar
-            </Button>
+            {admin ? (
+              <Button
+                size="sm"
+                render={<Link href={`/players/${player.id}/edit`} />}
+              >
+                <PencilIcon />
+                Editar
+              </Button>
+            ) : null}
             <SelectForTeamsButton id={player.id} />
             {admin && <DeletePlayerButton id={player.id} name={player.name} />}
           </div>

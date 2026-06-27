@@ -2,7 +2,7 @@ import Link from "next/link";
 import { notFound } from "next/navigation";
 import { ArrowLeftIcon } from "lucide-react";
 import { getMatchById, getPlayers } from "@/lib/queries";
-import { MatchForm } from "@/components/match-form";
+import { MatchForm } from "@/components/features/matches/match-form";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Editar partido · Reta Fútbol" };

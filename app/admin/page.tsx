@@ -2,8 +2,8 @@ import Link from "next/link";
 import { LightbulbIcon, ArrowRightIcon } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
-import { AdminLogin } from "@/components/admin-login";
-import { LogoutButton } from "@/components/logout-button";
+import { AdminLogin } from "@/components/features/admin/admin-login";
+import { LogoutButton } from "@/components/features/admin/logout-button";
 
 export const metadata = { title: "Admin · Reta Fútbol" };
 export const dynamic = "force-dynamic";

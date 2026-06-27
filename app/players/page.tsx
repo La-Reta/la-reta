@@ -2,7 +2,7 @@ import Link from "next/link";
 import { UserPlusIcon } from "lucide-react";
 import { getPlayers } from "@/lib/queries";
 import { isAdmin } from "@/lib/admin";
-import { PlayersBrowser } from "@/components/players-browser";
+import { PlayersBrowser } from "@/components/features/players/players-browser";
 import { Button } from "@/components/ui/button";
 
 export const metadata = { title: "Jugadores · Reta Fútbol" };

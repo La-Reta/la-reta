@@ -1,4 +1,4 @@
-import { PlayerForm } from "@/components/player-form";
+import { PlayerForm } from "@/components/features/players/player-form";
 
 export const metadata = { title: "Nuevo jugador · Reta Fútbol" };
 

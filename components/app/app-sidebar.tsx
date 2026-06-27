@@ -4,7 +4,7 @@ import * as React from "react";
 import Link from "next/link";
 import Image from "next/image";
 import { usePathname } from "next/navigation";
-import { useAtomValue } from "jotai";
+import { atom, useAtomValue } from "jotai";
 import {
   LayoutDashboardIcon,
   UsersIcon,
@@ -34,6 +34,7 @@ import {
   SidebarMenuButton,
   SidebarMenuItem,
   SidebarSeparator,
+  useSidebar,
 } from "@/components/ui/sidebar";
 import { SidebarTitle } from "./sidebar-title";
 import { cn } from "@/lib/utils";
@@ -123,29 +124,82 @@ const NAV_SECTIONS: NavSection[] = [
 ];
 
 const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
+const liveMatchActiveAtom = atom((get) => get(liveMatchAtom).active);
+
+const SidebarNavItem = React.memo(function SidebarNavItem({
+  item,
+  active,
+  liveActive,
+  showTooltip,
+}: {
+  item: NavItem;
+  active: boolean;
+  liveActive: boolean;
+  showTooltip: boolean;
+}) {
+  return (
+    <SidebarMenuItem>
+      <SidebarMenuButton
+        isActive={active}
+        tooltip={showTooltip ? (item.hint ?? item.title) : undefined}
+        render={<Link href={item.href} />}
+        className={cn(
+          "h-10 rounded-xl px-3 transition-all group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl",
+          "data-[active=true]:bg-sidebar-primary/12 data-[active=true]:text-sidebar-foreground data-[active=true]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--sidebar-primary)_28%,transparent)]",
+          "hover:bg-sidebar-accent/80 hover:text-sidebar-foreground",
+        )}
+      >
+        <item.icon className={cn(active && "text-sidebar-primary")} />
+        <span>{item.title}</span>
+        {item.href === "/live" && liveActive ?
+          <SidebarMenuBadge className="right-2 bg-emerald-500/14 text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400">
+            Live
+          </SidebarMenuBadge>
+        : active ?
+          <ChevronRightIcon className="ml-auto size-4 text-sidebar-primary group-data-[collapsible=icon]:hidden" />
+        : null}
+      </SidebarMenuButton>
+    </SidebarMenuItem>
+  );
+});
 
 export function AppSidebar() {
   const pathname = usePathname();
-  const live = useAtomValue(liveMatchAtom);
-  const liveActive = live.active;
+  const liveActive = useAtomValue(liveMatchActiveAtom);
+  const { isMobile, state } = useSidebar();
+  const showTooltip = state === "collapsed" && !isMobile;
 
-  const matchScore = (href: string) => {
-    if (href === "/") return pathname === "/" ? 1 : -1;
-    if (pathname === href || pathname.startsWith(href + "/"))
-      return href.length;
-    return -1;
-  };
+  const activeHref = React.useMemo(
+    () =>
+      ALL_NAV_ITEMS.reduce<string | null>((bestHref, item) => {
+        if (item.href === "/") {
+          return pathname === "/" ? "/" : bestHref;
+        }
 
-  const bestScore = Math.max(
-    ...ALL_NAV_ITEMS.map((item) => matchScore(item.href)),
+        const matches =
+          pathname === item.href || pathname.startsWith(item.href + "/");
+
+        if (!matches) return bestHref;
+
+        if (!bestHref || item.href.length > bestHref.length) {
+          return item.href;
+        }
+
+        return bestHref;
+      }, null),
+    [pathname],
   );
 
   return (
     <Sidebar variant="floating" collapsible="icon">
-      <SidebarHeader className="gap-3">
-        <div className="rounded-2xl border border-sidebar-border/70 bg-sidebar/80 p-3 shadow-sm">
-          <div className="flex items-center gap-3">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8">
+      <SidebarHeader className="gap-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:pt-3">
+        <Link
+          href="/"
+          aria-label="Ir al resumen"
+          className="block rounded-2xl border border-sidebar-border/70 bg-sidebar/80 p-3 shadow-sm transition-colors hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
+        >
+          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:rounded-2xl">
               <Image
                 src="/fifa-wc.webp"
                 alt="Reta Credix · FIFA 26"
@@ -167,7 +221,7 @@ export function AppSidebar() {
               </p>
             </div>
           </div>
-        </div>
+        </Link>
 
         <div className="rounded-xl border border-sidebar-border/70 bg-sidebar-accent/45 p-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between gap-3">
@@ -193,61 +247,42 @@ export function AppSidebar() {
         </div>
       </SidebarHeader>
 
-      <SidebarContent className="gap-1">
+      <SidebarContent className="gap-1 group-data-[collapsible=icon]:px-1">
         {NAV_SECTIONS.map((section) => (
-          <SidebarGroup key={section.label} className="px-2 py-1">
+          <SidebarGroup
+            key={section.label}
+            className="px-2 py-1 group-data-[collapsible=icon]:px-0"
+          >
             <SidebarGroupLabel className="px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/45">
               {section.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
-              <SidebarMenu>
-                {section.items.map((item) => {
-                  const score = matchScore(item.href);
-                  const active = score > -1 && score === bestScore;
-
-                  return (
-                    <SidebarMenuItem key={item.href}>
-                      <SidebarMenuButton
-                        isActive={active}
-                        tooltip={item.hint ?? item.title}
-                        render={<Link href={item.href} />}
-                        className={cn(
-                          "h-10 rounded-xl px-3 transition-all",
-                          "data-[active=true]:bg-sidebar-primary/12 data-[active=true]:text-sidebar-foreground data-[active=true]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--sidebar-primary)_28%,transparent)]",
-                          "hover:bg-sidebar-accent/80 hover:text-sidebar-foreground",
-                        )}
-                      >
-                        <item.icon
-                          className={cn(active && "text-sidebar-primary")}
-                        />
-                        <span>{item.title}</span>
-                        {item.href === "/live" && liveActive ?
-                          <SidebarMenuBadge className="right-2 bg-emerald-500/14 text-emerald-600 dark:text-emerald-400">
-                            Live
-                          </SidebarMenuBadge>
-                        : active ?
-                          <ChevronRightIcon className="ml-auto size-4 text-sidebar-primary group-data-[collapsible=icon]:hidden" />
-                        : null}
-                      </SidebarMenuButton>
-                    </SidebarMenuItem>
-                  );
-                })}
+              <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+                {section.items.map((item) => (
+                  <SidebarNavItem
+                    key={item.href}
+                    item={item}
+                    active={item.href === activeHref}
+                    liveActive={liveActive}
+                    showTooltip={showTooltip}
+                  />
+                ))}
               </SidebarMenu>
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
       </SidebarContent>
 
-      <SidebarFooter className="gap-3">
+      <SidebarFooter className="gap-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1">
         <SidebarSeparator />
         <SidebarMenu>
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={pathname === "/admin" || pathname.startsWith("/admin/")}
-              tooltip="Administración"
+              tooltip={showTooltip ? "Administración" : undefined}
               variant="outline"
               render={<Link href="/admin" />}
-              className="h-10 rounded-xl px-3"
+              className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl"
             >
               <LockIcon />
               <span>Administración</span>

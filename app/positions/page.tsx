@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { getPlayers } from "@/lib/queries";
-import { Pitch } from "@/components/pitch";
-import { PositionHotspots } from "@/components/position-hotspots";
+import { Pitch } from "@/components/shared/pitch";
+import { PositionHotspots } from "@/components/features/positions/position-hotspots";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { playerPositions } from "@/lib/format";
 import {
