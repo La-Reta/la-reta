@@ -38,6 +38,7 @@ import {
 } from "@/components/ui/sidebar";
 import { SidebarTitle } from "./sidebar-title";
 import { cn } from "@/lib/utils";
+import { Badge } from "../ui/badge";
 
 type NavItem = {
   title: string;
@@ -298,6 +299,7 @@ export function AppSidebar() {
           <p className="text-sidebar-foreground/58 mt-1 text-[11px]">
             Neon, Drizzle y tiempo real para la reta.
           </p>
+          <Badge variant={"outline"}>Beta v1.0.0</Badge>
         </div>
       </SidebarFooter>
     </Sidebar>
