@@ -39,6 +39,7 @@ export function TeamBuilder({ players }: { players: Player[] }) {
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const [result, setResult] = React.useState<BalancedTeams | null>(null);
   const [mounted, setMounted] = React.useState(false);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
   const byId = React.useMemo(
@@ -312,6 +313,11 @@ function Matchup({ result }: { result: BalancedTeams }) {
           ratingA={ratingA}
           ratingB={ratingB}
         />
+        <div className="flex items-center justify-center lg:hidden">
+          <Badge variant={"outline"}>
+            La preview de la imagen se ve mejor en desktop.
+          </Badge>
+        </div>
       </div>
 
       {/* Team sheets */}
