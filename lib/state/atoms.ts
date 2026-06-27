@@ -15,9 +15,7 @@ export const toggleSelectedAtom = atom(null, (get, set, id: number) => {
   const current = get(selectedIdsAtom);
   set(
     selectedIdsAtom,
-    current.includes(id)
-      ? current.filter((x) => x !== id)
-      : [...current, id],
+    current.includes(id) ? current.filter((x) => x !== id) : [...current, id],
   );
 });
 

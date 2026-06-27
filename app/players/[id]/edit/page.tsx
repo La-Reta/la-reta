@@ -24,7 +24,7 @@ export default async function EditPlayerPage({
         <h1 className="text-2xl font-bold tracking-tight">
           Editar · {player.name}
         </h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Ajusta los datos y atributos del jugador.
         </p>
       </div>

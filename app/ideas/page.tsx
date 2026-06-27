@@ -34,7 +34,7 @@ export default async function IdeasPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Ideas de la reta</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           ¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la
           revisa y le asigna prioridad.
         </p>
@@ -43,17 +43,17 @@ export default async function IdeasPage() {
       <IdeaForm />
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
-          <span className="h-4 w-1 rounded-full bg-primary" />
+        <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase">
+          <span className="bg-primary h-4 w-1 rounded-full" />
           {ideas.length} idea{ideas.length === 1 ? "" : "s"}
         </h2>
 
         {ideas.length === 0 ? (
-          <p className="bg-card p-8 text-center text-sm text-muted-foreground rounded-lg ring-1 ring-foreground/10">
+          <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
             Aún no hay ideas. ¡Sé el primero en proponer algo!
           </p>
         ) : (
-          <div className="overflow-x-auto bg-card rounded-lg ring-1 ring-foreground/10">
+          <div className="bg-card ring-foreground/10 overflow-x-auto rounded-lg ring-1">
             <Table>
               <TableHeader>
                 <TableRow>
@@ -72,11 +72,11 @@ export default async function IdeasPage() {
                   <TableRow key={idea.id}>
                     <TableCell>
                       <p className="font-medium">{idea.title}</p>
-                      <p className="line-clamp-2 max-w-md text-xs text-muted-foreground">
+                      <p className="text-muted-foreground line-clamp-2 max-w-md text-xs">
                         {idea.description}
                       </p>
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-xs">
                       {IDEA_CATEGORY_LABEL[idea.category]}
                     </TableCell>
                     <TableCell>
@@ -90,16 +90,16 @@ export default async function IdeasPage() {
                           {IDEA_PRIORITY_LABEL[idea.priority]}
                         </Pill>
                       ) : (
-                        <span className="text-xs text-muted-foreground">—</span>
+                        <span className="text-muted-foreground text-xs">—</span>
                       )}
                     </TableCell>
-                    <TableCell className="text-xs text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-xs">
                       {idea.estimate ?? "—"}
                     </TableCell>
                     <TableCell className="text-xs">
                       {idea.author ?? "Anónimo"}
                     </TableCell>
-                    <TableCell className="text-right text-xs text-muted-foreground">
+                    <TableCell className="text-muted-foreground text-right text-xs">
                       {fmt(idea.createdAt)}
                     </TableCell>
                     {admin ? (

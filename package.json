@@ -10,7 +10,8 @@
     "db:generate": "drizzle-kit generate",
     "db:push": "drizzle-kit push",
     "db:studio": "drizzle-kit studio",
-    "db:seed": "tsx lib/db/seed.ts"
+    "db:seed": "tsx lib/db/seed.ts",
+    "format": "prettier --write ."
   },
   "dependencies": {
     "@base-ui/react": "1.6.0",
@@ -50,6 +51,8 @@
     "drizzle-kit": "0.31.10",
     "eslint": "^9",
     "eslint-config-next": "16.2.9",
+    "prettier": "3.9.0",
+    "prettier-plugin-tailwindcss": "0.8.0",
     "shadcn": "4.12.0",
     "tailwindcss": "^4",
     "tsx": "4.22.4",

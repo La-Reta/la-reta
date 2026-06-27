@@ -12,10 +12,38 @@ export type Stats = Record<StatKey, number>;
  * Each row sums to 1. Roughly mirrors how FIFA weights attributes by role.
  */
 const WEIGHTS: Record<PositionGroup, Stats> = {
-  GK: { pace: 0.1, shooting: 0.05, passing: 0.15, dribbling: 0.1, defending: 0.3, physical: 0.3 },
-  DEF: { pace: 0.15, shooting: 0.05, passing: 0.15, dribbling: 0.1, defending: 0.35, physical: 0.2 },
-  MID: { pace: 0.12, shooting: 0.15, passing: 0.25, dribbling: 0.23, defending: 0.12, physical: 0.13 },
-  FWD: { pace: 0.22, shooting: 0.3, passing: 0.12, dribbling: 0.2, defending: 0.03, physical: 0.13 },
+  GK: {
+    pace: 0.1,
+    shooting: 0.05,
+    passing: 0.15,
+    dribbling: 0.1,
+    defending: 0.3,
+    physical: 0.3,
+  },
+  DEF: {
+    pace: 0.15,
+    shooting: 0.05,
+    passing: 0.15,
+    dribbling: 0.1,
+    defending: 0.35,
+    physical: 0.2,
+  },
+  MID: {
+    pace: 0.12,
+    shooting: 0.15,
+    passing: 0.25,
+    dribbling: 0.23,
+    defending: 0.12,
+    physical: 0.13,
+  },
+  FWD: {
+    pace: 0.22,
+    shooting: 0.3,
+    passing: 0.12,
+    dribbling: 0.2,
+    defending: 0.03,
+    physical: 0.13,
+  },
 };
 
 /** Position-weighted overall rating, clamped to 1-99. */

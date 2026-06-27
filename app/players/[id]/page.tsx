@@ -86,18 +86,18 @@ export default async function PlayerDetailPage({
           <div>
             <div className="flex flex-wrap items-center gap-2">
               <Badge>{player.position}</Badge>
-              {player.position2 ?
+              {player.position2 ? (
                 <Badge variant="outline">{player.position2}</Badge>
-              : null}
+              ) : null}
               <Badge variant="secondary">{GROUP_LABEL[group]}</Badge>
               <Badge variant="outline">{TIER_LABEL[tier]}</Badge>
             </div>
             <h1 className="mt-2 text-3xl font-black tracking-tight">
               {player.name}
             </h1>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-muted-foreground text-sm">
               Overall{" "}
-              <span className="font-bold text-foreground">
+              <span className="text-foreground font-bold">
                 {player.overall}
               </span>
             </p>
@@ -118,10 +118,10 @@ export default async function PlayerDetailPage({
           </div>
 
           {/* Datos */}
-          <div className="grid grid-cols-2 gap-px overflow-hidden bg-foreground/10 rounded-lg ring-1 ring-foreground/10 sm:grid-cols-3">
+          <div className="bg-foreground/10 ring-foreground/10 grid grid-cols-2 gap-px overflow-hidden rounded-lg ring-1 sm:grid-cols-3">
             {facts.map((f) => (
               <div key={f.label} className="bg-card p-3">
-                <p className="text-[10px] uppercase text-muted-foreground">
+                <p className="text-muted-foreground text-[10px] uppercase">
                   {f.label}
                 </p>
                 <p className="mt-0.5 text-sm font-semibold">{f.value}</p>
@@ -144,7 +144,7 @@ export default async function PlayerDetailPage({
                         {player[key]}
                       </span>
                     </div>
-                    <div className="h-1.5 overflow-hidden bg-muted">
+                    <div className="bg-muted h-1.5 overflow-hidden">
                       <div
                         className={`h-full ${statColor(player[key])}`}
                         style={{ width: `${player[key]}%` }}
@@ -190,7 +190,7 @@ export default async function PlayerDetailPage({
                       </p>
                     </div>
                   </div>
-                  {player.position2 ?
+                  {player.position2 ? (
                     <div className="flex items-start gap-3">
                       <div
                         className="mt-1 size-2 shrink-0 rounded-full"
@@ -208,7 +208,7 @@ export default async function PlayerDetailPage({
                         </p>
                       </div>
                     </div>
-                  : null}
+                  ) : null}
                 </div>
               </CardContent>
             </Card>

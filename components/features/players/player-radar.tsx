@@ -22,7 +22,10 @@ export function PlayerRadar({ player }: { player: Player }) {
   }));
 
   return (
-    <ChartContainer config={chartConfig} className="mx-auto aspect-square max-h-72 w-full">
+    <ChartContainer
+      config={chartConfig}
+      className="mx-auto aspect-square max-h-72 w-full"
+    >
       <RadarChart data={data} outerRadius="72%">
         <ChartTooltip
           cursor={false}

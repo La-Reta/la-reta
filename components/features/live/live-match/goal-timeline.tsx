@@ -31,12 +31,12 @@ export function GoalTimeline({
 
   return (
     <div className="space-y-3">
-      <div className="flex flex-col gap-3 rounded-2xl border border-foreground/10 bg-card/80 p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
+      <div className="border-foreground/10 bg-card/80 flex flex-col gap-3 rounded-2xl border p-4 shadow-sm sm:flex-row sm:items-center sm:justify-between">
         <div>
-          <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-muted-foreground">
+          <h2 className="text-muted-foreground text-sm font-semibold tracking-[0.14em] uppercase">
             Registro de goles
           </h2>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="text-muted-foreground mt-1 text-sm">
             {goals.length === 0
               ? "Aún no hay goles registrados."
               : `${goals.length} gol${goals.length === 1 ? "" : "es"} capturado${goals.length === 1 ? "" : "s"} durante el partido.`}
@@ -66,20 +66,20 @@ export function GoalTimeline({
       </div>
 
       {goals.length === 0 ? (
-        <div className="rounded-2xl border border-dashed border-foreground/12 bg-card/60 px-6 py-10 text-center text-sm text-muted-foreground">
+        <div className="border-foreground/12 bg-card/60 text-muted-foreground rounded-2xl border border-dashed px-6 py-10 text-center text-sm">
           Toca &quot;Agregar gol&quot; para empezar a llenar la línea del
           partido.
         </div>
       ) : (
-        <ul className="overflow-hidden rounded-2xl border border-foreground/10 bg-card/90 shadow-sm">
+        <ul className="border-foreground/10 bg-card/90 overflow-hidden rounded-2xl border shadow-sm">
           {[...goals].reverse().map((goal) => (
             <li
               key={goal.id}
-              className="flex items-center gap-3 border-b border-foreground/8 px-4 py-3 last:border-b-0"
+              className="border-foreground/8 flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
             >
               <span
                 className={cn(
-                  "inline-flex min-w-10 justify-center rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-wide text-white",
+                  "inline-flex min-w-10 justify-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase",
                   goal.team === "A" ? "bg-sky-600" : "bg-rose-600",
                 )}
               >
@@ -91,7 +91,7 @@ export function GoalTimeline({
                 onClick={() => onAssign(goal.id)}
                 className="flex min-w-0 flex-1 items-center gap-2 text-left hover:underline"
               >
-                <UserIcon className="size-3.5 shrink-0 text-muted-foreground" />
+                <UserIcon className="text-muted-foreground size-3.5 shrink-0" />
                 <span
                   className={cn(
                     "truncate text-sm",
@@ -102,7 +102,7 @@ export function GoalTimeline({
                 </span>
               </button>
 
-              <span className="shrink-0 font-mono text-xs tabular-nums text-muted-foreground">
+              <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
                 {formatMinute(goal.at)} · {formatClock(goal.at)}
               </span>
 

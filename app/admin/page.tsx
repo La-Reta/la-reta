@@ -19,7 +19,7 @@ export default async function AdminPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Administración</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             Gestiona la reta. Tienes acceso de admin.
           </p>
         </div>
@@ -28,19 +28,19 @@ export default async function AdminPage() {
 
       <Link
         href="/admin/ideas"
-        className="flex items-center gap-4 bg-card p-4 rounded-lg ring-1 ring-foreground/10 transition-colors hover:bg-muted/50"
+        className="bg-card ring-foreground/10 hover:bg-muted/50 flex items-center gap-4 rounded-lg p-4 ring-1 transition-colors"
       >
-        <div className="flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+        <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-md">
           <LightbulbIcon className="size-5" />
         </div>
         <div className="flex-1">
           <p className="font-semibold">Ideas</p>
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {ideas.length} en total
             {pending > 0 ? ` · ${pending} sin revisar` : ""}
           </p>
         </div>
-        <ArrowRightIcon className="size-4 text-muted-foreground" />
+        <ArrowRightIcon className="text-muted-foreground size-4" />
       </Link>
     </div>
   );

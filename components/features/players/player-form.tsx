@@ -103,9 +103,9 @@ export function PlayerForm({ player }: { player?: Player }) {
     name: form.name,
     position: form.position as Player["position"],
     position2:
-      form.position2 && form.position2 !== form.position ?
-        (form.position2 as Player["position"])
-      : null,
+      form.position2 && form.position2 !== form.position
+        ? (form.position2 as Player["position"])
+        : null,
     preferredFoot: form.preferredFoot as Player["preferredFoot"],
     nationality: form.nationality,
     photoUrl: form.photoUrl || null,
@@ -131,9 +131,8 @@ export function PlayerForm({ player }: { player?: Player }) {
         heightCm,
         weightKg,
       };
-      const res =
-        isEdit ?
-          await updatePlayer(player!.id, input)
+      const res = isEdit
+        ? await updatePlayer(player!.id, input)
         : await createPlayer(input);
       if (res.ok) {
         toast.success(isEdit ? "Jugador actualizado" : "Jugador creado");
@@ -152,8 +151,8 @@ export function PlayerForm({ player }: { player?: Player }) {
     >
       <div className="space-y-6">
         {/* Identidad */}
-        <fieldset className="space-y-4 rounded-lg ring-1 ring-foreground/10 bg-card p-4">
-          <legend className="px-1 text-xs font-semibold uppercase text-muted-foreground">
+        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
+          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
             Identidad
           </legend>
           <div className="grid gap-4 sm:grid-cols-2">
@@ -231,8 +230,8 @@ export function PlayerForm({ player }: { player?: Player }) {
         </fieldset>
 
         {/* Físico */}
-        <fieldset className="space-y-4 rounded-lg ring-1 ring-foreground/10 bg-card p-4">
-          <legend className="px-1 text-xs font-semibold uppercase text-muted-foreground">
+        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
+          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
             Perfil físico
           </legend>
           <div className="grid gap-4 sm:grid-cols-3">
@@ -261,8 +260,8 @@ export function PlayerForm({ player }: { player?: Player }) {
         </fieldset>
 
         {/* Atributos */}
-        <fieldset className="space-y-4 rounded-lg ring-1 ring-foreground/10 bg-card p-4">
-          <legend className="px-1 text-xs font-semibold uppercase text-muted-foreground">
+        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
+          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
             Atributos
           </legend>
           <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
@@ -289,11 +288,11 @@ export function PlayerForm({ player }: { player?: Player }) {
 
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={pending}>
-            {pending ?
-              "Guardando…"
-            : isEdit ?
-              "Guardar cambios"
-            : "Crear jugador"}
+            {pending
+              ? "Guardando…"
+              : isEdit
+                ? "Guardar cambios"
+                : "Crear jugador"}
           </Button>
           <Button
             type="button"
@@ -308,7 +307,7 @@ export function PlayerForm({ player }: { player?: Player }) {
 
       {/* Preview en vivo */}
       <div className="lg:sticky lg:top-16">
-        <p className="mb-2 text-xs font-semibold uppercase text-muted-foreground">
+        <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase">
           Vista previa · OVR {overall}
         </p>
         <div className="mx-auto max-w-[240px]">

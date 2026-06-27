@@ -14,6 +14,7 @@ import { LineupBoard } from "@/components/features/dashboard/lineup-board";
 import { Commentator } from "@/components/features/dashboard/commentator";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
 import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
+import { PlayerLegend } from "@/components/features/dashboard/player-legend";
 import { Button } from "@/components/ui/button";
 import { flagEmoji } from "@/lib/format";
 import {
@@ -56,15 +57,14 @@ export default async function DashboardPage() {
   const ranking = players.slice(0, 6);
 
   const topScorer = topScorers[0] ?? null;
-  const goleador =
-    topScorer ?
-      (players.find((p) => p.id === topScorer.playerId) ?? null)
+  const goleador = topScorer
+    ? (players.find((p) => p.id === topScorer.playerId) ?? null)
     : null;
 
   return (
     <div className="space-y-6">
       {/* ── Matchday banner ───────────────────────────────────────── */}
-      <section className="relative overflow-hidden bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] text-white rounded-lg ring-1 ring-foreground/10">
+      <section className="ring-foreground/10 relative overflow-hidden rounded-lg bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] text-white ring-1">
         {/* faint chalk pitch, drawn from the right touchline */}
         <svg
           viewBox="0 0 600 400"
@@ -81,10 +81,10 @@ export default async function DashboardPage() {
 
         <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-9">
           <div>
-            <span className="font-display text-xs font-semibold uppercase tracking-[0.25em] text-emerald-300/90">
+            <span className="font-display text-xs font-semibold tracking-[0.25em] text-emerald-300/90 uppercase">
               Jornada · Temporada 2026
             </span>
-            <h1 className="font-display mt-1 text-5xl font-bold uppercase leading-[0.92] tracking-tight md:text-7xl">
+            <h1 className="font-display mt-1 text-5xl leading-[0.92] font-bold tracking-tight uppercase md:text-7xl">
               La Reta
               <br />
               <RotatingWord className="text-emerald-300" words={bannerWords} />
@@ -114,7 +114,7 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="shrink-0 self-start bg-white p-3 shadow-xl ring-1 ring-black/10 md:self-end rounded-xl">
+          <div className="shrink-0 self-start rounded-xl bg-white p-3 shadow-xl ring-1 ring-black/10 md:self-end">
             <Image
               src="/fifa-credix.png"
               alt="FIFA 26 × Credix"
@@ -149,7 +149,7 @@ export default async function DashboardPage() {
           statValue={best.overall}
           statLabel="OVR"
         />
-        {goleador && topScorer ?
+        {goleador && topScorer ? (
           <Spotlight
             title="El goleador"
             subtitle="Máximo anotador de la reta"
@@ -158,18 +158,19 @@ export default async function DashboardPage() {
             statLabel="GOLES"
             note={`en ${topScorer.matches} ${topScorer.matches === 1 ? "partido" : "partidos"}`}
           />
-        : <section className="rounded-lg bg-card ring-1 ring-foreground/10">
+        ) : (
+          <section className="bg-card ring-foreground/10 rounded-lg ring-1">
             <header className="border-b px-4 py-3">
-              <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
+              <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
                 El goleador
               </h2>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-muted-foreground text-[11px]">
                 Máximo anotador de la reta
               </p>
             </header>
             <div className="flex flex-col items-center gap-3 p-6 text-center">
-              <TrophyIcon className="size-8 text-muted-foreground" />
-              <p className="text-sm text-muted-foreground">
+              <TrophyIcon className="text-muted-foreground size-8" />
+              <p className="text-muted-foreground text-sm">
                 Aún no hay goles registrados. Anota goles en un partido para
                 coronar al goleador.
               </p>
@@ -183,29 +184,30 @@ export default async function DashboardPage() {
               </Button>
             </div>
           </section>
-        }
+        )}
         <RotatingPlayer players={players} />
       </div>
 
-      {/* ── El comentarista ────────────────────────────────────────── */}
-      <div className="md:grid md:grid-cols-2">
+      {/* ── Comentarista + Leyenda ──────────────────────────────────── */}
+      <div className="grid gap-6 md:grid-cols-2">
         <Commentator />
+        <PlayerLegend />
       </div>
 
       {/* ── Pizarra + ranking ──────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* Pizarra del once ideal */}
-        <section className="flex flex-col bg-card rounded-lg ring-1 ring-foreground/10">
+        <section className="bg-card ring-foreground/10 flex flex-col rounded-lg ring-1">
           <header className="flex items-center justify-between border-b px-4 py-3">
             <div>
-              <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
+              <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
                 Once ideal
               </h2>
-              <p className="text-[11px] text-muted-foreground">
+              <p className="text-muted-foreground text-[11px]">
                 El mejor por línea · esquema 4-3-3
               </p>
             </div>
-            <span className="font-display rounded-sm bg-foreground px-2 py-1 text-xs font-bold uppercase tracking-wider text-background">
+            <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase">
               4-3-3
             </span>
           </header>
@@ -227,9 +229,9 @@ export default async function DashboardPage() {
         </section>
 
         {/* Ranking */}
-        <section className="bg-card rounded-lg ring-1 ring-foreground/10">
+        <section className="bg-card ring-foreground/10 rounded-lg ring-1">
           <header className="flex items-center justify-between border-b px-4 py-3">
-            <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
+            <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
               Ranking de nivel
             </h2>
             <Button variant="link" size="sm" render={<Link href="/players" />}>
@@ -242,7 +244,7 @@ export default async function DashboardPage() {
               <li key={p.id}>
                 <Link
                   href={`/players/${p.id}`}
-                  className="flex items-center gap-3 border-b px-4 py-2 text-sm last:border-b-0 hover:bg-muted/60"
+                  className="hover:bg-muted/60 flex items-center gap-3 border-b px-4 py-2 text-sm last:border-b-0"
                 >
                   <span
                     className="font-display w-5 text-center text-base font-bold tabular-nums"
@@ -291,12 +293,12 @@ function Spotlight({
   note?: string;
 }) {
   return (
-    <section className="rounded-lg bg-card ring-1 ring-foreground/10">
+    <section className="bg-card ring-foreground/10 rounded-lg ring-1">
       <header className="border-b px-4 py-3">
-        <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
+        <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
           {title}
         </h2>
-        <p className="text-[11px] text-muted-foreground">{subtitle}</p>
+        <p className="text-muted-foreground text-[11px]">{subtitle}</p>
       </header>
       <div className="flex items-center gap-4 p-4">
         <Link
@@ -306,21 +308,21 @@ function Spotlight({
           <FifaCard player={player} size="sm" />
         </Link>
         <div className="min-w-0">
-          <p className="font-display text-2xl font-bold uppercase leading-none">
+          <p className="font-display text-2xl leading-none font-bold uppercase">
             {player.displayName}
           </p>
-          <p className="truncate text-sm text-muted-foreground">
+          <p className="text-muted-foreground truncate text-sm">
             {player.name}
           </p>
           <p className="mt-2 font-mono text-3xl font-black tabular-nums">
             {statValue}
-            <span className="ml-1 text-xs font-medium text-muted-foreground">
+            <span className="text-muted-foreground ml-1 text-xs font-medium">
               {statLabel}
             </span>
           </p>
-          {note ?
-            <p className="text-[11px] text-muted-foreground">{note}</p>
-          : null}
+          {note ? (
+            <p className="text-muted-foreground text-[11px]">{note}</p>
+          ) : null}
           <Button
             variant="outline"
             size="xs"
@@ -349,20 +351,20 @@ function Score({
 }) {
   return (
     <div className="border-l border-white/10 px-4 py-3 first:border-l-0">
-      <p className="font-display text-[10px] font-semibold uppercase tracking-[0.18em] text-emerald-200/70">
+      <p className="font-display text-[10px] font-semibold tracking-[0.18em] text-emerald-200/70 uppercase">
         {label}
       </p>
       <p
-        className="font-mono text-3xl font-black leading-none tabular-nums"
+        className="font-mono text-3xl leading-none font-black tabular-nums"
         style={{ color: accent ? "#fca5a5" : undefined }}
       >
         {value}
       </p>
-      {sub ?
+      {sub ? (
         <p className="mt-0.5 truncate text-[11px] font-medium text-emerald-50/70">
           {sub}
         </p>
-      : null}
+      ) : null}
     </div>
   );
 }
@@ -370,9 +372,9 @@ function Score({
 function EmptyState() {
   return (
     <div className="mx-auto max-w-md py-24 text-center">
-      <ShieldHalfIcon className="mx-auto size-10 text-muted-foreground" />
+      <ShieldHalfIcon className="text-muted-foreground mx-auto size-10" />
       <h1 className="mt-4 text-xl font-bold">Aún no hay jugadores</h1>
-      <p className="mt-1 text-sm text-muted-foreground">
+      <p className="text-muted-foreground mt-1 text-sm">
         Crea el primero o corre el seed para poblar la base de datos.
       </p>
       <Button className="mt-4" render={<Link href="/players/new" />}>

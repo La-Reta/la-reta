@@ -151,13 +151,13 @@ const SidebarNavItem = React.memo(function SidebarNavItem({
       >
         <item.icon className={cn(active && "text-sidebar-primary")} />
         <span>{item.title}</span>
-        {item.href === "/live" && liveActive ?
+        {item.href === "/live" && liveActive ? (
           <SidebarMenuBadge className="right-2 bg-emerald-500/14 text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400">
             Live
           </SidebarMenuBadge>
-        : active ?
-          <ChevronRightIcon className="ml-auto size-4 text-sidebar-primary group-data-[collapsible=icon]:hidden" />
-        : null}
+        ) : active ? (
+          <ChevronRightIcon className="text-sidebar-primary ml-auto size-4 group-data-[collapsible=icon]:hidden" />
+        ) : null}
       </SidebarMenuButton>
     </SidebarMenuItem>
   );
@@ -196,7 +196,7 @@ export function AppSidebar() {
         <Link
           href="/"
           aria-label="Ir al resumen"
-          className="block rounded-2xl border border-sidebar-border/70 bg-sidebar/80 p-3 shadow-sm transition-colors hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
+          className="border-sidebar-border/70 bg-sidebar/80 hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 block rounded-2xl border p-3 shadow-sm transition-colors group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
         >
           <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
             <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:rounded-2xl">
@@ -212,32 +212,32 @@ export function AppSidebar() {
             <div className="min-w-0 group-data-[collapsible=icon]:hidden">
               <div className="flex items-center gap-2">
                 <SidebarTitle />
-                <span className="rounded-full bg-sidebar-accent px-2 py-0.5 text-[10px] font-semibold text-sidebar-accent-foreground">
+                <span className="bg-sidebar-accent text-sidebar-accent-foreground rounded-full px-2 py-0.5 text-[10px] font-semibold">
                   FIFA 26
                 </span>
               </div>
-              <p className="mt-1 text-[11px] text-sidebar-foreground/65">
+              <p className="text-sidebar-foreground/65 mt-1 text-[11px]">
                 Navegación principal de la reta
               </p>
             </div>
           </div>
         </Link>
 
-        <div className="rounded-xl border border-sidebar-border/70 bg-sidebar-accent/45 p-3 group-data-[collapsible=icon]:hidden">
+        <div className="border-sidebar-border/70 bg-sidebar-accent/45 rounded-xl border p-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between gap-3">
             <div>
-              <p className="text-[10px] font-semibold uppercase tracking-[0.16em] text-sidebar-foreground/55">
+              <p className="text-sidebar-foreground/55 text-[10px] font-semibold tracking-[0.16em] uppercase">
                 Estado actual
               </p>
-              <p className="mt-1 text-sm font-semibold text-sidebar-foreground">
+              <p className="text-sidebar-foreground mt-1 text-sm font-semibold">
                 {liveActive ? "Partido en juego" : "Sin partido activo"}
               </p>
             </div>
             <div
               className={
-                liveActive ?
-                  "flex items-center gap-1 rounded-full bg-emerald-500/14 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"
-                : "flex items-center gap-1 rounded-full bg-sidebar px-2 py-1 text-[11px] font-semibold text-sidebar-foreground/65"
+                liveActive
+                  ? "flex items-center gap-1 rounded-full bg-emerald-500/14 px-2 py-1 text-[11px] font-semibold text-emerald-600 dark:text-emerald-400"
+                  : "bg-sidebar text-sidebar-foreground/65 flex items-center gap-1 rounded-full px-2 py-1 text-[11px] font-semibold"
               }
             >
               <CircleDotIcon className="size-3.5" />
@@ -253,7 +253,7 @@ export function AppSidebar() {
             key={section.label}
             className="px-2 py-1 group-data-[collapsible=icon]:px-0"
           >
-            <SidebarGroupLabel className="px-2 text-[11px] font-semibold uppercase tracking-[0.14em] text-sidebar-foreground/45">
+            <SidebarGroupLabel className="text-sidebar-foreground/45 px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
               {section.label}
             </SidebarGroupLabel>
             <SidebarGroupContent>
@@ -290,12 +290,12 @@ export function AppSidebar() {
           </SidebarMenuItem>
         </SidebarMenu>
 
-        <div className="rounded-xl border border-sidebar-border/70 bg-sidebar-accent/35 px-3 py-2 group-data-[collapsible=icon]:hidden">
-          <div className="flex items-center gap-2 text-[11px] font-medium text-sidebar-foreground/72">
-            <SparkleIcon className="size-3.5 text-sidebar-primary" />
+        <div className="border-sidebar-border/70 bg-sidebar-accent/35 rounded-xl border px-3 py-2 group-data-[collapsible=icon]:hidden">
+          <div className="text-sidebar-foreground/72 flex items-center gap-2 text-[11px] font-medium">
+            <SparkleIcon className="text-sidebar-primary size-3.5" />
             Stack actual
           </div>
-          <p className="mt-1 text-[11px] text-sidebar-foreground/58">
+          <p className="text-sidebar-foreground/58 mt-1 text-[11px]">
             Neon, Drizzle y tiempo real para la reta.
           </p>
         </div>

@@ -30,12 +30,12 @@ export function AdminLogin() {
 
   return (
     <div className="mx-auto max-w-sm py-12">
-      <div className="bg-card p-6 rounded-lg ring-1 ring-foreground/10">
-        <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-primary/10 text-primary">
+      <div className="bg-card ring-foreground/10 rounded-lg p-6 ring-1">
+        <div className="bg-primary/10 text-primary mb-4 flex size-10 items-center justify-center rounded-md">
           <LockIcon className="size-5" />
         </div>
         <h1 className="text-lg font-bold">Zona de administración</h1>
-        <p className="mt-1 text-sm text-muted-foreground">
+        <p className="text-muted-foreground mt-1 text-sm">
           Ingresa el PIN para gestionar ideas y la reta.
         </p>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">

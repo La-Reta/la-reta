@@ -16,7 +16,7 @@ export default async function PalabrasPage() {
     <div className="mx-auto max-w-3xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">La Reta ____</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           ¿Cómo es tu reta? Completa la frase y tu palabra rotará en el banner
           del inicio para toda la banda.
         </p>
@@ -25,13 +25,13 @@ export default async function PalabrasPage() {
       <WordForm />
 
       <section className="space-y-3">
-        <h2 className="flex items-center gap-2 text-sm font-semibold uppercase text-muted-foreground">
-          <span className="h-4 w-1 rounded-full bg-primary" />
+        <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase">
+          <span className="bg-primary h-4 w-1 rounded-full" />
           Aportes · {words.length}
         </h2>
 
         {words.length === 0 ? (
-          <p className="rounded-lg bg-card p-8 text-center text-sm text-muted-foreground ring-1 ring-foreground/10">
+          <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
             Aún no hay aportes. ¡Sé el primero en completar la frase!
           </p>
         ) : (
@@ -39,16 +39,19 @@ export default async function PalabrasPage() {
             {words.map((w) => (
               <div
                 key={w.id}
-                className="rounded-lg bg-card p-4 ring-1 ring-foreground/10"
+                className="bg-card ring-foreground/10 rounded-lg p-4 ring-1"
               >
-                <p className="font-display text-lg font-semibold uppercase tracking-wide">
-                  La Reta <span className="text-emerald-600 dark:text-emerald-400">{w.word}</span>
+                <p className="font-display text-lg font-semibold tracking-wide uppercase">
+                  La Reta{" "}
+                  <span className="text-emerald-600 dark:text-emerald-400">
+                    {w.word}
+                  </span>
                 </p>
-                <p className="mt-1 text-xs text-muted-foreground">
+                <p className="text-muted-foreground mt-1 text-xs">
                   — {w.author ?? "Anónimo"} · {fmt(w.createdAt)}
                 </p>
                 {(w.language || w.timezone || w.screen) && (
-                  <p className="mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px] text-muted-foreground">
+                  <p className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px]">
                     {w.language && <span>🌐 {w.language}</span>}
                     {w.timezone && <span>🕐 {w.timezone}</span>}
                     {w.screen && <span>📱 {w.screen}</span>}

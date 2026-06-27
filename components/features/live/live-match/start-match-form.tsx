@@ -28,10 +28,10 @@ export function StartMatchForm({
 }) {
   return (
     <div className="mx-auto max-w-3xl">
-      <Card className="overflow-hidden border-none bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_34%),linear-gradient(180deg,var(--color-card),color-mix(in_oklab,var(--color-card)_88%,var(--color-muted)))] shadow-sm ring-1 ring-foreground/10">
-        <CardHeader className="border-b border-foreground/8">
+      <Card className="ring-foreground/10 overflow-hidden border-none bg-[radial-gradient(circle_at_top,rgba(59,130,246,0.12),transparent_34%),linear-gradient(180deg,var(--color-card),color-mix(in_oklab,var(--color-card)_88%,var(--color-muted)))] shadow-sm ring-1">
+        <CardHeader className="border-foreground/8 border-b">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="inline-flex items-center gap-1 rounded-full bg-primary/10 px-2.5 py-1 text-[11px] font-semibold uppercase tracking-[0.16em] text-primary">
+            <span className="bg-primary/10 text-primary inline-flex items-center gap-1 rounded-full px-2.5 py-1 text-[11px] font-semibold tracking-[0.16em] uppercase">
               <RadioIcon className="size-3.5" />
               Pre-partido
             </span>
@@ -54,7 +54,7 @@ export function StartMatchForm({
                 onChange={(e) => onTeamAChange(e.target.value)}
                 placeholder="Equipo A"
                 aria-label="Equipo A"
-                className="h-11 rounded-xl border-0 bg-background/80 shadow-none ring-1 ring-inset ring-sky-500/15 placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-sky-500/35"
+                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 rounded-xl border-0 shadow-none ring-1 ring-sky-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-sky-500/35"
               />
             </div>
 
@@ -63,7 +63,7 @@ export function StartMatchForm({
                 type="button"
                 variant="outline"
                 size="icon"
-                className="size-11 rounded-full border-foreground/10 bg-background/70 shadow-sm"
+                className="border-foreground/10 bg-background/70 size-11 rounded-full shadow-sm"
                 onClick={onSwapTeams}
                 aria-label="Intercambiar equipos"
               >
@@ -77,7 +77,7 @@ export function StartMatchForm({
                 onChange={(e) => onTeamBChange(e.target.value)}
                 placeholder="Equipo B"
                 aria-label="Equipo B"
-                className="h-11 rounded-xl border-0 bg-background/80 shadow-none ring-1 ring-inset ring-rose-500/15 placeholder:text-muted-foreground/80 focus-visible:ring-2 focus-visible:ring-rose-500/35"
+                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 rounded-xl border-0 shadow-none ring-1 ring-rose-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-rose-500/35"
               />
             </div>
           </div>

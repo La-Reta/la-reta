@@ -66,7 +66,9 @@ function normalize(input: PlayerInput) {
   // Secondary position is optional; ignore it if empty or equal to the primary.
   const rawPos2 = input.position2?.trim();
   const position2 =
-    rawPos2 && rawPos2 !== input.position && POSITIONS.includes(rawPos2 as Position)
+    rawPos2 &&
+    rawPos2 !== input.position &&
+    POSITIONS.includes(rawPos2 as Position)
       ? (rawPos2 as Position)
       : null;
 

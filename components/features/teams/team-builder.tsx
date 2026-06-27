@@ -69,15 +69,15 @@ export function TeamBuilder({ players }: { players: Player[] }) {
   }
 
   if (!mounted) {
-    return <div className="h-64 animate-pulse rounded-lg bg-muted/50" />;
+    return <div className="bg-muted/50 h-64 animate-pulse rounded-lg" />;
   }
 
   return (
     <div className="space-y-6">
       {/* Control bar */}
-      <div className="flex flex-wrap items-center justify-between gap-3 rounded-lg bg-card p-3 ring-1 ring-foreground/10">
+      <div className="bg-card ring-foreground/10 flex flex-wrap items-center justify-between gap-3 rounded-lg p-3 ring-1">
         <div className="flex items-center gap-2 text-sm">
-          <UsersIcon className="size-4 text-muted-foreground" />
+          <UsersIcon className="text-muted-foreground size-4" />
           <span className="font-mono text-lg font-bold tabular-nums">
             {selectedPlayers.length}
           </span>
@@ -113,8 +113,8 @@ export function TeamBuilder({ players }: { players: Player[] }) {
         <Matchup result={result} />
       ) : (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-12 text-center">
-          <ScaleIcon className="size-8 text-muted-foreground" />
-          <p className="text-sm text-muted-foreground">
+          <ScaleIcon className="text-muted-foreground size-8" />
+          <p className="text-muted-foreground text-sm">
             Convoca al menos 2 jugadores y genera dos equipos parejos.
           </p>
         </div>
@@ -125,7 +125,7 @@ export function TeamBuilder({ players }: { players: Player[] }) {
         <CardHeader className="border-b">
           <CardTitle className="flex items-center justify-between">
             <span>Convocatoria</span>
-            <span className="text-xs font-normal text-muted-foreground">
+            <span className="text-muted-foreground text-xs font-normal">
               Toca para convocar
             </span>
           </CardTitle>
@@ -141,7 +141,7 @@ export function TeamBuilder({ players }: { players: Player[] }) {
             ).length;
             return (
               <div key={g} className="space-y-2">
-                <p className="flex items-center gap-1.5 text-[10px] font-semibold uppercase text-muted-foreground">
+                <p className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
                   <span
                     className="size-2 rounded-full"
                     style={{ backgroundColor: GROUP_COLOR[g] }}
@@ -236,32 +236,34 @@ function Matchup({ result }: { result: BalancedTeams }) {
         : { label: "Algo disparejo", className: "text-rose-500" };
 
   return (
-    <section className="overflow-hidden rounded-xl ring-1 ring-foreground/10">
+    <section className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
       {/* Scoreboard VS header */}
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 bg-neutral-950 px-5 py-6 text-white">
         <div className="text-right">
           <p
-            className="font-display text-xs font-semibold uppercase tracking-[0.2em]"
+            className="font-display text-xs font-semibold tracking-[0.2em] uppercase"
             style={{ color: TEAM_A }}
           >
             Equipo A
           </p>
-          <p className="font-mono text-5xl font-black leading-none tabular-nums">
+          <p className="font-mono text-5xl leading-none font-black tabular-nums">
             {ratingA}
           </p>
           <p className="mt-1 text-[11px] text-white/50">
             {teamA.length} jugadores · OVR prom.
           </p>
         </div>
-        <span className="font-display text-2xl font-black text-white/30">VS</span>
+        <span className="font-display text-2xl font-black text-white/30">
+          VS
+        </span>
         <div className="text-left">
           <p
-            className="font-display text-xs font-semibold uppercase tracking-[0.2em]"
+            className="font-display text-xs font-semibold tracking-[0.2em] uppercase"
             style={{ color: TEAM_B }}
           >
             Equipo B
           </p>
-          <p className="font-mono text-5xl font-black leading-none tabular-nums">
+          <p className="font-mono text-5xl leading-none font-black tabular-nums">
             {ratingB}
           </p>
           <p className="mt-1 text-[11px] text-white/50">
@@ -271,16 +273,16 @@ function Matchup({ result }: { result: BalancedTeams }) {
       </div>
 
       {/* Balance meter */}
-      <div className="space-y-1.5 bg-card px-5 py-4">
+      <div className="bg-card space-y-1.5 px-5 py-4">
         <div className="relative flex h-2.5 overflow-hidden rounded-full">
           <div style={{ width: `${aPct}%`, backgroundColor: TEAM_A }} />
           <div style={{ width: `${100 - aPct}%`, backgroundColor: TEAM_B }} />
           {/* center 50% tick */}
-          <span className="absolute left-1/2 top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2 bg-background/80" />
+          <span className="bg-background/80 absolute top-1/2 left-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2" />
         </div>
-        <p className="text-center text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-center text-xs">
           Diferencia de nivel{" "}
-          <span className="font-bold text-foreground">{diff}</span> ·{" "}
+          <span className="text-foreground font-bold">{diff}</span> ·{" "}
           <span className={cn("font-medium", verdict.className)}>
             {verdict.label}
           </span>
@@ -288,12 +290,17 @@ function Matchup({ result }: { result: BalancedTeams }) {
       </div>
 
       {/* Pitch (capturable) */}
-      <div className="space-y-3 bg-card px-4 py-4">
+      <div className="bg-card space-y-3 px-4 py-4">
         <div className="flex items-center justify-between">
-          <span className="font-display text-xs font-semibold uppercase tracking-wide text-muted-foreground">
+          <span className="font-display text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Alineación
           </span>
-          <Button size="sm" variant="outline" onClick={download} disabled={busy}>
+          <Button
+            size="sm"
+            variant="outline"
+            onClick={download}
+            disabled={busy}
+          >
             <DownloadIcon />
             {busy ? "Generando…" : "Descargar imagen"}
           </Button>
@@ -308,9 +315,19 @@ function Matchup({ result }: { result: BalancedTeams }) {
       </div>
 
       {/* Team sheets */}
-      <div className="grid gap-px bg-border md:grid-cols-2">
-        <TeamSheet team="Equipo A" color={TEAM_A} lineups={teamA} rating={ratingA} />
-        <TeamSheet team="Equipo B" color={TEAM_B} lineups={teamB} rating={ratingB} />
+      <div className="bg-border grid gap-px md:grid-cols-2">
+        <TeamSheet
+          team="Equipo A"
+          color={TEAM_A}
+          lineups={teamA}
+          rating={ratingA}
+        />
+        <TeamSheet
+          team="Equipo B"
+          color={TEAM_B}
+          lineups={teamB}
+          rating={ratingB}
+        />
       </div>
     </section>
   );
@@ -335,15 +352,16 @@ function TeamSheet({
             className="size-2.5 rounded-full"
             style={{ backgroundColor: color }}
           />
-          <span className="font-display text-base font-bold uppercase tracking-wide">
+          <span className="font-display text-base font-bold tracking-wide uppercase">
             {team}
           </span>
         </span>
-        <span className="text-xs text-muted-foreground">
-          OVR <span className="font-mono font-bold text-foreground">{rating}</span>
+        <span className="text-muted-foreground text-xs">
+          OVR{" "}
+          <span className="text-foreground font-mono font-bold">{rating}</span>
         </span>
       </div>
-      <ul className="divide-y divide-border border-t">
+      <ul className="divide-border divide-y border-t">
         {lineups.map(({ player, role }) => {
           const flexed = role !== player.position;
           return (
@@ -365,7 +383,7 @@ function TeamSheet({
               </Badge>
               <span className="truncate font-medium">{player.name}</span>
               {flexed && (
-                <span className="shrink-0 text-[10px] text-muted-foreground">
+                <span className="text-muted-foreground shrink-0 text-[10px]">
                   ({playerPositions(player).join("/")})
                 </span>
               )}

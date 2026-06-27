@@ -7,5 +7,9 @@ function subscribe() {
 }
 
 export function useHydrated() {
-  return React.useSyncExternalStore(subscribe, () => true, () => false);
+  return React.useSyncExternalStore(
+    subscribe,
+    () => true,
+    () => false,
+  );
 }

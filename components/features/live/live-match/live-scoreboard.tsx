@@ -32,11 +32,11 @@ export function LiveScoreboard({
             <span className="absolute inline-flex size-full animate-ping rounded-full bg-red-500 opacity-75" />
             <span className="relative inline-flex size-2 rounded-full bg-red-500" />
           </span>
-          <span className="text-xs font-semibold uppercase tracking-[0.24em] text-red-400">
+          <span className="text-xs font-semibold tracking-[0.24em] text-red-400 uppercase">
             En vivo
           </span>
         </div>
-        <span className="font-mono text-2xl font-bold tabular-nums text-white/92">
+        <span className="font-mono text-2xl font-bold text-white/92 tabular-nums">
           {formatDuration(elapsedSec)}
         </span>
       </div>
@@ -54,7 +54,7 @@ export function LiveScoreboard({
           scorers={scorersA}
         />
 
-        <p className="px-1 font-mono text-5xl font-black leading-none tabular-nums sm:text-6xl">
+        <p className="px-1 font-mono text-5xl leading-none font-black tabular-nums sm:text-6xl">
           {scoreA}
           <span className="mx-1 text-white/28">:</span>
           {scoreB}
@@ -84,10 +84,17 @@ function TeamSide({
 }) {
   return (
     <div className="min-w-0 text-center">
-      <p className={cn("truncate text-sm font-bold uppercase tracking-wide", text)}>
+      <p
+        className={cn(
+          "truncate text-sm font-bold tracking-wide uppercase",
+          text,
+        )}
+      >
         {team}
       </p>
-      <span className={cn("mx-auto mt-1 block h-0.5 w-8 rounded-full", accent)} />
+      <span
+        className={cn("mx-auto mt-1 block h-0.5 w-8 rounded-full", accent)}
+      />
       {scorers.length > 0 ? (
         <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-white/58">
           {scorers.join(", ")}

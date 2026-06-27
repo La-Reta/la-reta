@@ -118,8 +118,9 @@ export function MatchForm({
             goals: parseNumberInput(s.goals),
           })),
       };
-      const res =
-        isEdit ? await updateMatch(match!.id, input) : await createMatch(input);
+      const res = isEdit
+        ? await updateMatch(match!.id, input)
+        : await createMatch(input);
       if (res.ok) {
         toast.success(isEdit ? "Partido actualizado" : "Partido registrado");
         if (isEdit) {
@@ -142,7 +143,7 @@ export function MatchForm({
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-4 bg-card p-4 rounded-lg ring-1 ring-foreground/10"
+      className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1"
     >
       {/* Marcador */}
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_auto_1fr]">
@@ -161,7 +162,7 @@ export function MatchForm({
             onChange={(e) => setScoreA(e.target.value)}
             className="w-16 text-center text-lg font-bold"
           />
-          <span className="pb-2 text-muted-foreground">–</span>
+          <span className="text-muted-foreground pb-2">–</span>
           <Input
             type="number"
             min={0}
@@ -226,11 +227,12 @@ export function MatchForm({
             Añadir
           </Button>
         </div>
-        {scorers.length === 0 ?
-          <p className="text-xs text-muted-foreground">
+        {scorers.length === 0 ? (
+          <p className="text-muted-foreground text-xs">
             Si sabes quién anotó, agrégalo para llevar la tabla de goleadores.
           </p>
-        : <div className="space-y-2">
+        ) : (
+          <div className="space-y-2">
             {scorers.map((row, i) => (
               <div key={i} className="flex items-center gap-2">
                 <NativeSelect
@@ -267,19 +269,17 @@ export function MatchForm({
               </div>
             ))}
           </div>
-        }
+        )}
       </div>
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={pending}>
-          {isEdit ?
-            <SaveIcon />
-          : <TrophyIcon />}
-          {pending ?
-            "Guardando…"
-          : isEdit ?
-            "Guardar cambios"
-          : "Registrar partido"}
+          {isEdit ? <SaveIcon /> : <TrophyIcon />}
+          {pending
+            ? "Guardando…"
+            : isEdit
+              ? "Guardar cambios"
+              : "Registrar partido"}
         </Button>
         {isEdit && (
           <Button

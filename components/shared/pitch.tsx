@@ -63,8 +63,12 @@ export function Pitch({
         <rect x={12} y={H / 2 - 91.6} width={55} height={183.2} />
         <rect x={W - 12 - 55} y={H / 2 - 91.6} width={55} height={183.2} />
         {/* Penalty arcs (the bit outside each box) */}
-        <path d={`M ${177} ${H / 2 - 73.1} A 91.5 91.5 0 0 1 ${177} ${H / 2 + 73.1}`} />
-        <path d={`M ${W - 177} ${H / 2 - 73.1} A 91.5 91.5 0 0 0 ${W - 177} ${H / 2 + 73.1}`} />
+        <path
+          d={`M ${177} ${H / 2 - 73.1} A 91.5 91.5 0 0 1 ${177} ${H / 2 + 73.1}`}
+        />
+        <path
+          d={`M ${W - 177} ${H / 2 - 73.1} A 91.5 91.5 0 0 0 ${W - 177} ${H / 2 + 73.1}`}
+        />
       </g>
       <g fill={LINE}>
         <circle cx={W / 2} cy={H / 2} r={4} />

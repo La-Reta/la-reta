@@ -18,13 +18,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
 
-export function DeletePlayerButton({
-  id,
-  name,
-}: {
-  id: number;
-  name: string;
-}) {
+export function DeletePlayerButton({ id, name }: { id: number; name: string }) {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
@@ -55,8 +49,8 @@ export function DeletePlayerButton({
         <AlertDialogHeader>
           <AlertDialogTitle>¿Eliminar a {name}?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta acción no se puede deshacer. El jugador se quitará de la base de
-            datos y de cualquier equipo.
+            Esta acción no se puede deshacer. El jugador se quitará de la base
+            de datos y de cualquier equipo.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>

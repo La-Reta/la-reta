@@ -59,7 +59,7 @@ export function RotatingPlayer({
 
   return (
     <section
-      className="rounded-lg bg-card ring-1 ring-foreground/10"
+      className="bg-card ring-foreground/10 rounded-lg ring-1"
       aria-label="Conoce a los jugadores"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
@@ -67,10 +67,10 @@ export function RotatingPlayer({
       onBlurCapture={() => setPaused(false)}
     >
       <header className="border-b px-4 py-3">
-        <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
+        <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
           Conoce a los jugadores
         </h2>
-        <p className="text-[11px] text-muted-foreground">
+        <p className="text-muted-foreground text-[11px]">
           La plantilla completa · actualiza cada momento
         </p>
       </header>
@@ -88,15 +88,15 @@ export function RotatingPlayer({
         <Link
           href={`/players/${player.id}`}
           aria-label={`Ver ficha de ${player.displayName}`}
-          className="w-28 shrink-0 rounded-sm transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
+          className="focus-visible:ring-ring w-28 shrink-0 rounded-sm transition-transform hover:-translate-y-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none"
         >
           <FifaCard player={player} size="sm" />
         </Link>
         <div className="min-w-0">
-          <p className="font-display text-2xl font-bold uppercase leading-none">
+          <p className="font-display text-2xl leading-none font-bold uppercase">
             {player.displayName}
           </p>
-          <p className="truncate text-sm text-muted-foreground">
+          <p className="text-muted-foreground truncate text-sm">
             {player.name}
           </p>
           <div className="mt-1 flex items-center gap-2">
@@ -115,7 +115,7 @@ export function RotatingPlayer({
           </div>
           <p className="mt-1.5 font-mono text-3xl font-black tabular-nums">
             {player.overall}
-            <span className="ml-1 text-xs font-medium text-muted-foreground">
+            <span className="text-muted-foreground ml-1 text-xs font-medium">
               OVR
             </span>
           </p>
@@ -147,15 +147,15 @@ export function RotatingPlayer({
             className={cn(
               // 44×44px táctil, punto visual centrado
               "flex min-h-[44px] min-w-[44px] items-center justify-center",
-              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm",
+              "focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none",
             )}
           >
             <span
               className={cn(
                 "block size-2.5 rounded-full transition-all duration-200",
-                i === activeSlot ?
-                  "scale-125 bg-foreground"
-                : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
+                i === activeSlot
+                  ? "bg-foreground scale-125"
+                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
               )}
             />
           </button>

@@ -6,15 +6,30 @@ import { initials } from "@/lib/format";
 import type { Lineup } from "@/lib/team-balancer";
 
 // x% of the pitch per line, for each side (B mirrored toward the right goal).
-const BANDS_A: Record<PositionGroup, number> = { GK: 8, DEF: 21, MID: 33, FWD: 45 };
-const BANDS_B: Record<PositionGroup, number> = { GK: 92, DEF: 79, MID: 67, FWD: 55 };
+const BANDS_A: Record<PositionGroup, number> = {
+  GK: 8,
+  DEF: 21,
+  MID: 33,
+  FWD: 45,
+};
+const BANDS_B: Record<PositionGroup, number> = {
+  GK: 92,
+  DEF: 79,
+  MID: 67,
+  FWD: 55,
+};
 const ORDER: PositionGroup[] = ["GK", "DEF", "MID", "FWD"];
 
 type Placed = { lineup: Lineup; x: number; y: number };
 
 function place(lineups: Lineup[], side: "A" | "B"): Placed[] {
   const bands = side === "A" ? BANDS_A : BANDS_B;
-  const groups: Record<PositionGroup, Lineup[]> = { GK: [], DEF: [], MID: [], FWD: [] };
+  const groups: Record<PositionGroup, Lineup[]> = {
+    GK: [],
+    DEF: [],
+    MID: [],
+    FWD: [],
+  };
   for (const l of lineups) groups[positionGroup(l.role)].push(l);
 
   const placed: Placed[] = [];
@@ -29,7 +44,17 @@ function place(lineups: Lineup[], side: "A" | "B"): Placed[] {
   return placed;
 }
 
-function Token({ p, x, y, color }: { p: Placed; x: number; y: number; color: string }) {
+function Token({
+  p,
+  x,
+  y,
+  color,
+}: {
+  p: Placed;
+  x: number;
+  y: number;
+  color: string;
+}) {
   const player = p.lineup.player;
   return (
     <div
@@ -55,13 +80,13 @@ function Token({ p, x, y, color }: { p: Placed; x: number; y: number; color: str
           )}
         </div>
         <span
-          className="absolute -bottom-1 -right-1 grid min-w-5 place-items-center rounded-full px-1 font-mono text-[9px] font-bold text-white ring-2 ring-black/30"
+          className="absolute -right-1 -bottom-1 grid min-w-5 place-items-center rounded-full px-1 font-mono text-[9px] font-bold text-white ring-2 ring-black/30"
           style={{ backgroundColor: color }}
         >
           {player.overall}
         </span>
       </div>
-      <span className="max-w-20 truncate rounded bg-black/55 px-1 text-[10px] font-semibold uppercase leading-tight text-white">
+      <span className="max-w-20 truncate rounded bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
         {player.displayName}
       </span>
     </div>
@@ -103,19 +128,23 @@ export const MatchupPitch = React.forwardRef<
       {/* Header */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 bg-black/25 px-4 py-2.5">
         <div className="text-left leading-none">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-sky-300">
+          <p className="font-display text-[11px] font-semibold tracking-[0.18em] text-sky-300 uppercase">
             Equipo A
           </p>
-          <p className="font-mono text-2xl font-black tabular-nums">{ratingA}</p>
+          <p className="font-mono text-2xl font-black tabular-nums">
+            {ratingA}
+          </p>
         </div>
-        <p className="font-display text-sm font-bold uppercase tracking-[0.25em] text-white/70">
+        <p className="font-display text-sm font-bold tracking-[0.25em] text-white/70 uppercase">
           La Reta · VS
         </p>
         <div className="text-right leading-none">
-          <p className="font-display text-[11px] font-semibold uppercase tracking-[0.18em] text-rose-300">
+          <p className="font-display text-[11px] font-semibold tracking-[0.18em] text-rose-300 uppercase">
             Equipo B
           </p>
-          <p className="font-mono text-2xl font-black tabular-nums">{ratingB}</p>
+          <p className="font-mono text-2xl font-black tabular-nums">
+            {ratingB}
+          </p>
         </div>
       </div>
 
@@ -127,7 +156,7 @@ export const MatchupPitch = React.forwardRef<
         <Token key={p.lineup.player.id} p={p} x={p.x} y={p.y} color="#f43f5e" />
       ))}
 
-      <span className="absolute bottom-1.5 right-3 font-display text-[10px] uppercase tracking-wider text-white/40">
+      <span className="font-display absolute right-3 bottom-1.5 text-[10px] tracking-wider text-white/40 uppercase">
         reta fútbol
       </span>
     </div>

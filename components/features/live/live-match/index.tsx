@@ -69,10 +69,9 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   }, [players, deferredFilter]);
 
   const attrGoal = live.goals.find((goal) => goal.id === attrId);
-  const attrTeam =
-    attrGoal ?
-      attrGoal.team === "A" ?
-        live.teamA
+  const attrTeam = attrGoal
+    ? attrGoal.team === "A"
+      ? live.teamA
       : live.teamB
     : "";
 
@@ -151,9 +150,8 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
 
   function finalize() {
     startTransition(async () => {
-      const durationSec =
-        live.startedAt ?
-          Math.floor((Date.now() - live.startedAt) / 1000)
+      const durationSec = live.startedAt
+        ? Math.floor((Date.now() - live.startedAt) / 1000)
         : null;
       const res = await createMatch({
         playedAt: new Date(live.startedAt ?? Date.now())
@@ -183,7 +181,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
 
   if (!hydrated) {
     return (
-      <div className="mx-auto h-80 max-w-3xl animate-pulse rounded-3xl bg-muted/50" />
+      <div className="bg-muted/50 mx-auto h-80 max-w-3xl animate-pulse rounded-3xl" />
     );
   }
 
@@ -221,9 +219,9 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
             <Button
               key={team}
               className={
-                team === "A" ?
-                  "h-24 flex-col gap-1 rounded-2xl bg-sky-600 text-white shadow-sm transition-transform hover:bg-sky-700 active:scale-[0.99] dark:bg-sky-500 dark:hover:bg-sky-400"
-                : "h-24 flex-col gap-1 rounded-2xl bg-rose-600 text-white shadow-sm transition-transform hover:bg-rose-700 active:scale-[0.99] dark:bg-rose-500 dark:hover:bg-rose-400"
+                team === "A"
+                  ? "h-24 flex-col gap-1 rounded-2xl bg-sky-600 text-white shadow-sm transition-transform hover:bg-sky-700 active:scale-[0.99] dark:bg-sky-500 dark:hover:bg-sky-400"
+                  : "h-24 flex-col gap-1 rounded-2xl bg-rose-600 text-white shadow-sm transition-transform hover:bg-rose-700 active:scale-[0.99] dark:bg-rose-500 dark:hover:bg-rose-400"
               }
               onClick={() => addGoal(team)}
               aria-label={`Gol de ${name}`}
@@ -234,9 +232,9 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
                 {name}
               </span>
               <span className="text-[11px] opacity-75">
-                {score === 0 ?
-                  "Sin goles aún"
-                : `${score} gol${score === 1 ? "" : "es"}`}
+                {score === 0
+                  ? "Sin goles aún"
+                  : `${score} gol${score === 1 ? "" : "es"}`}
               </span>
             </Button>
           );

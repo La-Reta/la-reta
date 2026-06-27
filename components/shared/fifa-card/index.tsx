@@ -48,7 +48,7 @@ export function FifaCard({
       )}
       style={{ backgroundImage: s.base }}
     >
-      {player.photoUrl ?
+      {player.photoUrl ? (
         <div className="absolute inset-0 z-0">
           {/* eslint-disable-next-line @next/next/no-img-element */}
           <img
@@ -57,7 +57,8 @@ export function FifaCard({
             className="absolute inset-0 h-full w-full object-cover object-top"
           />
         </div>
-      : <div
+      ) : (
+        <div
           className={cn(
             "absolute inset-x-0 z-0 flex h-[52%] items-center justify-center font-black opacity-20",
             s.accentSoft,
@@ -66,7 +67,7 @@ export function FifaCard({
         >
           {initials(player.name)}
         </div>
-      }
+      )}
 
       <div
         aria-hidden="true"
@@ -105,11 +106,11 @@ export function FifaCard({
           <span className={cn("block font-semibold tracking-wide", z.position)}>
             {player.position}
           </span>
-          {showSecondaryPosition ?
+          {showSecondaryPosition ? (
             <span className={cn("mt-1 block opacity-70", z.position2)}>
               {player.position2}
             </span>
-          : null}
+          ) : null}
         </div>
 
         <div className="flex flex-col items-end gap-1 leading-none">
@@ -140,14 +141,14 @@ export function FifaCard({
           >
             {showName ? player.displayName : "\u00a0"}
           </h3>
-          {showSubname ?
+          {showSubname ? (
             <p className={cn("mt-0.5 truncate text-white/82", z.subname)}>
               {player.name}
             </p>
-          : null}
+          ) : null}
         </div>
 
-        {showStats ?
+        {showStats ? (
           <>
             <div className={cn("mt-2 h-px w-full", s.divider)} />
             <div className={cn("grid grid-cols-3", z.statsWrap)}>
@@ -155,7 +156,7 @@ export function FifaCard({
                 <div key={key} className="min-w-0">
                   <div
                     className={cn(
-                      "font-black leading-none",
+                      "leading-none font-black",
                       s.statValue,
                       z.statValue,
                     )}
@@ -164,7 +165,7 @@ export function FifaCard({
                   </div>
                   <div
                     className={cn(
-                      "mt-0.5 truncate font-semibold leading-none uppercase",
+                      "mt-0.5 truncate leading-none font-semibold uppercase",
                       s.statLabel,
                       z.statLabel,
                     )}
@@ -175,7 +176,7 @@ export function FifaCard({
               ))}
             </div>
           </>
-        : null}
+        ) : null}
       </div>
     </article>
   );

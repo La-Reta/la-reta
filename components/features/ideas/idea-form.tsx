@@ -47,7 +47,7 @@ export function IdeaForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="space-y-4 bg-card p-4 rounded-lg ring-1 ring-foreground/10"
+      className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1"
     >
       <div className="grid gap-4 sm:grid-cols-2">
         <div className="sm:col-span-2">

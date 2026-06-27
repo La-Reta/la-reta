@@ -26,15 +26,20 @@ type ChangeEvent = {
   date: Date | string;
   overallFrom: number;
   overallTo: number;
-  changes: { key: (typeof STAT_KEYS)[number]; from: number; to: number; delta: number }[];
+  changes: {
+    key: (typeof STAT_KEYS)[number];
+    from: number;
+    to: number;
+    delta: number;
+  }[];
 };
 
 export function PlayerHistory({ history }: { history: StatHistory[] }) {
   if (history.length < 2) {
     return (
-      <p className="py-8 text-center text-sm text-muted-foreground">
-        Aún no hay cambios registrados. El historial se irá llenando cada vez que
-        edites las stats de este jugador.
+      <p className="text-muted-foreground py-8 text-center text-sm">
+        Aún no hay cambios registrados. El historial se irá llenando cada vez
+        que edites las stats de este jugador.
       </p>
     );
   }
@@ -72,10 +77,10 @@ export function PlayerHistory({ history }: { history: StatHistory[] }) {
   return (
     <div className="space-y-5">
       <div className="flex items-center justify-between">
-        <p className="text-xs text-muted-foreground">
+        <p className="text-muted-foreground text-xs">
           {history.length} registros · de{" "}
-          <span className="font-semibold text-foreground">{first}</span> a{" "}
-          <span className="font-semibold text-foreground">{last}</span> OVR
+          <span className="text-foreground font-semibold">{first}</span> a{" "}
+          <span className="text-foreground font-semibold">{last}</span> OVR
         </p>
         <Delta value={totalDelta} suffix=" total" />
       </div>
@@ -110,11 +115,11 @@ export function PlayerHistory({ history }: { history: StatHistory[] }) {
       </ChartContainer>
 
       <div className="space-y-3">
-        <p className="text-[10px] font-semibold uppercase text-muted-foreground">
+        <p className="text-muted-foreground text-[10px] font-semibold uppercase">
           Cambios
         </p>
         {events.map((e, i) => (
-          <div key={i} className="border-l-2 border-border pl-3">
+          <div key={i} className="border-border border-l-2 pl-3">
             <div className="flex items-center gap-2 text-xs">
               <span className="font-medium">{fmtDate(e.date)}</span>
               {e.overallFrom !== e.overallTo && (
@@ -159,7 +164,7 @@ function Delta({
 }) {
   if (value === 0)
     return (
-      <span className={cn("text-[10px] text-muted-foreground", className)}>
+      <span className={cn("text-muted-foreground text-[10px]", className)}>
         sin cambio{suffix}
       </span>
     );
@@ -168,7 +173,9 @@ function Delta({
     <span
       className={cn(
         "inline-flex items-center gap-0.5 text-[10px] font-semibold",
-        up ? "text-emerald-600 dark:text-emerald-400" : "text-rose-600 dark:text-rose-400",
+        up
+          ? "text-emerald-600 dark:text-emerald-400"
+          : "text-rose-600 dark:text-rose-400",
         className,
       )}
     >

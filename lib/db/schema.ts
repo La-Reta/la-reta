@@ -112,8 +112,12 @@ export type NewIdea = typeof ideas.$inferInsert;
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
   playedAt: date("played_at").notNull(),
-  teamAName: varchar("team_a_name", { length: 60 }).notNull().default("Equipo A"),
-  teamBName: varchar("team_b_name", { length: 60 }).notNull().default("Equipo B"),
+  teamAName: varchar("team_a_name", { length: 60 })
+    .notNull()
+    .default("Equipo A"),
+  teamBName: varchar("team_b_name", { length: 60 })
+    .notNull()
+    .default("Equipo B"),
   scoreA: smallint("score_a").notNull().default(0),
   scoreB: smallint("score_b").notNull().default(0),
   // How even the match felt, 0 (paliza) … 100 (parejísimo).

@@ -11,7 +11,7 @@ export default async function TeamsPage() {
     <div className="mx-auto max-w-4xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Armar equipos</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Selecciona a los que van a jugar y genera dos equipos parejos por
           overall y posición.
         </p>

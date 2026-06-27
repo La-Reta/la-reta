@@ -90,7 +90,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
 
   if (ideas.length === 0) {
     return (
-      <p className="bg-card p-8 text-center text-sm text-muted-foreground rounded-lg ring-1 ring-foreground/10">
+      <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
         Todavía no hay ideas que revisar.
       </p>
     );
@@ -99,7 +99,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
   return (
     <div className="grid gap-4 md:grid-cols-[280px_1fr] md:items-start">
       {/* Lista */}
-      <div className="divide-y divide-border bg-card rounded-lg ring-1 ring-foreground/10">
+      <div className="divide-border bg-card ring-foreground/10 divide-y rounded-lg ring-1">
         {ideas.map((idea) => (
           <button
             key={idea.id}
@@ -122,7 +122,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
               >
                 {IDEA_STATUS_LABEL[idea.status]}
               </span>
-              <span className="text-[10px] text-muted-foreground">
+              <span className="text-muted-foreground text-[10px]">
                 {fmt(idea.createdAt)}
               </span>
             </span>
@@ -132,13 +132,13 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
 
       {/* Editor */}
       {selected ? (
-        <div className="space-y-4 bg-card p-4 rounded-lg ring-1 ring-foreground/10">
+        <div className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1">
           <div>
             <h2 className="text-lg font-bold">{selected.title}</h2>
-            <p className="mt-1 text-sm text-muted-foreground">
+            <p className="text-muted-foreground mt-1 text-sm">
               {selected.description}
             </p>
-            <p className="mt-2 text-xs text-muted-foreground">
+            <p className="text-muted-foreground mt-2 text-xs">
               {IDEA_CATEGORY_LABEL[selected.category]} · por{" "}
               {selected.author ?? "Anónimo"} · {fmt(selected.createdAt)}
             </p>
@@ -179,9 +179,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
               </NativeSelect>
             </div>
             <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs">
-                Tiempo estimado
-              </Label>
+              <Label className="mb-1.5 block text-xs">Tiempo estimado</Label>
               <Input
                 value={draft.estimate}
                 onChange={(e) =>
@@ -215,7 +213,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
           </div>
         </div>
       ) : (
-        <p className="bg-card p-8 text-center text-sm text-muted-foreground rounded-lg ring-1 ring-foreground/10">
+        <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
           Selecciona una idea para revisarla.
         </p>
       )}

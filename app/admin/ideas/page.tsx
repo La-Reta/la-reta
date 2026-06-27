@@ -26,7 +26,7 @@ export default async function AdminIdeasPage() {
       </div>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Revisar ideas</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Asigna estado, prioridad y tiempo a cada propuesta.
         </p>
       </div>

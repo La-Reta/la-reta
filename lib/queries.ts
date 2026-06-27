@@ -52,7 +52,11 @@ export async function getPlayers(): Promise<Player[]> {
 }
 
 export async function getPlayerById(id: number): Promise<Player | null> {
-  const rows = await db.select().from(players).where(eq(players.id, id)).limit(1);
+  const rows = await db
+    .select()
+    .from(players)
+    .where(eq(players.id, id))
+    .limit(1);
   if (!rows[0]) return null;
   return withLocalPhoto(rows[0], playerImageMap());
 }
@@ -137,7 +141,11 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
 export async function getMatchById(
   id: number,
 ): Promise<MatchWithScorers | null> {
-  const [m] = await db.select().from(matches).where(eq(matches.id, id)).limit(1);
+  const [m] = await db
+    .select()
+    .from(matches)
+    .where(eq(matches.id, id))
+    .limit(1);
   if (!m) return null;
 
   const goalRows = await db
@@ -177,7 +185,9 @@ export async function getTopScorers(): Promise<TopScorer[]> {
       displayName: players.displayName,
       nationality: players.nationality,
       goals: totalGoals.mapWith(Number),
-      matches: sql<number>`count(distinct ${matchGoals.matchId})`.mapWith(Number),
+      matches: sql<number>`count(distinct ${matchGoals.matchId})`.mapWith(
+        Number,
+      ),
     })
     .from(matchGoals)
     .innerJoin(players, eq(matchGoals.playerId, players.id))

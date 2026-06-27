@@ -133,7 +133,7 @@ export function PlayersBrowser({
     <div className="space-y-4">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
         <div className="relative max-w-xs">
-          <SearchIcon className="pointer-events-none absolute left-2.5 top-1/2 size-4 -translate-y-1/2 text-muted-foreground" />
+          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
           <Input
             value={query}
             onChange={(e) => setQuery(e.target.value)}
@@ -159,13 +159,15 @@ export function PlayersBrowser({
         </div>
       </div>
 
-      <p className="text-xs text-muted-foreground">
+      <p className="text-muted-foreground text-xs">
         {filtered.length} jugador{filtered.length === 1 ? "" : "es"}
-        {selected.size > 0 ? ` · ${selected.size} seleccionado${selected.size === 1 ? "" : "s"}` : ""}
+        {selected.size > 0
+          ? ` · ${selected.size} seleccionado${selected.size === 1 ? "" : "s"}`
+          : ""}
       </p>
 
       {filtered.length === 0 ? (
-        <p className="py-16 text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground py-16 text-center text-sm">
           No hay jugadores que coincidan.
         </p>
       ) : (
@@ -177,8 +179,8 @@ export function PlayersBrowser({
                 {/* Selection checkbox — only on hover (or when already selected) */}
                 <label
                   className={cn(
-                    "absolute left-2 top-2 z-10 flex cursor-pointer items-center justify-center rounded-md bg-background/85 p-1 shadow ring-1 ring-foreground/10 backdrop-blur transition-opacity",
-                    "opacity-0 group-hover:opacity-100 group-focus-within:opacity-100",
+                    "bg-background/85 ring-foreground/10 absolute top-2 left-2 z-10 flex cursor-pointer items-center justify-center rounded-md p-1 shadow ring-1 backdrop-blur transition-opacity",
+                    "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
                     isSel && "opacity-100",
                   )}
                   aria-label={`Seleccionar ${player.name}`}
@@ -193,7 +195,7 @@ export function PlayersBrowser({
                   className={cn(
                     "block rounded-[1.4rem] transition-transform duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none",
                     isSel &&
-                      "ring-2 ring-primary ring-offset-2 ring-offset-background",
+                      "ring-primary ring-offset-background ring-2 ring-offset-2",
                   )}
                 >
                   <FifaCard player={player} />
@@ -207,7 +209,7 @@ export function PlayersBrowser({
       {/* Floating bulk-action bar */}
       {selected.size > 0 && (
         <div className="fixed inset-x-0 bottom-4 z-30 flex justify-center px-4">
-          <div className="flex items-center gap-2 rounded-full border bg-card/95 px-3 py-2 shadow-lg ring-1 ring-foreground/10 backdrop-blur">
+          <div className="bg-card/95 ring-foreground/10 flex items-center gap-2 rounded-full border px-3 py-2 shadow-lg ring-1 backdrop-blur">
             <span className="px-1 text-sm font-medium">
               {selected.size} seleccionado{selected.size === 1 ? "" : "s"}
             </span>
@@ -218,45 +220,44 @@ export function PlayersBrowser({
               </Button>
             )}
             <Button size="sm" variant="secondary" onClick={addToTeams}>
-              <ShieldHalfIcon />
-              A equipos
+              <ShieldHalfIcon />A equipos
             </Button>
 
             {isAdmin && (
-            <AlertDialog>
-              <AlertDialogTrigger
-                render={
-                  <Button size="sm" variant="destructive" disabled={pending}>
-                    <Trash2Icon />
-                    Eliminar
-                  </Button>
-                }
-              />
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>
-                    ¿Eliminar {selected.size} jugador
-                    {selected.size === 1 ? "" : "es"}?
-                  </AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta acción no se puede deshacer. Se quitarán de la base de
-                    datos, de los equipos y del registro de goles.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel disabled={pending}>
-                    Cancelar
-                  </AlertDialogCancel>
-                  <AlertDialogAction
-                    variant="destructive"
-                    onClick={bulkDelete}
-                    disabled={pending}
-                  >
-                    {pending ? "Eliminando…" : "Sí, eliminar"}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              <AlertDialog>
+                <AlertDialogTrigger
+                  render={
+                    <Button size="sm" variant="destructive" disabled={pending}>
+                      <Trash2Icon />
+                      Eliminar
+                    </Button>
+                  }
+                />
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>
+                      ¿Eliminar {selected.size} jugador
+                      {selected.size === 1 ? "" : "es"}?
+                    </AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta acción no se puede deshacer. Se quitarán de la base
+                      de datos, de los equipos y del registro de goles.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel disabled={pending}>
+                      Cancelar
+                    </AlertDialogCancel>
+                    <AlertDialogAction
+                      variant="destructive"
+                      onClick={bulkDelete}
+                      disabled={pending}
+                    >
+                      {pending ? "Eliminando…" : "Sí, eliminar"}
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
             )}
 
             <Button size="sm" variant="ghost" onClick={clear}>

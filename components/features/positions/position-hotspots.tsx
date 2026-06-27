@@ -1,10 +1,6 @@
 "use client";
 
-import {
-  POSITION_COORDS,
-  POSITION_NAME,
-  type Position,
-} from "@/lib/constants";
+import { POSITION_COORDS, POSITION_NAME, type Position } from "@/lib/constants";
 import { flagEmoji } from "@/lib/format";
 import {
   Tooltip,
@@ -43,7 +39,12 @@ export function PositionHotspots({
                   type="button"
                   aria-label={`${POSITION_NAME[pos]}: ${list.length} jugador${list.length === 1 ? "" : "es"}`}
                   className="pointer-events-auto absolute -translate-x-1/2 -translate-y-1/2 rounded-full"
-                  style={{ left: `${x}%`, top: `${y}%`, width: "10%", height: "14%" }}
+                  style={{
+                    left: `${x}%`,
+                    top: `${y}%`,
+                    width: "10%",
+                    height: "14%",
+                  }}
                 />
               }
             />

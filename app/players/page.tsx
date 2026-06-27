@@ -16,7 +16,7 @@ export default async function PlayersPage() {
       <div className="flex items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Jugadores</h1>
-          <p className="text-sm text-muted-foreground">
+          <p className="text-muted-foreground text-sm">
             La plantilla completa de la reta, en cartas estilo FIFA.
           </p>
         </div>

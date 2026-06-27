@@ -77,7 +77,7 @@ export function LineupBoard({ players }: { players: Player[] }) {
             >
               {p.overall}
             </span>
-            <span className="flex max-w-20 items-center gap-0.5 truncate rounded-sm bg-black/55 px-1 text-[10px] font-semibold uppercase leading-tight text-white">
+            <span className="flex max-w-20 items-center gap-0.5 truncate rounded-sm bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
               <span className="truncate">{p.displayName}</span>
               <span className="shrink-0">{flagEmoji(p.nationality)}</span>
             </span>

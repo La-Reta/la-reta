@@ -32,7 +32,7 @@ export default async function EditMatchPage({
       </Button>
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Editar partido</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Ajusta el marcador, el balance y los goleadores.
         </p>
       </div>

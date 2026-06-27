@@ -30,7 +30,7 @@ export function LiveLock() {
 
   return (
     <div className="mx-auto max-w-sm py-10">
-      <div className="overflow-hidden rounded-xl bg-[linear-gradient(135deg,#11337a_0%,#0c1f4a_55%,#0a1330_100%)] p-6 text-white ring-1 ring-foreground/10">
+      <div className="ring-foreground/10 overflow-hidden rounded-xl bg-[linear-gradient(135deg,#11337a_0%,#0c1f4a_55%,#0a1330_100%)] p-6 text-white ring-1">
         <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-white/10 text-sky-300 ring-1 ring-white/15">
           <RadioIcon className="size-5" />
         </div>

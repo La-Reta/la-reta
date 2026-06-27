@@ -19,14 +19,12 @@ export default async function LivePage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Marcador en vivo</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Lleva el marcador durante el partido. Al finalizar se guarda solo en
           el registro de partidos.
         </p>
       </div>
-      {unlocked ?
-        <LiveMatch players={list} />
-      : <LiveLock />}
+      {unlocked ? <LiveMatch players={list} /> : <LiveLock />}
     </div>
   );
 }

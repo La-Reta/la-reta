@@ -22,7 +22,9 @@ function collectClient(): ClientInfo {
     language: navigator.language,
     timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
     screen:
-      typeof screen !== "undefined" ? `${screen.width}x${screen.height}` : undefined,
+      typeof screen !== "undefined"
+        ? `${screen.width}x${screen.height}`
+        : undefined,
     platform: uaData?.platform ?? navigator.platform,
     userAgent: navigator.userAgent,
   };
@@ -44,7 +46,7 @@ function Stars({ value, className }: { value: number; className?: string }) {
       role="img"
       aria-label={`${value.toFixed(1)} de 5 estrellas`}
     >
-      <span className="flex gap-0.5 text-muted-foreground/30">
+      <span className="text-muted-foreground/30 flex gap-0.5">
         {[0, 1, 2, 3, 4].map((i) => (
           <StarIcon key={i} className="size-4" />
         ))}
@@ -72,7 +74,11 @@ function StarInput({
   const [hover, setHover] = React.useState(0);
   const active = hover || value;
   return (
-    <div className="flex items-center gap-1" role="radiogroup" aria-label="Tu calificación">
+    <div
+      className="flex items-center gap-1"
+      role="radiogroup"
+      aria-label="Tu calificación"
+    >
       {[1, 2, 3, 4, 5].map((n) => (
         <button
           type="button"
@@ -82,7 +88,7 @@ function StarInput({
           onClick={() => onChange(value === n ? 0 : n)}
           onMouseEnter={() => setHover(n)}
           onMouseLeave={() => setHover(0)}
-          className="rounded-sm p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="focus-visible:ring-ring rounded-sm p-0.5 transition-transform hover:scale-110 focus-visible:ring-2 focus-visible:outline-none"
         >
           <StarIcon
             className={cn(
@@ -146,16 +152,18 @@ export function PlayerComments({
   return (
     <div className="space-y-6">
       {/* Summary */}
-      <div className="flex items-center gap-5 rounded-lg bg-muted/40 p-4">
+      <div className="bg-muted/40 flex items-center gap-5 rounded-lg p-4">
         <div className="text-center">
-          <p className="font-mono text-4xl font-black leading-none tabular-nums">
+          <p className="font-mono text-4xl leading-none font-black tabular-nums">
             {avg ? avg.toFixed(1) : "—"}
           </p>
-          <p className="mt-1 text-[10px] uppercase text-muted-foreground">de 5</p>
+          <p className="text-muted-foreground mt-1 text-[10px] uppercase">
+            de 5
+          </p>
         </div>
         <div className="space-y-1">
           <Stars value={avg} className="[&_svg]:size-5" />
-          <p className="text-xs text-muted-foreground">
+          <p className="text-muted-foreground text-xs">
             {rated.length > 0
               ? `${rated.length} calificación${rated.length === 1 ? "" : "es"}`
               : "Sin calificaciones aún"}
@@ -199,11 +207,11 @@ export function PlayerComments({
 
       {/* Reviews */}
       {comments.length === 0 ? (
-        <p className="py-4 text-center text-sm text-muted-foreground">
+        <p className="text-muted-foreground py-4 text-center text-sm">
           Aún no hay reseñas. ¡Sé el primero en opinar! ⚽
         </p>
       ) : (
-        <ul className="divide-y divide-border">
+        <ul className="divide-border divide-y">
           {[...comments].reverse().map((c) => (
             <li key={c.id} className="flex gap-3 py-4 first:pt-0">
               <Avatar className="size-9 shrink-0">
@@ -216,7 +224,7 @@ export function PlayerComments({
                   <span className="text-sm font-semibold">
                     {c.author ?? "Anónimo"}
                   </span>
-                  <span className="text-[11px] text-muted-foreground">
+                  <span className="text-muted-foreground text-[11px]">
                     {fmt(c.createdAt)}
                   </span>
                 </div>

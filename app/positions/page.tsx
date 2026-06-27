@@ -37,7 +37,7 @@ export default async function PositionsPage() {
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Posiciones</h1>
-        <p className="text-sm text-muted-foreground">
+        <p className="text-muted-foreground text-sm">
           Dónde juega cada posición en la cancha. El número indica cuántos
           jugadores tienes para cada una.
         </p>
@@ -45,11 +45,11 @@ export default async function PositionsPage() {
 
       <Card>
         <CardContent className="space-y-4">
-          <div className="relative overflow-hidden rounded-lg ring-1 ring-foreground/10">
+          <div className="ring-foreground/10 relative overflow-hidden rounded-lg ring-1">
             <Pitch counts={counts} />
             <PositionHotspots byPosition={byPosition} />
           </div>
-          <p className="text-center text-[11px] text-muted-foreground">
+          <p className="text-muted-foreground text-center text-[11px]">
             Pasa el cursor sobre una posición para ver los jugadores.
           </p>
           {/* Legend */}
@@ -81,38 +81,40 @@ export default async function PositionsPage() {
               </CardTitle>
             </CardHeader>
             <CardContent className="space-y-3">
-              {POSITIONS.filter((p) => positionGroup(p) === group).map((pos) => (
-                <div key={pos} className="space-y-1">
-                  <div className="flex items-baseline gap-2">
-                    <span
-                      className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-[11px] font-bold text-white"
-                      style={{ backgroundColor: GROUP_COLOR[group] }}
-                    >
-                      {pos}
-                    </span>
-                    <span className="text-sm font-medium">
-                      {POSITION_NAME[pos]}
-                    </span>
-                  </div>
-                  {byPosition[pos].length > 0 ? (
-                    <div className="flex flex-wrap gap-1 pl-11">
-                      {byPosition[pos].map((p) => (
-                        <Link
-                          key={p.id}
-                          href={`/players/${p.id}`}
-                          className="rounded-sm bg-muted px-1.5 py-0.5 text-[11px] hover:bg-muted/70"
-                        >
-                          {p.displayName}
-                        </Link>
-                      ))}
+              {POSITIONS.filter((p) => positionGroup(p) === group).map(
+                (pos) => (
+                  <div key={pos} className="space-y-1">
+                    <div className="flex items-baseline gap-2">
+                      <span
+                        className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-[11px] font-bold text-white"
+                        style={{ backgroundColor: GROUP_COLOR[group] }}
+                      >
+                        {pos}
+                      </span>
+                      <span className="text-sm font-medium">
+                        {POSITION_NAME[pos]}
+                      </span>
                     </div>
-                  ) : (
-                    <p className="pl-11 text-[11px] text-muted-foreground">
-                      Sin jugadores
-                    </p>
-                  )}
-                </div>
-              ))}
+                    {byPosition[pos].length > 0 ? (
+                      <div className="flex flex-wrap gap-1 pl-11">
+                        {byPosition[pos].map((p) => (
+                          <Link
+                            key={p.id}
+                            href={`/players/${p.id}`}
+                            className="bg-muted hover:bg-muted/70 rounded-sm px-1.5 py-0.5 text-[11px]"
+                          >
+                            {p.displayName}
+                          </Link>
+                        ))}
+                      </div>
+                    ) : (
+                      <p className="text-muted-foreground pl-11 text-[11px]">
+                        Sin jugadores
+                      </p>
+                    )}
+                  </div>
+                ),
+              )}
             </CardContent>
           </Card>
         ))}

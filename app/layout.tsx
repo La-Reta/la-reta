@@ -60,7 +60,7 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <Toaster richColors position="top-center" />
         </Providers>
-        {cloudflareWebAnalyticsToken ?
+        {cloudflareWebAnalyticsToken ? (
           <Script
             src="https://static.cloudflareinsights.com/beacon.min.js"
             strategy="afterInteractive"
@@ -68,7 +68,7 @@ export default function RootLayout({
               token: cloudflareWebAnalyticsToken,
             })}
           />
-        : null}
+        ) : null}
         <Analytics />
       </body>
     </html>
