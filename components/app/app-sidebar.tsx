@@ -279,13 +279,13 @@ export function AppSidebar() {
           <SidebarMenuItem>
             <SidebarMenuButton
               isActive={pathname === "/admin" || pathname.startsWith("/admin/")}
-              tooltip={showTooltip ? "Administración" : undefined}
+              tooltip={showTooltip ? "Admin" : undefined}
               variant="outline"
               render={<Link href="/admin" />}
               className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl"
             >
               <LockIcon />
-              <span>Administración</span>
+              <span>Admin</span>
             </SidebarMenuButton>
           </SidebarMenuItem>
         </SidebarMenu>

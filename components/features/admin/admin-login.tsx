@@ -36,7 +36,7 @@ export function AdminLogin() {
         </div>
         <h1 className="text-lg font-bold">Zona de administración</h1>
         <p className="text-muted-foreground mt-1 text-sm">
-          Ingresa el PIN para gestionar ideas y la reta.
+          Ingresa el PIN para gestionar detalles internos del sistema.
         </p>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div>
