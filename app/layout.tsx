@@ -5,6 +5,10 @@ import { cn } from "@/lib/utils";
 import { Providers } from "@/components/app/providers";
 import { AppShell } from "@/components/app/app-shell";
 import { Toaster } from "@/components/ui/sonner";
+import Script from "next/script";
+
+const cloudflareWebAnalyticsToken =
+  process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 
 const raleway = Raleway({ subsets: ["latin"], variable: "--font-sans" });
 
@@ -55,6 +59,15 @@ export default function RootLayout({
           <AppShell>{children}</AppShell>
           <Toaster richColors position="top-center" />
         </Providers>
+        {cloudflareWebAnalyticsToken ?
+          <Script
+            src="https://static.cloudflareinsights.com/beacon.min.js"
+            strategy="afterInteractive"
+            data-cf-beacon={JSON.stringify({
+              token: cloudflareWebAnalyticsToken,
+            })}
+          />
+        : null}
       </body>
     </html>
   );

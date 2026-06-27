@@ -13,6 +13,7 @@ import { FifaCard } from "@/components/shared/fifa-card";
 import { LineupBoard } from "@/components/features/dashboard/lineup-board";
 import { Commentator } from "@/components/features/dashboard/commentator";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
+import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
 import { Button } from "@/components/ui/button";
 import { flagEmoji } from "@/lib/format";
 import {
@@ -139,8 +140,8 @@ export default async function DashboardPage() {
         </div>
       </section>
 
-      {/* ── Destacados: crack + goleador (horizontal en desktop) ───── */}
-      <div className="grid gap-6 md:grid-cols-2">
+      {/* ── Destacados: crack + goleador + jugadores (horizontal en desktop) ───── */}
+      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
         <Spotlight
           title="El crack"
           subtitle="Mayor overall de la plantilla"
@@ -183,6 +184,7 @@ export default async function DashboardPage() {
             </div>
           </section>
         }
+        <RotatingPlayer players={players} />
       </div>
 
       {/* ── El comentarista ────────────────────────────────────────── */}
