@@ -1,0 +1,200 @@
+/**
+ * Domain constants shared by the DB schema, the rating engine and the UI.
+ * Kept dependency-free so it can be imported from both server and client.
+ */
+
+// Specific positions, ordered by line. `as const` + tuple so Drizzle's pgEnum
+// and TS unions stay in sync.
+export const POSITIONS = [
+  "GK",
+  "RB",
+  "RWB",
+  "CB",
+  "LB",
+  "LWB",
+  "CDM",
+  "CM",
+  "CAM",
+  "RM",
+  "LM",
+  "RW",
+  "LW",
+  "CF",
+  "ST",
+] as const;
+
+export type Position = (typeof POSITIONS)[number];
+
+export const FEET = ["left", "right"] as const;
+export type Foot = (typeof FEET)[number];
+
+export type PositionGroup = "GK" | "DEF" | "MID" | "FWD";
+
+const GROUP_BY_POSITION: Record<Position, PositionGroup> = {
+  GK: "GK",
+  RB: "DEF",
+  RWB: "DEF",
+  CB: "DEF",
+  LB: "DEF",
+  LWB: "DEF",
+  CDM: "MID",
+  CM: "MID",
+  CAM: "MID",
+  RM: "MID",
+  LM: "MID",
+  RW: "FWD",
+  LW: "FWD",
+  CF: "FWD",
+  ST: "FWD",
+};
+
+export function positionGroup(position: Position): PositionGroup {
+  return GROUP_BY_POSITION[position];
+}
+
+export const GROUP_LABEL: Record<PositionGroup, string> = {
+  GK: "Portero",
+  DEF: "Defensa",
+  MID: "Mediocampo",
+  FWD: "Delantero",
+};
+
+/** Marker color per line, chosen for contrast against the green pitch. */
+export const GROUP_COLOR: Record<PositionGroup, string> = {
+  GK: "#f59e0b", // amber
+  DEF: "#0ea5e9", // sky
+  MID: "#8b5cf6", // violet
+  FWD: "#f43f5e", // rose
+};
+
+/** Full Spanish name of each position, for the pitch legend / tooltips. */
+export const POSITION_NAME: Record<Position, string> = {
+  GK: "Portero",
+  RB: "Lateral derecho",
+  RWB: "Carrilero derecho",
+  CB: "Defensa central",
+  LB: "Lateral izquierdo",
+  LWB: "Carrilero izquierdo",
+  CDM: "Mediocentro defensivo",
+  CM: "Mediocentro",
+  CAM: "Mediapunta",
+  RM: "Volante derecho",
+  LM: "Volante izquierdo",
+  RW: "Extremo derecho",
+  LW: "Extremo izquierdo",
+  CF: "Delantero centro",
+  ST: "Delantero",
+};
+
+/**
+ * Where each position sits on a landscape pitch, as percentages.
+ * x: 0 = own goal (left) … 100 = rival goal (right). y: 0 = top … 100 = bottom.
+ */
+export const POSITION_COORDS: Record<Position, { x: number; y: number }> = {
+  GK: { x: 6, y: 50 },
+  LB: { x: 22, y: 18 },
+  CB: { x: 17, y: 50 },
+  RB: { x: 22, y: 82 },
+  LWB: { x: 31, y: 11 },
+  RWB: { x: 31, y: 89 },
+  CDM: { x: 36, y: 50 },
+  LM: { x: 50, y: 16 },
+  CM: { x: 50, y: 50 },
+  RM: { x: 50, y: 84 },
+  CAM: { x: 64, y: 50 },
+  LW: { x: 82, y: 17 },
+  RW: { x: 82, y: 83 },
+  CF: { x: 77, y: 50 },
+  ST: { x: 91, y: 50 },
+};
+
+// The six FIFA attributes, in display order, with their 3-letter labels.
+export const STAT_KEYS = [
+  "pace",
+  "shooting",
+  "passing",
+  "dribbling",
+  "defending",
+  "physical",
+] as const;
+
+export type StatKey = (typeof STAT_KEYS)[number];
+
+export const STAT_ABBR: Record<StatKey, string> = {
+  pace: "PAC",
+  shooting: "SHO",
+  passing: "PAS",
+  dribbling: "DRI",
+  defending: "DEF",
+  physical: "PHY",
+};
+
+export const STAT_LABEL: Record<StatKey, string> = {
+  pace: "Ritmo",
+  shooting: "Tiro",
+  passing: "Pase",
+  dribbling: "Regate",
+  defending: "Defensa",
+  physical: "Físico",
+};
+
+// ── Ideas ────────────────────────────────────────────────────────────────
+export const IDEA_CATEGORIES = [
+  "mejora",
+  "cancha",
+  "social",
+  "reglas",
+  "otro",
+] as const;
+export type IdeaCategory = (typeof IDEA_CATEGORIES)[number];
+
+export const IDEA_CATEGORY_LABEL: Record<IdeaCategory, string> = {
+  mejora: "Mejora de la app",
+  cancha: "Cancha / lugar",
+  social: "Convivio / social",
+  reglas: "Reglas del juego",
+  otro: "Otro",
+};
+
+export const IDEA_STATUSES = [
+  "nueva",
+  "planeada",
+  "en_progreso",
+  "hecha",
+  "descartada",
+] as const;
+export type IdeaStatus = (typeof IDEA_STATUSES)[number];
+
+export const IDEA_STATUS_LABEL: Record<IdeaStatus, string> = {
+  nueva: "Nueva",
+  planeada: "Planeada",
+  en_progreso: "En progreso",
+  hecha: "Hecha",
+  descartada: "Descartada",
+};
+
+// Tailwind classes per status badge (literal so they're emitted).
+export const IDEA_STATUS_CLASS: Record<IdeaStatus, string> = {
+  nueva: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  planeada: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
+  en_progreso: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  hecha: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  descartada: "bg-muted text-muted-foreground",
+};
+
+export const IDEA_PRIORITIES = ["baja", "media", "alta", "critica"] as const;
+export type IdeaPriority = (typeof IDEA_PRIORITIES)[number];
+
+export const IDEA_PRIORITY_LABEL: Record<IdeaPriority, string> = {
+  baja: "Baja",
+  media: "Media",
+  alta: "Alta",
+  critica: "Crítica",
+};
+
+export const IDEA_PRIORITY_CLASS: Record<IdeaPriority, string> = {
+  baja: "bg-muted text-muted-foreground",
+  media: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  alta: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  critica: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
+};

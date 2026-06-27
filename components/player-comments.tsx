@@ -1,0 +1,236 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { SendHorizonalIcon, StarIcon } from "lucide-react";
+import { addPlayerComment, type ClientInfo } from "@/app/actions/comments";
+import type { PlayerComment } from "@/lib/db/schema";
+import { initials } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+
+function collectClient(): ClientInfo {
+  if (typeof navigator === "undefined") return {};
+  const uaData = (
+    navigator as unknown as { userAgentData?: { platform?: string } }
+  ).userAgentData;
+  return {
+    language: navigator.language,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screen:
+      typeof screen !== "undefined" ? `${screen.width}x${screen.height}` : undefined,
+    platform: uaData?.platform ?? navigator.platform,
+    userAgent: navigator.userAgent,
+  };
+}
+
+const fmt = (d: Date | string) =>
+  new Intl.DateTimeFormat("es-MX", {
+    day: "2-digit",
+    month: "short",
+    year: "numeric",
+  }).format(new Date(d));
+
+/** Read-only star row supporting fractional values (for the average). */
+function Stars({ value, className }: { value: number; className?: string }) {
+  const pct = Math.max(0, Math.min(1, value / 5)) * 100;
+  return (
+    <span
+      className={cn("relative inline-flex w-fit", className)}
+      role="img"
+      aria-label={`${value.toFixed(1)} de 5 estrellas`}
+    >
+      <span className="flex gap-0.5 text-muted-foreground/30">
+        {[0, 1, 2, 3, 4].map((i) => (
+          <StarIcon key={i} className="size-4" />
+        ))}
+      </span>
+      <span
+        className="absolute inset-0 flex gap-0.5 overflow-hidden text-amber-400"
+        style={{ width: `${pct}%` }}
+      >
+        {[0, 1, 2, 3, 4].map((i) => (
+          <StarIcon key={i} className="size-4 shrink-0 fill-current" />
+        ))}
+      </span>
+    </span>
+  );
+}
+
+/** Interactive star picker. */
+function StarInput({
+  value,
+  onChange,
+}: {
+  value: number;
+  onChange: (v: number) => void;
+}) {
+  const [hover, setHover] = React.useState(0);
+  const active = hover || value;
+  return (
+    <div className="flex items-center gap-1" role="radiogroup" aria-label="Tu calificación">
+      {[1, 2, 3, 4, 5].map((n) => (
+        <button
+          type="button"
+          key={n}
+          aria-label={`${n} estrella${n === 1 ? "" : "s"}`}
+          aria-pressed={value === n}
+          onClick={() => onChange(value === n ? 0 : n)}
+          onMouseEnter={() => setHover(n)}
+          onMouseLeave={() => setHover(0)}
+          className="rounded-sm p-0.5 transition-transform hover:scale-110 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring"
+        >
+          <StarIcon
+            className={cn(
+              "size-6 transition-colors",
+              active >= n
+                ? "fill-amber-400 text-amber-400"
+                : "text-muted-foreground/40",
+            )}
+          />
+        </button>
+      ))}
+    </div>
+  );
+}
+
+export function PlayerComments({
+  playerId,
+  comments,
+}: {
+  playerId: number;
+  comments: PlayerComment[];
+}) {
+  const router = useRouter();
+  const [body, setBody] = React.useState("");
+  const [author, setAuthor] = React.useState("");
+  const [rating, setRating] = React.useState(0);
+  const [pending, startTransition] = React.useTransition();
+
+  const rated = comments.filter((c) => c.rating != null) as (PlayerComment & {
+    rating: number;
+  })[];
+  const avg = rated.length
+    ? rated.reduce((a, c) => a + c.rating, 0) / rated.length
+    : 0;
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    const b = body.trim();
+    if (!b) {
+      toast.error("Escribe un comentario.");
+      return;
+    }
+    startTransition(async () => {
+      const res = await addPlayerComment(playerId, {
+        author,
+        body: b,
+        rating,
+        client: collectClient(),
+      });
+      if (res.ok) {
+        toast.success("¡Reseña publicada! 🙌");
+        setBody("");
+        setRating(0);
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <div className="space-y-6">
+      {/* Summary */}
+      <div className="flex items-center gap-5 rounded-lg bg-muted/40 p-4">
+        <div className="text-center">
+          <p className="font-mono text-4xl font-black leading-none tabular-nums">
+            {avg ? avg.toFixed(1) : "—"}
+          </p>
+          <p className="mt-1 text-[10px] uppercase text-muted-foreground">de 5</p>
+        </div>
+        <div className="space-y-1">
+          <Stars value={avg} className="[&_svg]:size-5" />
+          <p className="text-xs text-muted-foreground">
+            {rated.length > 0
+              ? `${rated.length} calificación${rated.length === 1 ? "" : "es"}`
+              : "Sin calificaciones aún"}
+            {comments.length > rated.length
+              ? ` · ${comments.length} comentario${comments.length === 1 ? "" : "s"}`
+              : ""}
+          </p>
+        </div>
+      </div>
+
+      {/* Compose */}
+      <form
+        onSubmit={onSubmit}
+        className="space-y-3 rounded-lg border border-dashed p-4"
+      >
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <span className="text-sm font-medium">Deja tu reseña</span>
+          <StarInput value={rating} onChange={setRating} />
+        </div>
+        <Textarea
+          value={body}
+          onChange={(e) => setBody(e.target.value)}
+          placeholder="¿Qué tal juega? Comparte tu opinión…"
+          rows={3}
+          maxLength={500}
+        />
+        <div className="flex items-center gap-2">
+          <Input
+            value={author}
+            onChange={(e) => setAuthor(e.target.value)}
+            placeholder="Tu nombre (opcional)"
+            maxLength={60}
+            className="flex-1"
+          />
+          <Button type="submit" disabled={pending}>
+            <SendHorizonalIcon />
+            {pending ? "Enviando…" : "Publicar"}
+          </Button>
+        </div>
+      </form>
+
+      {/* Reviews */}
+      {comments.length === 0 ? (
+        <p className="py-4 text-center text-sm text-muted-foreground">
+          Aún no hay reseñas. ¡Sé el primero en opinar! ⚽
+        </p>
+      ) : (
+        <ul className="divide-y divide-border">
+          {[...comments].reverse().map((c) => (
+            <li key={c.id} className="flex gap-3 py-4 first:pt-0">
+              <Avatar className="size-9 shrink-0">
+                <AvatarFallback className="text-xs font-semibold">
+                  {c.author ? initials(c.author) : "🙂"}
+                </AvatarFallback>
+              </Avatar>
+              <div className="min-w-0 flex-1">
+                <div className="flex flex-wrap items-center justify-between gap-x-2">
+                  <span className="text-sm font-semibold">
+                    {c.author ?? "Anónimo"}
+                  </span>
+                  <span className="text-[11px] text-muted-foreground">
+                    {fmt(c.createdAt)}
+                  </span>
+                </div>
+                {c.rating != null && (
+                  <Stars value={c.rating} className="mt-0.5" />
+                )}
+                <p className="mt-1.5 text-sm leading-relaxed wrap-break-word">
+                  {c.body}
+                </p>
+              </div>
+            </li>
+          ))}
+        </ul>
+      )}
+    </div>
+  );
+}

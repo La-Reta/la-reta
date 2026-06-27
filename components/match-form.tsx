@@ -1,0 +1,264 @@
+"use client";
+
+import * as React from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
+import { PlusIcon, XIcon, TrophyIcon, SaveIcon } from "lucide-react";
+import { createMatch, updateMatch } from "@/app/actions/matches";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import {
+  NativeSelect,
+  NativeSelectOption,
+} from "@/components/ui/native-select";
+
+export type MatchPlayer = { id: number; name: string };
+
+export type EditMatch = {
+  id: number;
+  playedAt: string;
+  teamAName: string;
+  teamBName: string;
+  scoreA: number;
+  scoreB: number;
+  balance: number;
+  durationSec: number | null;
+  notes: string | null;
+  scorers: { playerId: number; goals: number }[];
+};
+
+type ScorerRow = { playerId: string; goals: number };
+
+function balanceLabel(v: number) {
+  if (v >= 80) return "Parejísimo ⚖️";
+  if (v >= 60) return "Equilibrado";
+  if (v >= 40) return "Algo disparejo";
+  if (v >= 20) return "Disparejo";
+  return "Paliza 😬";
+}
+
+export function MatchForm({
+  players,
+  match,
+}: {
+  players: MatchPlayer[];
+  match?: EditMatch;
+}) {
+  const router = useRouter();
+  const isEdit = Boolean(match);
+  const [pending, startTransition] = React.useTransition();
+
+  const [playedAt, setPlayedAt] = React.useState(match?.playedAt ?? "");
+  const [teamAName, setTeamAName] = React.useState(match?.teamAName ?? "Equipo A");
+  const [teamBName, setTeamBName] = React.useState(match?.teamBName ?? "Equipo B");
+  const [scoreA, setScoreA] = React.useState(match?.scoreA ?? 0);
+  const [scoreB, setScoreB] = React.useState(match?.scoreB ?? 0);
+  const [balance, setBalance] = React.useState(match?.balance ?? 50);
+  const [notes, setNotes] = React.useState(match?.notes ?? "");
+  const [scorers, setScorers] = React.useState<ScorerRow[]>(
+    match?.scorers.map((s) => ({ playerId: String(s.playerId), goals: s.goals })) ??
+      [],
+  );
+
+  // Default the date to today on create (avoids SSR hydration mismatch).
+  React.useEffect(() => {
+    if (!isEdit) setPlayedAt(new Date().toISOString().slice(0, 10));
+  }, [isEdit]);
+
+  function addScorer() {
+    setScorers((s) => [...s, { playerId: "", goals: 1 }]);
+  }
+  function updateScorer(i: number, patch: Partial<ScorerRow>) {
+    setScorers((s) => s.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+  }
+  function removeScorer(i: number) {
+    setScorers((s) => s.filter((_, idx) => idx !== i));
+  }
+
+  function onSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    startTransition(async () => {
+      const input = {
+        playedAt,
+        teamAName,
+        teamBName,
+        scoreA,
+        scoreB,
+        balance,
+        durationSec: match?.durationSec ?? null,
+        notes,
+        scorers: scorers
+          .filter((s) => s.playerId)
+          .map((s) => ({ playerId: Number(s.playerId), goals: Number(s.goals) || 0 })),
+      };
+      const res = isEdit
+        ? await updateMatch(match!.id, input)
+        : await createMatch(input);
+      if (res.ok) {
+        toast.success(isEdit ? "Partido actualizado" : "Partido registrado");
+        if (isEdit) {
+          router.push("/matches");
+          router.refresh();
+        } else {
+          setScoreA(0);
+          setScoreB(0);
+          setBalance(50);
+          setNotes("");
+          setScorers([]);
+          router.refresh();
+        }
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <form
+      onSubmit={onSubmit}
+      className="space-y-4 bg-card p-4 rounded-lg ring-1 ring-foreground/10"
+    >
+      {/* Marcador */}
+      <div className="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_auto_1fr]">
+        <div>
+          <Label className="mb-1.5 block text-xs">Equipo local</Label>
+          <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+        </div>
+        <div className="col-span-2 flex items-end justify-center gap-2 sm:col-span-1">
+          <Input
+            type="number"
+            min={0}
+            value={scoreA}
+            onChange={(e) => setScoreA(Number(e.target.value))}
+            className="w-16 text-center text-lg font-bold"
+          />
+          <span className="pb-2 text-muted-foreground">–</span>
+          <Input
+            type="number"
+            min={0}
+            value={scoreB}
+            onChange={(e) => setScoreB(Number(e.target.value))}
+            className="w-16 text-center text-lg font-bold"
+          />
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">Equipo visitante</Label>
+          <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+        </div>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label className="mb-1.5 block text-xs">Fecha</Label>
+          <Input
+            type="date"
+            value={playedAt}
+            onChange={(e) => setPlayedAt(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">Notas (opcional)</Label>
+          <Input
+            value={notes}
+            onChange={(e) => setNotes(e.target.value)}
+            placeholder="Partidazo, lluvia, etc."
+          />
+        </div>
+      </div>
+
+      {/* Balance */}
+      <div>
+        <div className="mb-1.5 flex items-center justify-between">
+          <Label className="text-xs">¿Qué tan balanceado estuvo?</Label>
+          <span className="text-xs font-medium">
+            <span className="font-mono font-bold tabular-nums">{balance}</span>
+            /100 · {balanceLabel(balance)}
+          </span>
+        </div>
+        <Slider
+          min={0}
+          max={100}
+          value={balance}
+          onValueChange={(v) => setBalance(Array.isArray(v) ? v[0] : (v as number))}
+        />
+      </div>
+
+      {/* Goleadores */}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <Label className="text-xs">Goleadores (opcional)</Label>
+          <Button type="button" variant="outline" size="xs" onClick={addScorer}>
+            <PlusIcon />
+            Añadir
+          </Button>
+        </div>
+        {scorers.length === 0 ? (
+          <p className="text-xs text-muted-foreground">
+            Si sabes quién anotó, agrégalo para llevar la tabla de goleadores.
+          </p>
+        ) : (
+          <div className="space-y-2">
+            {scorers.map((row, i) => (
+              <div key={i} className="flex items-center gap-2">
+                <NativeSelect
+                  className="flex-1"
+                  value={row.playerId}
+                  onChange={(e) => updateScorer(i, { playerId: e.target.value })}
+                >
+                  <NativeSelectOption value="">— jugador —</NativeSelectOption>
+                  {players.map((p) => (
+                    <NativeSelectOption key={p.id} value={String(p.id)}>
+                      {p.name}
+                    </NativeSelectOption>
+                  ))}
+                </NativeSelect>
+                <Input
+                  type="number"
+                  min={0}
+                  value={row.goals}
+                  onChange={(e) =>
+                    updateScorer(i, { goals: Number(e.target.value) })
+                  }
+                  className="w-16 text-center"
+                  aria-label="Goles"
+                />
+                <Button
+                  type="button"
+                  variant="ghost"
+                  size="icon-sm"
+                  onClick={() => removeScorer(i)}
+                  aria-label="Quitar"
+                >
+                  <XIcon />
+                </Button>
+              </div>
+            ))}
+          </div>
+        )}
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button type="submit" disabled={pending}>
+          {isEdit ? <SaveIcon /> : <TrophyIcon />}
+          {pending
+            ? "Guardando…"
+            : isEdit
+              ? "Guardar cambios"
+              : "Registrar partido"}
+        </Button>
+        {isEdit && (
+          <Button
+            type="button"
+            variant="ghost"
+            onClick={() => router.back()}
+            disabled={pending}
+          >
+            Cancelar
+          </Button>
+        )}
+      </div>
+    </form>
+  );
+}
