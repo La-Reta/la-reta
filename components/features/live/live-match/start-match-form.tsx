@@ -2,7 +2,13 @@
 
 import { ArrowRightLeftIcon, PlayIcon, RadioIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 
 export function StartMatchForm({
@@ -34,8 +40,9 @@ export function StartMatchForm({
             Configura el marcador antes de arrancar
           </CardTitle>
           <CardDescription className="max-w-2xl text-sm leading-relaxed">
-            Define los nombres de los equipos y deja listo el tablero para empezar
-            a registrar goles, tiempo de juego y goleadores durante la reta.
+            Define los nombres de los equipos y deja listo el tablero para
+            empezar a registrar goles, tiempo de juego y goleadores durante la
+            reta.
           </CardDescription>
         </CardHeader>
 
@@ -75,7 +82,7 @@ export function StartMatchForm({
             </div>
           </div>
 
-          <Button size="lg" className="h-12 w-full text-base sm:w-auto" onClick={onStart}>
+          <Button size="lg" className="w-full sm:w-auto" onClick={onStart}>
             <PlayIcon />
             Iniciar partido en vivo
           </Button>

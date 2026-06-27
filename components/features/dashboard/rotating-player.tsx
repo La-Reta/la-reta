@@ -7,6 +7,7 @@ import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
 import { flagEmoji } from "@/lib/format";
 import { positionGroup, GROUP_COLOR } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import type { Player } from "@/lib/db/schema";
 
 export function RotatingPlayer({
@@ -18,9 +19,10 @@ export function RotatingPlayer({
 }) {
   const [index, setIndex] = React.useState(0);
   const [visible, setVisible] = React.useState(true);
+  const [paused, setPaused] = React.useState(false);
 
   React.useEffect(() => {
-    if (players.length <= 1) return;
+    if (players.length <= 1 || paused) return;
     const reduce =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     let swap: ReturnType<typeof setTimeout>;
@@ -39,13 +41,31 @@ export function RotatingPlayer({
       clearInterval(tick);
       clearTimeout(swap);
     };
-  }, [players.length, intervalMs]);
+  }, [players.length, intervalMs, paused]);
+
+  function goTo(i: number) {
+    setVisible(false);
+    setTimeout(() => {
+      setIndex(i);
+      setVisible(true);
+    }, 280);
+  }
 
   const player = players[index];
   if (!player) return null;
 
+  const visibleDots = players.slice(0, 12);
+  const activeSlot = index % 12;
+
   return (
-    <section className="rounded-lg bg-card ring-1 ring-foreground/10">
+    <section
+      className="rounded-lg bg-card ring-1 ring-foreground/10"
+      aria-label="Conoce a los jugadores"
+      onMouseEnter={() => setPaused(true)}
+      onMouseLeave={() => setPaused(false)}
+      onFocusCapture={() => setPaused(true)}
+      onBlurCapture={() => setPaused(false)}
+    >
       <header className="border-b px-4 py-3">
         <h2 className="font-display text-lg font-semibold uppercase tracking-wide">
           Conoce a los jugadores
@@ -55,7 +75,10 @@ export function RotatingPlayer({
         </p>
       </header>
 
+      {/* aria-live so screen readers announce player changes */}
       <div
+        aria-live="polite"
+        aria-atomic="true"
         className="flex items-center gap-4 p-4 transition-all duration-300"
         style={{
           opacity: visible ? 1 : 0,
@@ -64,7 +87,8 @@ export function RotatingPlayer({
       >
         <Link
           href={`/players/${player.id}`}
-          className="w-28 shrink-0 transition-transform hover:-translate-y-1"
+          aria-label={`Ver ficha de ${player.displayName}`}
+          className="w-28 shrink-0 rounded-sm transition-transform hover:-translate-y-1 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2"
         >
           <FifaCard player={player} size="sm" />
         </Link>
@@ -84,7 +108,10 @@ export function RotatingPlayer({
             >
               {player.position}
             </span>
-            <span className="text-sm">{flagEmoji(player.nationality)}</span>
+            <span className="text-sm" aria-hidden="true">
+              {flagEmoji(player.nationality)}
+            </span>
+            <span className="sr-only">{player.nationality}</span>
           </div>
           <p className="mt-1.5 font-mono text-3xl font-black tabular-nums">
             {player.overall}
@@ -104,27 +131,34 @@ export function RotatingPlayer({
         </div>
       </div>
 
-      {/* dot indicators */}
-      <footer className="flex justify-center gap-1 border-t px-4 py-2.5">
-        {players.slice(0, 12).map((_, i) => (
+      {/* dot indicators — touch target mínimo 44×44px via padding */}
+      <footer
+        className="flex flex-wrap justify-center gap-0 border-t px-4"
+        role="group"
+        aria-label="Seleccionar jugador"
+      >
+        {visibleDots.map((p, i) => (
           <button
             key={i}
-            onClick={() => {
-              setVisible(false);
-              setTimeout(() => {
-                setIndex(i);
-                setVisible(true);
-              }, 280);
-            }}
-            className="size-1.5 rounded-full transition-colors"
-            style={{
-              backgroundColor:
-                i === index % 12 ?
-                  "hsl(var(--foreground))"
-                : "hsl(var(--muted-foreground) / 0.3)",
-            }}
-            aria-label={`Jugador ${i + 1}`}
-          />
+            type="button"
+            onClick={() => goTo(i)}
+            aria-label={`Ver jugador ${i + 1}${i === activeSlot ? " (actual)" : ""}`}
+            aria-current={i === activeSlot ? "true" : undefined}
+            className={cn(
+              // 44×44px táctil, punto visual centrado
+              "flex min-h-[44px] min-w-[44px] items-center justify-center",
+              "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 rounded-sm",
+            )}
+          >
+            <span
+              className={cn(
+                "block size-2.5 rounded-full transition-all duration-200",
+                i === activeSlot ?
+                  "scale-125 bg-foreground"
+                : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
+              )}
+            />
+          </button>
         ))}
       </footer>
     </section>

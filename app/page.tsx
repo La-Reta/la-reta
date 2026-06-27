@@ -188,7 +188,9 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── El comentarista ────────────────────────────────────────── */}
-      <Commentator />
+      <div className="md:grid md:grid-cols-2">
+        <Commentator />
+      </div>
 
       {/* ── Pizarra + ranking ──────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">

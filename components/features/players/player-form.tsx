@@ -29,7 +29,10 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 
-const FOOT_LABEL: Record<string, string> = { left: "Izquierdo", right: "Derecho" };
+const FOOT_LABEL: Record<string, string> = {
+  left: "Izquierdo",
+  right: "Derecho",
+};
 
 type FormState = {
   name: string;
@@ -100,9 +103,9 @@ export function PlayerForm({ player }: { player?: Player }) {
     name: form.name,
     position: form.position as Player["position"],
     position2:
-      form.position2 && form.position2 !== form.position
-        ? (form.position2 as Player["position"])
-        : null,
+      form.position2 && form.position2 !== form.position ?
+        (form.position2 as Player["position"])
+      : null,
     preferredFoot: form.preferredFoot as Player["preferredFoot"],
     nationality: form.nationality,
     photoUrl: form.photoUrl || null,
@@ -128,8 +131,9 @@ export function PlayerForm({ player }: { player?: Player }) {
         heightCm,
         weightKg,
       };
-      const res = isEdit
-        ? await updatePlayer(player!.id, input)
+      const res =
+        isEdit ?
+          await updatePlayer(player!.id, input)
         : await createPlayer(input);
       if (res.ok) {
         toast.success(isEdit ? "Jugador actualizado" : "Jugador creado");
@@ -285,15 +289,15 @@ export function PlayerForm({ player }: { player?: Player }) {
 
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={pending}>
-            {pending
-              ? "Guardando…"
-              : isEdit
-                ? "Guardar cambios"
-                : "Crear jugador"}
+            {pending ?
+              "Guardando…"
+            : isEdit ?
+              "Guardar cambios"
+            : "Crear jugador"}
           </Button>
           <Button
             type="button"
-            variant="ghost"
+            variant="destructive"
             onClick={() => router.back()}
             disabled={pending}
           >

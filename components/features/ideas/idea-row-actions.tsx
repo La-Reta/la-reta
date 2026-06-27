@@ -14,13 +14,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 
-export function IdeaRowActions({
-  id,
-  status,
-}: {
-  id: number;
-  status: string;
-}) {
+export function IdeaRowActions({ id, status }: { id: number; status: string }) {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -50,11 +44,14 @@ export function IdeaRowActions({
           </Button>
         }
       />
-      <DropdownMenuContent align="end">
+      <DropdownMenuContent align="end" className={"w-fit"}>
         <DropdownMenuItem
           disabled={status === "hecha"}
           onClick={() =>
-            run(() => setIdeaStatus(id, "hecha"), "Idea marcada como completada")
+            run(
+              () => setIdeaStatus(id, "hecha"),
+              "Idea marcada como completada",
+            )
           }
         >
           <CheckCircle2Icon />

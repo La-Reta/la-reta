@@ -77,7 +77,7 @@ export default async function MatchesPage() {
                           ` · ⏱ ${Math.round(m.durationSec / 60)} min`
                         : ""}
                       </span>
-                      <div className="flex items-center gap-0.5">
+                      <div className="flex items-center gap-2">
                         <Button
                           variant={"default"}
                           size={"sm"}
@@ -90,7 +90,7 @@ export default async function MatchesPage() {
                         {admin && (
                           <>
                             <Button
-                              variant="ghost"
+                              variant="outline"
                               size="icon-sm"
                               aria-label="Editar partido"
                               render={<Link href={`/matches/${m.id}/edit`} />}
