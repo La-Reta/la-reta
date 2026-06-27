@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { PencilIcon } from "lucide-react";
+import { NotebookTabsIcon, PencilIcon } from "lucide-react";
 import { getMatches, getTopScorers } from "@/lib/queries";
 import { getPlayers } from "@/lib/queries";
 import { isAdmin } from "@/lib/admin";
@@ -57,12 +57,11 @@ export default async function MatchesPage() {
             Historial · {matches.length}
           </h2>
 
-          {matches.length === 0 ? (
+          {matches.length === 0 ?
             <p className="bg-card p-8 text-center text-sm text-muted-foreground rounded-lg ring-1 ring-foreground/10">
               Aún no hay partidos registrados.
             </p>
-          ) : (
-            <div className="space-y-3">
+          : <div className="space-y-3">
               {matches.map((m) => {
                 const aWon = m.scoreA > m.scoreB;
                 const bWon = m.scoreB > m.scoreA;
@@ -74,20 +73,33 @@ export default async function MatchesPage() {
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-xs text-muted-foreground">
                         {fmtDate(m.playedAt)}
-                        {m.durationSec
-                          ? ` · ⏱ ${Math.round(m.durationSec / 60)} min`
-                          : ""}
+                        {m.durationSec ?
+                          ` · ⏱ ${Math.round(m.durationSec / 60)} min`
+                        : ""}
                       </span>
                       <div className="flex items-center gap-0.5">
                         <Button
-                          variant="ghost"
-                          size="icon-sm"
-                          aria-label="Editar partido"
-                          render={<Link href={`/matches/${m.id}/edit`} />}
+                          variant={"default"}
+                          size={"sm"}
+                          aria-label="Ver detalles"
+                          render={<Link href={`/matches/${m.id}/detail`} />}
                         >
-                          <PencilIcon />
+                          <NotebookTabsIcon />
+                          Ver detalles
                         </Button>
-                        {admin && <DeleteMatchButton id={m.id} />}
+                        {admin && (
+                          <>
+                            <Button
+                              variant="ghost"
+                              size="icon-sm"
+                              aria-label="Editar partido"
+                              render={<Link href={`/matches/${m.id}/edit`} />}
+                            >
+                              <PencilIcon />
+                            </Button>
+                            <DeleteMatchButton id={m.id} />
+                          </>
+                        )}
                       </div>
                     </div>
                     <div className="mt-1 flex items-center justify-center gap-4 text-center">
@@ -119,7 +131,10 @@ export default async function MatchesPage() {
                       </span>
                       <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-muted">
                         <div
-                          className={cn("h-full rounded-full", balanceColor(m.balance))}
+                          className={cn(
+                            "h-full rounded-full",
+                            balanceColor(m.balance),
+                          )}
                           style={{ width: `${m.balance}%` }}
                         />
                       </div>
@@ -135,9 +150,9 @@ export default async function MatchesPage() {
                             className="inline-flex items-center gap-1 rounded-sm bg-muted px-1.5 py-0.5 text-[11px]"
                           >
                             ⚽ {s.displayName}
-                            {s.goals > 1 ? (
+                            {s.goals > 1 ?
                               <span className="font-bold">×{s.goals}</span>
-                            ) : null}
+                            : null}
                           </span>
                         ))}
                       </div>
@@ -151,7 +166,7 @@ export default async function MatchesPage() {
                 );
               })}
             </div>
-          )}
+          }
         </section>
 
         {/* Goleadores */}
@@ -160,12 +175,11 @@ export default async function MatchesPage() {
             <CardTitle>Goleadores</CardTitle>
           </CardHeader>
           <CardContent className="p-0">
-            {scorers.length === 0 ? (
+            {scorers.length === 0 ?
               <p className="p-4 text-xs text-muted-foreground">
                 Aún sin goles registrados.
               </p>
-            ) : (
-              <ol>
+            : <ol>
                 {scorers.map((s, i) => (
                   <li
                     key={s.playerId}
@@ -177,8 +191,7 @@ export default async function MatchesPage() {
                     <span>{flagEmoji(s.nationality)}</span>
                     <span className="truncate">{s.name}</span>
                     <span className="ml-auto text-[10px] text-muted-foreground">
-                      {s.matches}{" "}
-                      {s.matches === 1 ? "partido" : "partidos"}
+                      {s.matches} {s.matches === 1 ? "partido" : "partidos"}
                     </span>
                     <span className="w-6 text-right font-mono font-bold tabular-nums">
                       {s.goals}
@@ -186,7 +199,7 @@ export default async function MatchesPage() {
                   </li>
                 ))}
               </ol>
-            )}
+            }
           </CardContent>
         </Card>
       </div>

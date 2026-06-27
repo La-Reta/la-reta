@@ -70,22 +70,30 @@ export function MatchForm({
   const today = useTodayDate();
 
   const [playedAt, setPlayedAt] = React.useState(match?.playedAt ?? "");
-  const [teamAName, setTeamAName] = React.useState(match?.teamAName ?? "Equipo A");
-  const [teamBName, setTeamBName] = React.useState(match?.teamBName ?? "Equipo B");
+  const [teamAName, setTeamAName] = React.useState(
+    match?.teamAName ?? "Equipo A",
+  );
+  const [teamBName, setTeamBName] = React.useState(
+    match?.teamBName ?? "Equipo B",
+  );
   const [scoreA, setScoreA] = React.useState(String(match?.scoreA ?? 0));
   const [scoreB, setScoreB] = React.useState(String(match?.scoreB ?? 0));
   const [balance, setBalance] = React.useState(match?.balance ?? 50);
   const [notes, setNotes] = React.useState(match?.notes ?? "");
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
-    match?.scorers.map((s) => ({ playerId: String(s.playerId), goals: String(s.goals) })) ??
-      [],
+    match?.scorers.map((s) => ({
+      playerId: String(s.playerId),
+      goals: String(s.goals),
+    })) ?? [],
   );
 
   function addScorer() {
     setScorers((s) => [...s, { playerId: "", goals: "1" }]);
   }
   function updateScorer(i: number, patch: Partial<ScorerRow>) {
-    setScorers((s) => s.map((row, idx) => (idx === i ? { ...row, ...patch } : row)));
+    setScorers((s) =>
+      s.map((row, idx) => (idx === i ? { ...row, ...patch } : row)),
+    );
   }
   function removeScorer(i: number) {
     setScorers((s) => s.filter((_, idx) => idx !== i));
@@ -110,9 +118,8 @@ export function MatchForm({
             goals: parseNumberInput(s.goals),
           })),
       };
-      const res = isEdit
-        ? await updateMatch(match!.id, input)
-        : await createMatch(input);
+      const res =
+        isEdit ? await updateMatch(match!.id, input) : await createMatch(input);
       if (res.ok) {
         toast.success(isEdit ? "Partido actualizado" : "Partido registrado");
         if (isEdit) {
@@ -141,7 +148,10 @@ export function MatchForm({
       <div className="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_auto_1fr]">
         <div>
           <Label className="mb-1.5 block text-xs">Equipo local</Label>
-          <Input value={teamAName} onChange={(e) => setTeamAName(e.target.value)} />
+          <Input
+            value={teamAName}
+            onChange={(e) => setTeamAName(e.target.value)}
+          />
         </div>
         <div className="col-span-2 flex items-end justify-center gap-2 sm:col-span-1">
           <Input
@@ -162,7 +172,10 @@ export function MatchForm({
         </div>
         <div>
           <Label className="mb-1.5 block text-xs">Equipo visitante</Label>
-          <Input value={teamBName} onChange={(e) => setTeamBName(e.target.value)} />
+          <Input
+            value={teamBName}
+            onChange={(e) => setTeamBName(e.target.value)}
+          />
         </div>
       </div>
 
@@ -198,7 +211,9 @@ export function MatchForm({
           min={0}
           max={100}
           value={balance}
-          onValueChange={(v) => setBalance(Array.isArray(v) ? v[0] : (v as number))}
+          onValueChange={(v) =>
+            setBalance(Array.isArray(v) ? v[0] : (v as number))
+          }
         />
       </div>
 
@@ -206,23 +221,24 @@ export function MatchForm({
       <div className="space-y-2">
         <div className="flex items-center justify-between">
           <Label className="text-xs">Goleadores (opcional)</Label>
-          <Button type="button" variant="outline" size="xs" onClick={addScorer}>
+          <Button type="button" variant="outline" onClick={addScorer}>
             <PlusIcon />
             Añadir
           </Button>
         </div>
-        {scorers.length === 0 ? (
+        {scorers.length === 0 ?
           <p className="text-xs text-muted-foreground">
             Si sabes quién anotó, agrégalo para llevar la tabla de goleadores.
           </p>
-        ) : (
-          <div className="space-y-2">
+        : <div className="space-y-2">
             {scorers.map((row, i) => (
               <div key={i} className="flex items-center gap-2">
                 <NativeSelect
                   className="flex-1"
                   value={row.playerId}
-                  onChange={(e) => updateScorer(i, { playerId: e.target.value })}
+                  onChange={(e) =>
+                    updateScorer(i, { playerId: e.target.value })
+                  }
                 >
                   <NativeSelectOption value="">— jugador —</NativeSelectOption>
                   {players.map((p) => (
@@ -251,17 +267,19 @@ export function MatchForm({
               </div>
             ))}
           </div>
-        )}
+        }
       </div>
 
       <div className="flex items-center gap-2">
         <Button type="submit" disabled={pending}>
-          {isEdit ? <SaveIcon /> : <TrophyIcon />}
-          {pending
-            ? "Guardando…"
-            : isEdit
-              ? "Guardar cambios"
-              : "Registrar partido"}
+          {isEdit ?
+            <SaveIcon />
+          : <TrophyIcon />}
+          {pending ?
+            "Guardando…"
+          : isEdit ?
+            "Guardar cambios"
+          : "Registrar partido"}
         </Button>
         {isEdit && (
           <Button
