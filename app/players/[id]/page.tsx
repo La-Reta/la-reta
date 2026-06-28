@@ -1,34 +1,34 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeftIcon, PencilIcon } from "lucide-react";
-import {
-  getPlayerById,
-  getPlayerHistory,
-  getPlayerComments,
-  getPlayerGoalHistory,
-} from "@/lib/queries";
-import { isAdmin } from "@/lib/admin";
-import { FifaCard } from "@/components/shared/fifa-card";
-import { PlayerRadar } from "@/components/features/players/player-radar";
-import { PlayerHistory } from "@/components/features/players/player-history";
+import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
 import { PlayerComments } from "@/components/features/players/player-comments";
 import { PlayerGoalHistory } from "@/components/features/players/player-goal-history";
-import { Pitch } from "@/components/shared/pitch";
-import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
+import { PlayerHistory } from "@/components/features/players/player-history";
+import { PlayerRadar } from "@/components/features/players/player-radar";
 import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
+import { FifaCard } from "@/components/shared/fifa-card";
+import { Pitch } from "@/components/shared/pitch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isAdmin } from "@/lib/admin";
 import {
+  GROUP_COLOR,
+  GROUP_LABEL,
+  POSITION_NAME,
+  positionGroup,
   STAT_KEYS,
   STAT_LABEL,
-  GROUP_LABEL,
-  positionGroup,
-  POSITION_NAME,
-  GROUP_COLOR,
 } from "@/lib/constants";
-import { cardTier, TIER_LABEL } from "@/lib/ratings";
 import { flagEmoji, playerPositions } from "@/lib/format";
+import {
+  getPlayerById,
+  getPlayerComments,
+  getPlayerGoalHistory,
+  getPlayerHistory,
+} from "@/lib/queries";
+import { cardTier, TIER_LABEL } from "@/lib/ratings";
+import { ArrowLeftIcon, PencilIcon } from "lucide-react";
+import Link from "next/link";
+import { notFound } from "next/navigation";
 
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
@@ -75,7 +75,7 @@ export default async function PlayerDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Button variant="ghost" size="sm" render={<Link href="/players" />}>
+      <Button variant="secondary" size="sm" render={<Link href="/players" />}>
         <ArrowLeftIcon />
         Jugadores
       </Button>

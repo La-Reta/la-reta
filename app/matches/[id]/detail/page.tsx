@@ -1,6 +1,15 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
-import { notFound } from "next/navigation";
+import {
+  MatchScorersChart,
+  MatchTeamGoalsChart,
+} from "@/components/features/matches/match-detail-charts";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { isAdmin } from "@/lib/admin";
+import { formatShortDateOnly } from "@/lib/dates";
+import { flagEmoji } from "@/lib/format";
+import { getMatchById, type Scorer } from "@/lib/queries";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeftIcon,
   ClockIcon,
@@ -10,18 +19,9 @@ import {
   ShieldIcon,
   TargetIcon,
 } from "lucide-react";
-import { isAdmin } from "@/lib/admin";
-import { formatShortDateOnly } from "@/lib/dates";
-import { flagEmoji } from "@/lib/format";
-import { getMatchById, type Scorer } from "@/lib/queries";
-import { cn } from "@/lib/utils";
-import {
-  MatchScorersChart,
-  MatchTeamGoalsChart,
-} from "@/components/features/matches/match-detail-charts";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import { notFound } from "next/navigation";
+import type { ReactNode } from "react";
 
 export const metadata = { title: "Detalle de partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -34,7 +34,12 @@ function balanceLabel(value: number) {
   return "Paliza";
 }
 
-function matchResult(scoreA: number, scoreB: number, teamA: string, teamB: string) {
+function matchResult(
+  scoreA: number,
+  scoreB: number,
+  teamA: string,
+  teamB: string,
+) {
   if (scoreA === scoreB) return "Empate";
   return scoreA > scoreB ? `Ganó ${teamA}` : `Ganó ${teamB}`;
 }
@@ -62,13 +67,15 @@ function StatTile({
   detail?: string;
 }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
+    <div className="bg-muted/30 rounded-lg border p-3">
       <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
         <span className="[&_svg]:size-3.5">{icon}</span>
         {label}
       </div>
       <p className="mt-2 text-2xl font-black tabular-nums">{value}</p>
-      {detail ? <p className="text-muted-foreground mt-1 text-xs">{detail}</p> : null}
+      {detail ? (
+        <p className="text-muted-foreground mt-1 text-xs">{detail}</p>
+      ) : null}
     </div>
   );
 }
@@ -83,7 +90,10 @@ function TeamFigureCard({
   scorers: Scorer[];
 }) {
   const figure = topScorer(scorers);
-  const registeredGoals = scorers.reduce((sum, scorer) => sum + scorer.goals, 0);
+  const registeredGoals = scorers.reduce(
+    (sum, scorer) => sum + scorer.goals,
+    0,
+  );
 
   return (
     <Card>
@@ -150,7 +160,9 @@ function TeamRosterCard({
             .map((scorer) => (
               <div key={`${title}-${scorer.playerId}`} className="space-y-2">
                 <div className="flex items-center gap-2">
-                  <span className="text-lg">{flagEmoji(scorer.nationality)}</span>
+                  <span className="text-lg">
+                    {flagEmoji(scorer.nationality)}
+                  </span>
                   <Link
                     href={`/players/${scorer.playerId}`}
                     className="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
@@ -161,7 +173,7 @@ function TeamRosterCard({
                     {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
                   </Badge>
                 </div>
-                <div className="h-1.5 overflow-hidden rounded-full bg-muted">
+                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                   <div
                     className="h-full rounded-full bg-emerald-500"
                     style={{
@@ -186,7 +198,10 @@ export default async function MatchDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [match, admin] = await Promise.all([getMatchById(Number(id)), isAdmin()]);
+  const [match, admin] = await Promise.all([
+    getMatchById(Number(id)),
+    isAdmin(),
+  ]);
 
   if (!match) notFound();
 
@@ -220,14 +235,14 @@ export default async function MatchDetailPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="ghost" size="sm" render={<Link href="/matches" />}>
+        <Button variant="secondary" size="sm" render={<Link href="/matches" />}>
           <ArrowLeftIcon />
           Partidos
         </Button>
         {admin ? (
           <Button
             size="sm"
-            variant="outline"
+            variant="default"
             render={<Link href={`/matches/${match.id}/edit`} />}
           >
             <PencilIcon />
@@ -236,15 +251,22 @@ export default async function MatchDetailPage({
         ) : null}
       </div>
 
-      <section className="rounded-lg border bg-card p-4 shadow-xs">
+      <section className="bg-card rounded-lg border p-4 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <Badge variant="secondary">{formatShortDateOnly(match.playedAt)}</Badge>
+            <Badge variant="secondary">
+              {formatShortDateOnly(match.playedAt)}
+            </Badge>
             <h1 className="text-2xl font-black tracking-tight">
               {match.teamAName} vs {match.teamBName}
             </h1>
             <p className="text-muted-foreground text-sm">
-              {matchResult(match.scoreA, match.scoreB, match.teamAName, match.teamBName)}
+              {matchResult(
+                match.scoreA,
+                match.scoreB,
+                match.teamAName,
+                match.teamBName,
+              )}
             </p>
           </div>
           <div className="font-mono text-5xl font-black tabular-nums sm:text-6xl">
@@ -255,7 +277,7 @@ export default async function MatchDetailPage({
         </div>
 
         {match.notes ? (
-          <p className="text-muted-foreground mt-4 rounded-lg bg-muted/40 p-3 text-sm italic">
+          <p className="text-muted-foreground bg-muted/40 mt-4 rounded-lg p-3 text-sm italic">
             {match.notes}
           </p>
         ) : null}
@@ -277,7 +299,9 @@ export default async function MatchDetailPage({
         <StatTile
           icon={<ClockIcon />}
           label="Duración"
-          value={match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"}
+          value={
+            match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"
+          }
           detail={match.durationSec ? "Registrado en vivo" : "Sin reloj"}
         />
         <StatTile
@@ -368,7 +392,9 @@ export default async function MatchDetailPage({
               <ShieldIcon className="text-muted-foreground mt-0.5 size-4" />
               <div>
                 <p className="text-sm font-semibold">
-                  {winner ? `${winner} se llevó el partido` : "Partido empatado"}
+                  {winner
+                    ? `${winner} se llevó el partido`
+                    : "Partido empatado"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
                   Diferencia de {Math.abs(match.scoreA - match.scoreB)} gol
@@ -384,7 +410,7 @@ export default async function MatchDetailPage({
                   {match.balance}%
                 </span>
               </div>
-              <div className="h-2 overflow-hidden rounded-full bg-muted">
+              <div className="bg-muted h-2 overflow-hidden rounded-full">
                 <div
                   className={cn(
                     "h-full rounded-full",
@@ -399,10 +425,11 @@ export default async function MatchDetailPage({
               </div>
             </div>
 
-            <div className="rounded-lg bg-muted/40 p-3 text-xs text-muted-foreground">
-              Este dashboard usa la información registrada del partido: marcador,
-              balance, duración, equipos y goleadores. Para agregar jugadores,
-              asignar equipo o corregir datos, usa la acción de edición.
+            <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-xs">
+              Este dashboard usa la información registrada del partido:
+              marcador, balance, duración, equipos y goleadores. Para agregar
+              jugadores, asignar equipo o corregir datos, usa la acción de
+              edición.
             </div>
           </CardContent>
         </Card>
