@@ -84,19 +84,11 @@ export default async function DashboardPage() {
             </p>
 
             <div className="mt-5 flex gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                render={<Link href="/teams" />}
-              >
+              <Button variant="default" render={<Link href="/teams" />}>
                 <ShuffleIcon />
                 Armar equipos
               </Button>
-              <Button
-                size="sm"
-                className="bg-white/10 text-white ring-1 ring-white/20 hover:bg-white/20"
-                render={<Link href="/players" />}
-              >
+              <Button variant={"secondary"} render={<Link href="/players" />}>
                 Ver plantilla
                 <ArrowRightIcon />
               </Button>
