@@ -1,8 +1,8 @@
 "use client";
 
-import { MinusIcon, UserIcon, XIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
+import { MinusIcon, UserIcon, XIcon } from "lucide-react";
 import type { LiveGoal } from "./types";
 
 export function GoalTimeline({
@@ -107,7 +107,7 @@ export function GoalTimeline({
               </span>
 
               <Button
-                variant="ghost"
+                variant="secondary"
                 size="icon-sm"
                 onClick={() => onRemove(goal.id)}
                 aria-label="Eliminar gol"

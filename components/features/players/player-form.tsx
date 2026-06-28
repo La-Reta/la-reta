@@ -1,39 +1,34 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
 import {
   createPlayer,
   updatePlayer,
   type PlayerInput,
 } from "@/app/actions/players";
-import {
-  POSITIONS,
-  FEET,
-  STAT_KEYS,
-  STAT_LABEL,
-  positionGroup,
-  GROUP_LABEL,
-  type StatKey,
-} from "@/lib/constants";
-import { computeOverall } from "@/lib/ratings";
-import type { Player } from "@/lib/db/schema";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
-import {
-  Card,
-  CardContent,
-  CardHeader,
-  CardTitle,
-} from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Slider } from "@/components/ui/slider";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import { Slider } from "@/components/ui/slider";
+import {
+  FEET,
+  GROUP_LABEL,
+  POSITIONS,
+  STAT_KEYS,
+  STAT_LABEL,
+  positionGroup,
+  type StatKey,
+} from "@/lib/constants";
+import type { Player } from "@/lib/db/schema";
+import { computeOverall } from "@/lib/ratings";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
@@ -280,14 +275,7 @@ export function PlayerForm({ player }: { player?: Player }) {
           </div>
         </FormSection>
 
-        <div className="flex items-center gap-2">
-          <Button type="submit" disabled={pending}>
-            {pending
-              ? "Guardando…"
-              : isEdit
-                ? "Guardar cambios"
-                : "Crear jugador"}
-          </Button>
+        <div className="flex items-center justify-between gap-2">
           <Button
             type="button"
             variant="destructive"
@@ -295,6 +283,13 @@ export function PlayerForm({ player }: { player?: Player }) {
             disabled={pending}
           >
             Cancelar
+          </Button>
+          <Button type="submit" disabled={pending}>
+            {pending
+              ? "Guardando…"
+              : isEdit
+                ? "Guardar cambios"
+                : "Crear jugador"}
           </Button>
         </div>
       </div>

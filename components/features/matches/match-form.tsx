@@ -1,18 +1,18 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { PlusIcon, XIcon, TrophyIcon, SaveIcon } from "lucide-react";
 import { createMatch, updateMatch } from "@/app/actions/matches";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Slider } from "@/components/ui/slider";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import { Slider } from "@/components/ui/slider";
+import { PlusIcon, SaveIcon, TrophyIcon, XIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 export type MatchPlayer = { id: number; name: string };
 
@@ -272,7 +272,7 @@ export function MatchForm({
         )}
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex items-center gap-2 lg:justify-end">
         <Button type="submit" disabled={pending}>
           {isEdit ? <SaveIcon /> : <TrophyIcon />}
           {pending
@@ -284,7 +284,7 @@ export function MatchForm({
         {isEdit && (
           <Button
             type="button"
-            variant="ghost"
+            variant="secondary"
             onClick={() => router.back()}
             disabled={pending}
           >

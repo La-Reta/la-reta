@@ -1,6 +1,5 @@
 "use client";
 
-import { ArrowRightLeftIcon, PlayIcon, RadioIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -10,6 +9,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { ArrowRightLeftIcon, PlayIcon, RadioIcon } from "lucide-react";
 
 export function StartMatchForm({
   teamA,
@@ -82,7 +82,11 @@ export function StartMatchForm({
             </div>
           </div>
 
-          <Button size="lg" className="w-full sm:w-auto" onClick={onStart}>
+          <Button
+            size="lg"
+            className="w-full sm:w-auto lg:mx-auto lg:flex lg:w-full lg:max-w-xl"
+            onClick={onStart}
+          >
             <PlayIcon />
             Iniciar partido en vivo
           </Button>
