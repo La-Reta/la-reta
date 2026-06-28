@@ -1,7 +1,7 @@
 import "server-only";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { asc, desc, eq, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
 import {
   db,
   players,
@@ -83,6 +83,42 @@ export async function getPlayerHistory(
     .orderBy(asc(playerStatHistory.recordedAt));
 }
 
+export type PlayerGoalHistoryItem = {
+  matchId: number;
+  playedAt: string;
+  teamAName: string;
+  teamBName: string;
+  scoreA: number;
+  scoreB: number;
+  balance: number;
+  durationSec: number | null;
+  team: string | null;
+  goals: number;
+};
+
+/** Goal-scoring history for one player, newest match first. */
+export async function getPlayerGoalHistory(
+  playerId: number,
+): Promise<PlayerGoalHistoryItem[]> {
+  return db
+    .select({
+      matchId: matches.id,
+      playedAt: matches.playedAt,
+      teamAName: matches.teamAName,
+      teamBName: matches.teamBName,
+      scoreA: matches.scoreA,
+      scoreB: matches.scoreB,
+      balance: matches.balance,
+      durationSec: matches.durationSec,
+      team: matchGoals.team,
+      goals: matchGoals.goals,
+    })
+    .from(matchGoals)
+    .innerJoin(matches, eq(matchGoals.matchId, matches.id))
+    .where(and(eq(matchGoals.playerId, playerId), gt(matchGoals.goals, 0)))
+    .orderBy(desc(matches.playedAt), desc(matches.id));
+}
+
 // ── Ideas ────────────────────────────────────────────────────────────────
 /** All ideas, newest first. */
 export async function getIdeas(): Promise<Idea[]> {
@@ -95,6 +131,7 @@ export type Scorer = {
   name: string;
   displayName: string;
   nationality: string;
+  team: string | null;
   goals: number;
 };
 export type MatchWithScorers = Match & { scorers: Scorer[] };
@@ -110,6 +147,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
     .select({
       matchId: matchGoals.matchId,
       playerId: matchGoals.playerId,
+      team: matchGoals.team,
       goals: matchGoals.goals,
       name: players.name,
       displayName: players.displayName,
@@ -126,6 +164,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       name: g.name,
       displayName: g.displayName,
       nationality: g.nationality,
+      team: g.team,
       goals: g.goals,
     });
     byMatch.set(g.matchId, list);
@@ -151,6 +190,7 @@ export async function getMatchById(
   const goalRows = await db
     .select({
       playerId: matchGoals.playerId,
+      team: matchGoals.team,
       goals: matchGoals.goals,
       name: players.name,
       displayName: players.displayName,

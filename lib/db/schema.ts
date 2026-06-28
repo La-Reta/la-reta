@@ -143,6 +143,8 @@ export const matchGoals = pgTable("match_goals", {
   playerId: integer("player_id")
     .notNull()
     .references(() => players.id, { onDelete: "cascade" }),
+  // A/B from the match scoreboard. Nullable so existing historical rows remain valid.
+  team: varchar("team", { length: 1 }),
   goals: smallint("goals").notNull().default(0),
 });
 

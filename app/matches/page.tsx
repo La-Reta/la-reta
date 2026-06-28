@@ -1,15 +1,14 @@
-import Link from "next/link";
-import { NotebookTabsIcon, PencilIcon } from "lucide-react";
-import { getMatches, getTopScorers } from "@/lib/queries";
-import { getPlayers } from "@/lib/queries";
-import { isAdmin } from "@/lib/admin";
-import { MatchForm } from "@/components/features/matches/match-form";
 import { DeleteMatchButton } from "@/components/features/matches/delete-match-button";
+import { MatchForm } from "@/components/features/matches/match-form";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { flagEmoji } from "@/lib/format";
-import { cn } from "@/lib/utils";
+import { isAdmin } from "@/lib/admin";
 import { formatShortDateOnly } from "@/lib/dates";
+import { flagEmoji } from "@/lib/format";
+import { getMatches, getPlayers, getTopScorers } from "@/lib/queries";
+import { cn } from "@/lib/utils";
+import { NotebookTabsIcon, PencilIcon } from "lucide-react";
+import Link from "next/link";
 
 function balanceColor(v: number) {
   if (v >= 60) return "bg-emerald-500";
@@ -41,7 +40,7 @@ export default async function MatchesPage() {
         </p>
       </div>
 
-      <MatchForm players={formPlayers} />
+      <MatchForm players={formPlayers} admin={admin} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
         {/* Historial */}

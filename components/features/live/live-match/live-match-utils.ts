@@ -45,14 +45,20 @@ export function formatGoalClock(at: number) {
 }
 
 export function tallyGoalsByPlayer(goals: LiveGoal[]) {
-  const tally = new Map<number, number>();
+  const tally = new Map<string, { playerId: number; team: "A" | "B"; goals: number }>();
 
   for (const goal of goals) {
     if (goal.playerId == null) continue;
-    tally.set(goal.playerId, (tally.get(goal.playerId) ?? 0) + 1);
+    const key = `${goal.playerId}:${goal.team}`;
+    const current = tally.get(key) ?? {
+      playerId: goal.playerId,
+      team: goal.team,
+      goals: 0,
+    };
+    tally.set(key, { ...current, goals: current.goals + 1 });
   }
 
-  return [...tally].map(([playerId, goals]) => ({ playerId, goals }));
+  return [...tally.values()];
 }
 
 export function createGoalEvent(team: "A" | "B", currentCount: number) {

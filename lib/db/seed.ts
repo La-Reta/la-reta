@@ -454,18 +454,18 @@ async function main() {
     .returning({ id: matches.id });
 
   await db.insert(matchGoals).values([
-    { matchId: m1.id, playerId: id("HAALAND"), goals: 2 },
-    { matchId: m1.id, playerId: id("PASTOR"), goals: 1 },
-    { matchId: m1.id, playerId: id("MIGUE"), goals: 1 },
-    { matchId: m1.id, playerId: id("JUANJUAN"), goals: 1 },
-    { matchId: m1.id, playerId: id("LAUTARO"), goals: 2 },
-    { matchId: m1.id, playerId: id("DIEGO"), goals: 1 },
-    { matchId: m2.id, playerId: id("MBAPPÉ"), goals: 2 },
-    { matchId: m2.id, playerId: id("HAALAND"), goals: 1 },
-    { matchId: m2.id, playerId: id("FER"), goals: 1 },
-    { matchId: m2.id, playerId: id("BELLINGHAM"), goals: 2 },
-    { matchId: m2.id, playerId: id("ANDY"), goals: 1 },
-    { matchId: m2.id, playerId: id("DIEGO"), goals: 1 },
+    { matchId: m1.id, playerId: id("HAALAND"), team: "A", goals: 2 },
+    { matchId: m1.id, playerId: id("PASTOR"), team: "A", goals: 1 },
+    { matchId: m1.id, playerId: id("MIGUE"), team: "A", goals: 1 },
+    { matchId: m1.id, playerId: id("JUANJUAN"), team: "B", goals: 1 },
+    { matchId: m1.id, playerId: id("LAUTARO"), team: "B", goals: 2 },
+    { matchId: m1.id, playerId: id("DIEGO"), team: "B", goals: 1 },
+    { matchId: m2.id, playerId: id("MBAPPÉ"), team: "A", goals: 2 },
+    { matchId: m2.id, playerId: id("HAALAND"), team: "A", goals: 1 },
+    { matchId: m2.id, playerId: id("FER"), team: "A", goals: 1 },
+    { matchId: m2.id, playerId: id("BELLINGHAM"), team: "B", goals: 2 },
+    { matchId: m2.id, playerId: id("ANDY"), team: "B", goals: 1 },
+    { matchId: m2.id, playerId: id("DIEGO"), team: "B", goals: 1 },
   ]);
 
   console.log("✅ Seed completado.");

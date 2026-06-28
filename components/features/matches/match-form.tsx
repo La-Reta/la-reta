@@ -1,7 +1,6 @@
 "use client";
 
 import { createMatch, updateMatch } from "@/app/actions/matches";
-import { formatApiDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -10,6 +9,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Slider } from "@/components/ui/slider";
+import { formatApiDate } from "@/lib/dates";
 import { PlusIcon, SaveIcon, TrophyIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -27,10 +27,11 @@ export type EditMatch = {
   balance: number;
   durationSec: number | null;
   notes: string | null;
-  scorers: { playerId: number; goals: number }[];
+  scorers: { playerId: number; goals: number; team?: string | null }[];
 };
 
-type ScorerRow = { playerId: string; goals: string };
+type ScorerRow = { playerId: string; team: string; goals: string };
+type MatchTeam = "A" | "B";
 
 function subscribe() {
   return () => {};
@@ -40,6 +41,10 @@ function parseNumberInput(value: string) {
   if (!value.trim()) return Number.NaN;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
+}
+
+function parseTeam(value: string): MatchTeam | null {
+  return value === "A" || value === "B" ? value : null;
 }
 
 function useTodayDate() {
@@ -61,9 +66,11 @@ function balanceLabel(v: number) {
 export function MatchForm({
   players,
   match,
+  admin,
 }: {
   players: MatchPlayer[];
   match?: EditMatch;
+  admin: boolean;
 }) {
   const router = useRouter();
   const isEdit = Boolean(match);
@@ -84,12 +91,17 @@ export function MatchForm({
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
     match?.scorers.map((s) => ({
       playerId: String(s.playerId),
+      team: s.team ?? "",
       goals: String(s.goals),
     })) ?? [],
   );
 
   function addScorer() {
-    setScorers((s) => [...s, { playerId: "", goals: "1" }]);
+    if (scorers.length >= 10) {
+      toast.error("No puedes agregar más de 10 goleadores");
+      return;
+    }
+    setScorers((s) => [...s, { playerId: "", team: "A", goals: "1" }]);
   }
   function updateScorer(i: number, patch: Partial<ScorerRow>) {
     setScorers((s) =>
@@ -116,6 +128,7 @@ export function MatchForm({
           .filter((s) => s.playerId)
           .map((s) => ({
             playerId: Number(s.playerId),
+            team: parseTeam(s.team),
             goals: parseNumberInput(s.goals),
           })),
       };
@@ -222,7 +235,7 @@ export function MatchForm({
       {/* Goleadores */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-xs">Goleadores (opcional)</Label>
+          <Label className="text-xs">Jugadores y goles (opcional)</Label>
           <Button type="button" variant="outline" onClick={addScorer}>
             <PlusIcon />
             Añadir
@@ -230,14 +243,17 @@ export function MatchForm({
         </div>
         {scorers.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            Si sabes quién anotó, agrégalo para llevar la tabla de goleadores.
+            Agrega jugadores para asignarlos a un equipo y registrar sus goles.
           </p>
         ) : (
           <div className="space-y-2">
             {scorers.map((row, i) => (
-              <div key={i} className="flex items-center gap-2">
+              <div
+                key={i}
+                className="grid gap-2 sm:grid-cols-[1fr_9rem_4rem_auto]"
+              >
                 <NativeSelect
-                  className="flex-1"
+                  className="w-full"
                   value={row.playerId}
                   onChange={(e) =>
                     updateScorer(i, { playerId: e.target.value })
@@ -250,12 +266,22 @@ export function MatchForm({
                     </NativeSelectOption>
                   ))}
                 </NativeSelect>
+                <NativeSelect
+                  className="w-full"
+                  value={row.team}
+                  onChange={(e) => updateScorer(i, { team: e.target.value })}
+                  aria-label="Equipo"
+                >
+                  <NativeSelectOption value="">Sin equipo</NativeSelectOption>
+                  <NativeSelectOption value="A">{teamAName}</NativeSelectOption>
+                  <NativeSelectOption value="B">{teamBName}</NativeSelectOption>
+                </NativeSelect>
                 <Input
                   type="number"
                   min={0}
                   value={row.goals}
                   onChange={(e) => updateScorer(i, { goals: e.target.value })}
-                  className="w-16 text-center"
+                  className="w-full text-center"
                   aria-label="Goles"
                 />
                 <Button
@@ -274,14 +300,16 @@ export function MatchForm({
       </div>
 
       <div className="flex items-center gap-2 lg:justify-end">
-        <Button type="submit" disabled={pending}>
-          {isEdit ? <SaveIcon /> : <TrophyIcon />}
-          {pending
-            ? "Guardando…"
-            : isEdit
-              ? "Guardar cambios"
-              : "Registrar partido"}
-        </Button>
+        {admin && (
+          <Button type="submit" disabled={pending}>
+            {isEdit ? <SaveIcon /> : <TrophyIcon />}
+            {pending
+              ? "Guardando…"
+              : isEdit
+                ? "Guardar cambios"
+                : "Registrar partido"}
+          </Button>
+        )}
         {isEdit && (
           <Button
             type="button"

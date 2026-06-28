@@ -5,12 +5,14 @@ import {
   getPlayerById,
   getPlayerHistory,
   getPlayerComments,
+  getPlayerGoalHistory,
 } from "@/lib/queries";
 import { isAdmin } from "@/lib/admin";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { PlayerRadar } from "@/components/features/players/player-radar";
 import { PlayerHistory } from "@/components/features/players/player-history";
 import { PlayerComments } from "@/components/features/players/player-comments";
+import { PlayerGoalHistory } from "@/components/features/players/player-goal-history";
 import { Pitch } from "@/components/shared/pitch";
 import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
 import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
@@ -48,10 +50,11 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
   const numId = Number(id);
-  const [player, history, comments, admin] = await Promise.all([
+  const [player, history, comments, goalHistory, admin] = await Promise.all([
     getPlayerById(numId),
     getPlayerHistory(numId),
     getPlayerComments(numId),
+    getPlayerGoalHistory(numId),
     isAdmin(),
   ]);
   if (!player) notFound();
@@ -222,6 +225,8 @@ export default async function PlayerDetailPage({
               </CardContent>
             </Card>
           </div>
+
+          <PlayerGoalHistory history={goalHistory} />
 
           {/* Comentarios */}
           <Card>

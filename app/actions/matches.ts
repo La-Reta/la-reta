@@ -7,6 +7,7 @@ import { isAdmin } from "@/lib/admin";
 import { formatApiDate } from "@/lib/dates";
 
 type Result = { ok: true; id: number } | { ok: false; error: string };
+type MatchTeam = "A" | "B";
 
 export type MatchInput = {
   playedAt: string;
@@ -17,7 +18,7 @@ export type MatchInput = {
   balance: number;
   notes: string;
   durationSec?: number | null;
-  scorers: { playerId: number; goals: number }[];
+  scorers: { playerId: number; goals: number; team?: MatchTeam | null }[];
 };
 
 const clamp = (n: number, max: number) =>
@@ -25,12 +26,23 @@ const clamp = (n: number, max: number) =>
 
 /** Collapses scorer rows to one row per player (summing goals). */
 function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
-  const tally = new Map<number, number>();
+  const tally = new Map<string, { playerId: number; team: MatchTeam | null; goals: number }>();
   for (const s of scorers ?? []) {
     if (!s.playerId) continue;
-    tally.set(s.playerId, (tally.get(s.playerId) ?? 0) + clamp(s.goals, 50));
+    const team = s.team === "A" || s.team === "B" ? s.team : null;
+    const key = `${s.playerId}:${team ?? "unknown"}`;
+    const current = tally.get(key) ?? { playerId: s.playerId, team, goals: 0 };
+    tally.set(key, {
+      ...current,
+      goals: current.goals + clamp(s.goals, 50),
+    });
   }
-  return [...tally].map(([playerId, goals]) => ({ matchId, playerId, goals }));
+  return [...tally.values()].map(({ playerId, team, goals }) => ({
+    matchId,
+    playerId,
+    team,
+    goals,
+  }));
 }
 
 function matchValues(input: MatchInput) {

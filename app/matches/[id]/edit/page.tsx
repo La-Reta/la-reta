@@ -1,9 +1,10 @@
-import Link from "next/link";
-import { notFound } from "next/navigation";
-import { ArrowLeftIcon } from "lucide-react";
-import { getMatchById, getPlayers } from "@/lib/queries";
 import { MatchForm } from "@/components/features/matches/match-form";
 import { Button } from "@/components/ui/button";
+import { isAdmin } from "@/lib/admin";
+import { getMatchById, getPlayers } from "@/lib/queries";
+import { ArrowLeftIcon } from "lucide-react";
+import Link from "next/link";
+import { notFound, redirect } from "next/navigation";
 
 export const metadata = { title: "Editar partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -14,9 +15,14 @@ export default async function EditMatchPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [match, players] = await Promise.all([
+  if (!(await isAdmin())) {
+    redirect(`/matches/${id}/detail`);
+  }
+
+  const [match, players, admin] = await Promise.all([
     getMatchById(Number(id)),
     getPlayers(),
+    isAdmin(),
   ]);
   if (!match) notFound();
 
@@ -50,9 +56,11 @@ export default async function EditMatchPage({
           notes: match.notes,
           scorers: match.scorers.map((s) => ({
             playerId: s.playerId,
+            team: s.team,
             goals: s.goals,
           })),
         }}
+        admin={admin}
       />
     </div>
   );
