@@ -250,7 +250,7 @@ export function MatchForm({
             {scorers.map((row, i) => (
               <div
                 key={i}
-                className="grid gap-2 sm:grid-cols-[1fr_9rem_4rem_auto]"
+                className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_4rem_auto]"
               >
                 <NativeSelect
                   className="w-full"

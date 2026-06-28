@@ -32,7 +32,7 @@ export default async function EditMatchPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Button variant="ghost" size="sm" render={<Link href="/matches" />}>
+      <Button variant="secondary" size="sm" render={<Link href="/matches" />}>
         <ArrowLeftIcon />
         Partidos
       </Button>
