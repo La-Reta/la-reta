@@ -1,7 +1,7 @@
-import { notFound, redirect } from "next/navigation";
-import { getPlayerById } from "@/lib/queries";
-import { isAdmin } from "@/lib/admin";
 import { PlayerForm } from "@/components/features/players/player-form";
+import { isAdmin } from "@/lib/admin";
+import { getPlayerById } from "@/lib/queries";
+import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
@@ -10,8 +10,9 @@ export default async function EditPlayerPage({
 }: {
   params: Promise<{ id: string }>;
 }) {
+  const admin = await isAdmin();
   const { id } = await params;
-  if (!(await isAdmin())) {
+  if (!(admin || id)) {
     redirect(`/players/${id}`);
   }
 
@@ -28,7 +29,7 @@ export default async function EditPlayerPage({
           Ajusta los datos y atributos del jugador.
         </p>
       </div>
-      <PlayerForm player={player} />
+      <PlayerForm player={player} admin={admin} />
     </div>
   );
 }

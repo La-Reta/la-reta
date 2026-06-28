@@ -1,8 +1,11 @@
 import { PlayerForm } from "@/components/features/players/player-form";
+import { isAdmin } from "@/lib/admin";
 
 export const metadata = { title: "Nuevo jugador · Reta Fútbol" };
 
-export default function NewPlayerPage() {
+export default async function NewPlayerPage() {
+  const admin = await isAdmin();
+
   return (
     <div className="mx-auto max-w-5xl space-y-6">
       <div>
@@ -11,7 +14,7 @@ export default function NewPlayerPage() {
           Define sus datos y atributos. El overall se calcula según la posición.
         </p>
       </div>
-      <PlayerForm />
+      <PlayerForm admin={admin} />
     </div>
   );
 }

@@ -6,6 +6,12 @@ import {
   type PlayerInput,
 } from "@/app/actions/players";
 import { FifaCard } from "@/components/shared/fifa-card";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -26,6 +32,8 @@ import {
 } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { computeOverall } from "@/lib/ratings";
+import { InfoIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -75,7 +83,13 @@ function initialState(player?: Player): FormState {
   };
 }
 
-export function PlayerForm({ player }: { player?: Player }) {
+export function PlayerForm({
+  player,
+  admin,
+}: {
+  player?: Player;
+  admin: boolean;
+}) {
   const router = useRouter();
   const isEdit = Boolean(player);
   const [form, setForm] = React.useState<FormState>(() => initialState(player));
@@ -276,21 +290,38 @@ export function PlayerForm({ player }: { player?: Player }) {
         </FormSection>
 
         <div className="flex items-center justify-between gap-2">
-          <Button
-            type="button"
-            variant="destructive"
-            onClick={() => router.back()}
-            disabled={pending}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={pending}>
-            {pending
-              ? "Guardando…"
-              : isEdit
-                ? "Guardar cambios"
-                : "Crear jugador"}
-          </Button>
+          {admin ? (
+            <Alert variant={"default"}>
+              <InfoIcon />
+              <AlertTitle>Acceso de administrador</AlertTitle>
+              <AlertDescription>
+                Para crear un jugador debes ser administrador
+              </AlertDescription>
+              <AlertAction>
+                <Button render={<Link href={"/admin"} />}>
+                  Acceder a Admin
+                </Button>
+              </AlertAction>
+            </Alert>
+          ) : (
+            <>
+              <Button
+                type="button"
+                variant="destructive"
+                onClick={() => router.back()}
+                disabled={pending}
+              >
+                Cancelar
+              </Button>
+              <Button type="submit" disabled={pending}>
+                {pending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar cambios"
+                    : "Crear jugador"}
+              </Button>
+            </>
+          )}
         </div>
       </div>
 
