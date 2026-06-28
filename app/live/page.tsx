@@ -16,7 +16,7 @@ export default async function LivePage() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="space-y-6">
+    <div className="container space-y-6">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Marcador en vivo</h1>
         <p className="text-muted-foreground text-sm">
@@ -24,7 +24,7 @@ export default async function LivePage() {
           el registro de partidos.
         </p>
       </div>
-      {false ? <LiveMatch players={list} /> : <LiveLock />}
+      {unlocked ? <LiveMatch players={list} /> : <LiveLock />}
     </div>
   );
 }

@@ -21,8 +21,14 @@ import { computeOverall } from "@/lib/ratings";
 import type { Player } from "@/lib/db/schema";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
 import {
   NativeSelect,
@@ -150,28 +156,24 @@ export function PlayerForm({ player }: { player?: Player }) {
       className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start"
     >
       <div className="space-y-6">
-        {/* Identidad */}
-        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
-          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
-            Identidad
-          </legend>
+        <FormSection title="Identidad">
           <div className="grid gap-4 sm:grid-cols-2">
-            <Labeled label="Nombre completo">
+            <FormField label="Nombre completo">
               <Input
                 value={form.name}
                 onChange={(e) => set("name", e.target.value)}
                 placeholder="Erling Haaland"
                 required
               />
-            </Labeled>
-            <Labeled label="Nombre en carta">
+            </FormField>
+            <FormField label="Nombre en carta">
               <Input
                 value={form.displayName}
                 onChange={(e) => set("displayName", e.target.value)}
                 placeholder="HAALAND"
               />
-            </Labeled>
-            <Labeled label="Posición principal">
+            </FormField>
+            <FormField label="Posición principal">
               <NativeSelect
                 className="w-full"
                 value={form.position}
@@ -183,8 +185,8 @@ export function PlayerForm({ player }: { player?: Player }) {
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-            </Labeled>
-            <Labeled label="Posición secundaria (opcional)">
+            </FormField>
+            <FormField label="Posición secundaria (opcional)">
               <NativeSelect
                 className="w-full"
                 value={form.position2}
@@ -197,8 +199,8 @@ export function PlayerForm({ player }: { player?: Player }) {
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-            </Labeled>
-            <Labeled label="Pie preferido">
+            </FormField>
+            <FormField label="Pie preferido">
               <NativeSelect
                 className="w-full"
                 value={form.preferredFoot}
@@ -210,60 +212,52 @@ export function PlayerForm({ player }: { player?: Player }) {
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-            </Labeled>
-            <Labeled label="País (código ISO, 2 letras)">
+            </FormField>
+            <FormField label="País (código ISO, 2 letras)">
               <Input
                 value={form.nationality}
                 onChange={(e) => set("nationality", e.target.value)}
                 placeholder="mx"
                 maxLength={2}
               />
-            </Labeled>
-            <Labeled label="URL de foto (opcional)" className="sm:col-span-2">
+            </FormField>
+            <FormField label="URL de foto (opcional)" className="sm:col-span-2">
               <Input
                 value={form.photoUrl}
                 onChange={(e) => set("photoUrl", e.target.value)}
                 placeholder="https://..."
               />
-            </Labeled>
+            </FormField>
           </div>
-        </fieldset>
+        </FormSection>
 
-        {/* Físico */}
-        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
-          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
-            Perfil físico
-          </legend>
+        <FormSection title="Perfil físico">
           <div className="grid gap-4 sm:grid-cols-3">
-            <Labeled label="Edad">
+            <FormField label="Edad">
               <Input
                 type="number"
                 value={form.age}
                 onChange={(e) => set("age", e.target.value)}
               />
-            </Labeled>
-            <Labeled label="Altura (cm)">
+            </FormField>
+            <FormField label="Altura (cm)">
               <Input
                 type="number"
                 value={form.heightCm}
                 onChange={(e) => set("heightCm", e.target.value)}
               />
-            </Labeled>
-            <Labeled label="Peso (kg)">
+            </FormField>
+            <FormField label="Peso (kg)">
               <Input
                 type="number"
                 value={form.weightKg}
                 onChange={(e) => set("weightKg", e.target.value)}
               />
-            </Labeled>
+            </FormField>
           </div>
-        </fieldset>
+        </FormSection>
 
-        {/* Atributos */}
-        <fieldset className="ring-foreground/10 bg-card space-y-4 rounded-lg p-4 ring-1">
-          <legend className="text-muted-foreground px-1 text-xs font-semibold uppercase">
-            Atributos
-          </legend>
+        <FormSection title="Atributos">
           <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
             {STAT_KEYS.map((key) => (
               <div key={key} className="space-y-1.5">
@@ -284,7 +278,7 @@ export function PlayerForm({ player }: { player?: Player }) {
               </div>
             ))}
           </div>
-        </fieldset>
+        </FormSection>
 
         <div className="flex items-center gap-2">
           <Button type="submit" disabled={pending}>
@@ -318,7 +312,24 @@ export function PlayerForm({ player }: { player?: Player }) {
   );
 }
 
-function Labeled({
+function FormSection({
+  title,
+  children,
+}: {
+  title: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <Card size="sm">
+      <CardHeader className="border-b">
+        <CardTitle>{title}</CardTitle>
+      </CardHeader>
+      <CardContent>{children}</CardContent>
+    </Card>
+  );
+}
+
+function FormField({
   label,
   children,
   className,
@@ -328,9 +339,9 @@ function Labeled({
   className?: string;
 }) {
   return (
-    <div className={className}>
-      <Label className="mb-1.5 block text-xs">{label}</Label>
+    <Field className={className}>
+      <FieldLabel className="text-xs">{label}</FieldLabel>
       {children}
-    </div>
+    </Field>
   );
 }

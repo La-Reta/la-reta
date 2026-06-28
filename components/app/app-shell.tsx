@@ -1,11 +1,11 @@
+import { AppSidebar } from "@/components/app/app-sidebar";
+import { ThemeToggle } from "@/components/app/theme-toggle";
+import { Separator } from "@/components/ui/separator";
 import {
   SidebarInset,
   SidebarProvider,
   SidebarTrigger,
 } from "@/components/ui/sidebar";
-import { Separator } from "@/components/ui/separator";
-import { AppSidebar } from "@/components/app/app-sidebar";
-import { ThemeToggle } from "@/components/app/theme-toggle";
 import { SidebarTitle } from "./sidebar-title";
 
 export function AppShell({ children }: { children: React.ReactNode }) {

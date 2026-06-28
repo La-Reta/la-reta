@@ -1,26 +1,5 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import Image from "next/image";
-import { usePathname } from "next/navigation";
-import { atom, useAtomValue } from "jotai";
-import {
-  LayoutDashboardIcon,
-  UsersIcon,
-  ShieldHalfIcon,
-  UserPlusIcon,
-  MapIcon,
-  TrophyIcon,
-  LightbulbIcon,
-  LockIcon,
-  RadioIcon,
-  SparklesIcon,
-  CircleDotIcon,
-  SparkleIcon,
-  ChevronRightIcon,
-} from "lucide-react";
-import { liveMatchAtom } from "@/lib/state/atoms";
 import {
   Sidebar,
   SidebarContent,
@@ -36,9 +15,30 @@ import {
   SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
-import { SidebarTitle } from "./sidebar-title";
+import { liveMatchAtom } from "@/lib/state/atoms";
 import { cn } from "@/lib/utils";
+import { atom, useAtomValue } from "jotai";
+import {
+  ChevronRightIcon,
+  CircleDotIcon,
+  LayoutDashboardIcon,
+  LightbulbIcon,
+  LockIcon,
+  MapIcon,
+  RadioIcon,
+  ShieldHalfIcon,
+  SparkleIcon,
+  SparklesIcon,
+  TrophyIcon,
+  UserPlusIcon,
+  UsersIcon,
+} from "lucide-react";
+import Image from "next/image";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import * as React from "react";
 import { Badge } from "../ui/badge";
+import { SidebarTitle } from "./sidebar-title";
 
 type NavItem = {
   title: string;
@@ -168,7 +168,8 @@ export function AppSidebar() {
   const pathname = usePathname();
   const liveActive = useAtomValue(liveMatchActiveAtom);
   const { isMobile, state } = useSidebar();
-  const showTooltip = state === "collapsed" && !isMobile;
+  const isCollapsed = state === "collapsed" && !isMobile;
+  const showTooltip = isCollapsed;
 
   const activeHref = React.useMemo(
     () =>
@@ -254,9 +255,11 @@ export function AppSidebar() {
             key={section.label}
             className="px-2 py-1 group-data-[collapsible=icon]:px-0"
           >
-            <SidebarGroupLabel className="text-sidebar-foreground/45 px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
-              {section.label}
-            </SidebarGroupLabel>
+            {!isCollapsed ? (
+              <SidebarGroupLabel className="text-sidebar-foreground/45 px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
+                {section.label}
+              </SidebarGroupLabel>
+            ) : null}
             <SidebarGroupContent>
               <SidebarMenu className="group-data-[collapsible=icon]:items-center">
                 {section.items.map((item) => (

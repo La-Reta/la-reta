@@ -1,36 +1,36 @@
 "use client";
 
-import * as React from "react";
-import { useAtom } from "jotai";
-import { toast } from "sonner";
-import {
-  CheckIcon,
-  ListChecksIcon,
-  ShuffleIcon,
-  XIcon,
-  UsersIcon,
-  ScaleIcon,
-  DownloadIcon,
-} from "lucide-react";
-import { selectedIdsAtom } from "@/lib/state/atoms";
 import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  GROUP_COLOR,
+  GROUP_LABEL,
+  positionGroup,
+  type PositionGroup,
+} from "@/lib/constants";
+import type { Player } from "@/lib/db/schema";
+import { flagEmoji, playerPositions } from "@/lib/format";
+import { selectedIdsAtom } from "@/lib/state/atoms";
 import {
   balanceTeams,
   type BalancedTeams,
   type Lineup,
 } from "@/lib/team-balancer";
-import {
-  positionGroup,
-  GROUP_LABEL,
-  GROUP_COLOR,
-  type PositionGroup,
-} from "@/lib/constants";
-import { flagEmoji, playerPositions } from "@/lib/format";
-import { Button } from "@/components/ui/button";
-import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { cn } from "@/lib/utils";
-import type { Player } from "@/lib/db/schema";
+import { useAtom } from "jotai";
+import {
+  CheckIcon,
+  DownloadIcon,
+  ListChecksIcon,
+  ScaleIcon,
+  ShuffleIcon,
+  UsersIcon,
+  XIcon,
+} from "lucide-react";
+import * as React from "react";
+import { toast } from "sonner";
 
 const TEAM_A = "#0ea5e9"; // sky
 const TEAM_B = "#f43f5e"; // rose
@@ -91,7 +91,7 @@ export function TeamBuilder({ players }: { players: Player[] }) {
           </Button>
           {selected.length > 0 && (
             <Button
-              variant="ghost"
+              variant="secondary"
               size="sm"
               onClick={() => {
                 setSelected([]);
