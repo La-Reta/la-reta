@@ -26,6 +26,7 @@ import {
   LockIcon,
   MapIcon,
   RadioIcon,
+  ScaleIcon,
   ShieldHalfIcon,
   SparkleIcon,
   SparklesIcon,
@@ -119,6 +120,17 @@ const NAV_SECTIONS: NavSection[] = [
         href: "/palabras",
         icon: SparklesIcon,
         hint: "Dinámica social",
+      },
+    ],
+  },
+  {
+    label: "Confianza",
+    items: [
+      {
+        title: "Legal",
+        href: "/legal",
+        icon: ScaleIcon,
+        hint: "Privacidad, términos e IA",
       },
     ],
   },
