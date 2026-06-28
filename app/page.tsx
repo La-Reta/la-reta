@@ -6,6 +6,7 @@ import { Commentator } from "@/components/features/dashboard/commentator";
 import { PlayerLegend } from "@/components/features/dashboard/player-legend";
 import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
+import { LegalConsentAlert } from "@/components/features/legal/legal-consent-alert";
 import { Button } from "@/components/ui/button";
 import { positionGroup, type PositionGroup } from "@/lib/constants";
 import { getBannerWords, getPlayers, getTopScorers } from "@/lib/queries";
@@ -120,6 +121,8 @@ export default async function DashboardPage() {
           />
         </div>
       </section>
+
+      <LegalConsentAlert />
 
       {/* ── Destacados: crack + goleador + jugadores (horizontal en desktop) ───── */}
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">

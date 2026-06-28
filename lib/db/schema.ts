@@ -194,3 +194,29 @@ export const playerComments = pgTable("player_comments", {
 
 export type PlayerComment = typeof playerComments.$inferSelect;
 export type NewPlayerComment = typeof playerComments.$inferInsert;
+
+// ── Legal consent evidence ─────────────────────────────────────────────────
+/** Minimal audit trail for users who accept the public legal documents. */
+export const legalAcceptances = pgTable("legal_acceptances", {
+  id: serial("id").primaryKey(),
+  legalVersion: varchar("legal_version", { length: 40 }).notNull(),
+  acceptedDocuments: text("accepted_documents").notNull(),
+  sourcePath: varchar("source_path", { length: 120 }),
+  language: varchar("language", { length: 24 }),
+  languages: varchar("languages", { length: 240 }),
+  timezone: varchar("timezone", { length: 64 }),
+  timezoneOffset: smallint("timezone_offset"),
+  screen: varchar("screen", { length: 32 }),
+  viewport: varchar("viewport", { length: 32 }),
+  pixelRatio: varchar("pixel_ratio", { length: 16 }),
+  platform: varchar("platform", { length: 80 }),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 64 }),
+  forwardedFor: varchar("forwarded_for", { length: 500 }),
+  country: varchar("country", { length: 8 }),
+  acceptLanguage: varchar("accept_language", { length: 240 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type LegalAcceptance = typeof legalAcceptances.$inferSelect;
+export type NewLegalAcceptance = typeof legalAcceptances.$inferInsert;

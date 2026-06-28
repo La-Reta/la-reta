@@ -1,0 +1,20 @@
+CREATE TABLE IF NOT EXISTS "legal_acceptances" (
+  "id" serial PRIMARY KEY NOT NULL,
+  "legal_version" varchar(40) NOT NULL,
+  "accepted_documents" text NOT NULL,
+  "source_path" varchar(120),
+  "language" varchar(24),
+  "languages" varchar(240),
+  "timezone" varchar(64),
+  "timezone_offset" smallint,
+  "screen" varchar(32),
+  "viewport" varchar(32),
+  "pixel_ratio" varchar(16),
+  "platform" varchar(80),
+  "user_agent" text,
+  "ip_address" varchar(64),
+  "forwarded_for" varchar(500),
+  "country" varchar(8),
+  "accept_language" varchar(240),
+  "created_at" timestamp DEFAULT now() NOT NULL
+);

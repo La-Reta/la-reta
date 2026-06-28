@@ -18,6 +18,7 @@ const personalData = [
   "Perfil físico/deportivo: edad o fecha de nacimiento si se agrega en el futuro, estatura, peso, atributos tipo FIFA, overall e historial de cambios.",
   "Actividad en la reta: partidos jugados, goles, equipo asignado, comentarios, valoraciones, ideas, palabras comunitarias y notas internas de administración.",
   "Datos técnicos de uso: idioma, zona horaria, resolución de pantalla, plataforma, navegador o user agent, además de datos estadísticos de analítica si se habilitan herramientas como Cloudflare Analytics.",
+  "Evidencia de aceptación legal: versión aceptada, documentos aceptados, fecha y hora, ruta de origen, IP disponible en el request, país aproximado si el proveedor lo informa y encabezados técnicos básicos como accept-language.",
 ];
 
 const purposes = [
@@ -89,6 +90,23 @@ export default function PrivacyPage() {
           usen estas herramientas, se debe limitar la información enviada a lo
           necesario y evitar compartir datos sensibles que no sean
           indispensables para la función.
+        </p>
+      </LegalSection>
+
+      <LegalSection title="Aceptación de términos y evidencia técnica">
+        <p className="text-muted-foreground">
+          Cuando una persona acepta los términos desde el dashboard, la app
+          registra una evidencia mínima para auditoría, seguridad y defensa del
+          proyecto. Esta evidencia puede incluir versión legal aceptada, fecha,
+          ruta de origen, idioma, zona horaria, pantalla, viewport, plataforma,
+          user agent, IP disponible en el request, encabezado x-forwarded-for,
+          país aproximado si el proveedor lo informa y accept-language.
+        </p>
+        <p className="text-muted-foreground">
+          Esta información no se usa para perfilar comercialmente a la persona.
+          Su finalidad es demostrar aceptación, investigar abuso, resolver
+          disputas y proteger a la comunidad y a las personas responsables de la
+          app.
         </p>
       </LegalSection>
 

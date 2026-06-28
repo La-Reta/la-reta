@@ -34,6 +34,7 @@ import { toast } from "sonner";
 
 const TEAM_A = "#0ea5e9"; // sky
 const TEAM_B = "#f43f5e"; // rose
+const EXPORT_BOARD_WIDTH = 1120;
 
 export function TeamBuilder({ players }: { players: Player[] }) {
   const [selected, setSelected] = useAtom(selectedIdsAtom);
@@ -206,14 +207,16 @@ function Matchup({ result }: { result: BalancedTeams }) {
   const aPct = Math.round((ratingA / total) * 100);
 
   const pitchRef = React.useRef<HTMLDivElement>(null);
+  const exportPitchRef = React.useRef<HTMLDivElement>(null);
   const [busy, setBusy] = React.useState(false);
 
   async function download() {
-    if (!pitchRef.current) return;
+    const node = exportPitchRef.current ?? pitchRef.current;
+    if (!node) return;
     setBusy(true);
     try {
       const { toPng } = await import("html-to-image");
-      const url = await toPng(pitchRef.current, {
+      const url = await toPng(node, {
         pixelRatio: 2,
         cacheBust: true,
         backgroundColor: "#0a1330",
@@ -313,9 +316,22 @@ function Matchup({ result }: { result: BalancedTeams }) {
           ratingA={ratingA}
           ratingB={ratingB}
         />
+        <div
+          aria-hidden="true"
+          className="pointer-events-none fixed top-0"
+          style={{ left: -10000, width: EXPORT_BOARD_WIDTH }}
+        >
+          <MatchupPitch
+            ref={exportPitchRef}
+            teamA={teamA}
+            teamB={teamB}
+            ratingA={ratingA}
+            ratingB={ratingB}
+          />
+        </div>
         <div className="flex items-center justify-center lg:hidden">
           <Badge variant={"outline"}>
-            La preview de la imagen se ve mejor en desktop.
+            La descarga se genera en tamaño desktop.
           </Badge>
         </div>
       </div>
