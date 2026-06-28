@@ -46,9 +46,8 @@ export async function WordItem({ word }: { word: RetaWord }) {
         )}
       </CardHeader>
       <CardContent>
-        <Badge variant={"ghost"}>
-          {word.author ?? "Anónimo"} · {fmt(word.createdAt)}
-        </Badge>
+        <Badge variant={"ghost"}>{word.author ?? "Anónimo"}</Badge>
+        <Badge variant={"ghost"}>{fmt(word.createdAt)}</Badge>
         {(word.language || word.timezone || word.screen) && (
           <p className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px]">
             {word.language && (
