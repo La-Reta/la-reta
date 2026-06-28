@@ -8,6 +8,7 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
+import { formatShortDate } from "@/lib/dates";
 import { RetaWord } from "@/lib/db";
 import {
   ClockIcon,
@@ -16,11 +17,6 @@ import {
   SmartphoneIcon,
   TrashIcon,
 } from "lucide-react";
-
-const fmt = (d: Date | string) =>
-  new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" }).format(
-    new Date(d),
-  );
 
 export async function WordItem({ word }: { word: RetaWord }) {
   const admin = await isAdmin();
@@ -47,7 +43,7 @@ export async function WordItem({ word }: { word: RetaWord }) {
       </CardHeader>
       <CardContent>
         <Badge variant={"ghost"}>{word.author ?? "Anónimo"}</Badge>
-        <Badge variant={"ghost"}>{fmt(word.createdAt)}</Badge>
+        <Badge variant={"ghost"}>{formatShortDate(word.createdAt)}</Badge>
         {(word.language || word.timezone || word.screen) && (
           <p className="text-muted-foreground mt-2 flex flex-wrap gap-x-3 gap-y-0.5 text-[10px]">
             {word.language && (

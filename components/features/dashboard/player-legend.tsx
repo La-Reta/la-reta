@@ -1,5 +1,5 @@
+import { QuoteIcon, StarIcon } from "lucide-react";
 import Image from "next/image";
-import { StarIcon, QuoteIcon } from "lucide-react";
 
 /** Legendary player showcase — FIFA icon card aesthetic. */
 export function PlayerLegend() {
@@ -29,7 +29,7 @@ export function PlayerLegend() {
             className="absolute inset-y-0 right-0 z-10 w-8 bg-gradient-to-l from-[#3d2800]/80 to-transparent"
           />
           <Image
-            src="/players/choucha.png"
+            src="/players/choucha.webp"
             alt="Choucha — leyenda de la reta"
             width={480}
             height={720}

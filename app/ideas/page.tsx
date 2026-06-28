@@ -18,14 +18,10 @@ import {
   IDEA_PRIORITY_LABEL,
   IDEA_PRIORITY_CLASS,
 } from "@/lib/constants";
+import { formatShortDate } from "@/lib/dates";
 
 export const metadata = { title: "Ideas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
-
-const fmt = (d: Date | string) =>
-  new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" }).format(
-    new Date(d),
-  );
 
 export default async function IdeasPage() {
   const [ideas, admin] = await Promise.all([getIdeas(), isAdmin()]);
@@ -100,7 +96,7 @@ export default async function IdeasPage() {
                       {idea.author ?? "Anónimo"}
                     </TableCell>
                     <TableCell className="text-muted-foreground text-right text-xs">
-                      {fmt(idea.createdAt)}
+                      {formatShortDate(idea.createdAt)}
                     </TableCell>
                     {admin ? (
                       <TableCell className="text-right">

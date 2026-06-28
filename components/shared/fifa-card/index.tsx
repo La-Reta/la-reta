@@ -1,8 +1,8 @@
-import { cn } from "@/lib/utils";
-import { flagEmoji, initials } from "@/lib/format";
-import { cardTier } from "@/lib/ratings";
 import { STAT_ABBR, STAT_KEYS } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { flagEmoji, initials } from "@/lib/format";
+import { cardTier } from "@/lib/ratings";
+import { cn } from "@/lib/utils";
 import {
   DARK_HALO,
   LIGHT_HALO,
@@ -97,22 +97,11 @@ export function FifaCard({
 
       <div
         className={cn(
-          "relative z-10 flex items-start justify-between",
+          "relative z-10 flex items-start justify-end",
           z.top,
           textShadow,
         )}
       >
-        <div className={cn("rounded-md px-1.5 py-1 leading-none", s.badgeBg)}>
-          <span className={cn("block font-semibold tracking-wide", z.position)}>
-            {player.position}
-          </span>
-          {showSecondaryPosition ? (
-            <span className={cn("mt-1 block opacity-70", z.position2)}>
-              {player.position2}
-            </span>
-          ) : null}
-        </div>
-
         <div className="flex flex-col items-end gap-1 leading-none">
           <span
             className={cn("font-black tracking-tight", s.accent, z.overall)}
@@ -132,7 +121,7 @@ export function FifaCard({
           textShadow,
         )}
       >
-        <div className="min-w-0">
+        <div className="flex min-w-0 justify-between gap-2">
           <h3
             className={cn(
               "truncate font-black tracking-tight text-white",
@@ -146,6 +135,26 @@ export function FifaCard({
               {player.name}
             </p>
           ) : null}
+
+          {showStats && (
+            <div
+              className={cn(
+                "inline-flex gap-2 rounded-md px-1.5 py-1 leading-none",
+                s.badgeBg,
+              )}
+            >
+              <span
+                className={cn("block font-semibold tracking-wide", z.position)}
+              >
+                {player.position}
+              </span>
+              {showSecondaryPosition ? (
+                <span className={cn("mt-1 block opacity-70", z.position2)}>
+                  {player.position2}
+                </span>
+              ) : null}
+            </div>
+          )}
         </div>
 
         {showStats ? (

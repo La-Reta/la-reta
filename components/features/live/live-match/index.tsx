@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { FlagIcon, PlayIcon } from "lucide-react";
 import { liveMatchAtom, EMPTY_LIVE_MATCH } from "@/lib/state/atoms";
 import { createMatch } from "@/app/actions/matches";
+import { formatApiDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -154,9 +155,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
         ? Math.floor((Date.now() - live.startedAt) / 1000)
         : null;
       const res = await createMatch({
-        playedAt: new Date(live.startedAt ?? Date.now())
-          .toISOString()
-          .slice(0, 10),
+        playedAt: formatApiDate(live.startedAt ?? Date.now()),
         teamAName: live.teamA,
         teamBName: live.teamB,
         scoreA,

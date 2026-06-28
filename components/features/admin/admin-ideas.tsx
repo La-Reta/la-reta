@@ -23,70 +23,14 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { cn } from "@/lib/utils";
-
-const fmt = (d: Date | string) =>
-  new Intl.DateTimeFormat("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "2-digit",
-  }).format(new Date(d));
+import { formatCompactDate } from "@/lib/dates";
 
 export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
-  const router = useRouter();
   const [selectedId, setSelectedId] = React.useState<number | null>(
     ideas[0]?.id ?? null,
   );
-  const [pending, startTransition] = React.useTransition();
 
   const selected = ideas.find((i) => i.id === selectedId) ?? null;
-
-  const [draft, setDraft] = React.useState({
-    status: "",
-    priority: "",
-    estimate: "",
-    adminNotes: "",
-  });
-
-  // Load the selected idea's triage fields into the editable draft.
-  React.useEffect(() => {
-    if (selected) {
-      setDraft({
-        status: selected.status,
-        priority: selected.priority ?? "",
-        estimate: selected.estimate ?? "",
-        adminNotes: selected.adminNotes ?? "",
-      });
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [selectedId]);
-
-  function save() {
-    if (!selected) return;
-    startTransition(async () => {
-      const res = await updateIdeaTriage(selected.id, draft);
-      if (res.ok) {
-        toast.success("Idea actualizada");
-        router.refresh();
-      } else {
-        toast.error(res.error);
-      }
-    });
-  }
-
-  function remove() {
-    if (!selected) return;
-    if (!confirm(`¿Eliminar la idea "${selected.title}"?`)) return;
-    startTransition(async () => {
-      const res = await deleteIdea(selected.id);
-      if (res.ok) {
-        toast.success("Idea eliminada");
-        setSelectedId(null);
-        router.refresh();
-      } else {
-        toast.error(res.error);
-      }
-    });
-  }
 
   if (ideas.length === 0) {
     return (
@@ -123,7 +67,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
                 {IDEA_STATUS_LABEL[idea.status]}
               </span>
               <span className="text-muted-foreground text-[10px]">
-                {fmt(idea.createdAt)}
+                {formatCompactDate(idea.createdAt)}
               </span>
             </span>
           </button>
@@ -132,91 +76,149 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
 
       {/* Editor */}
       {selected ? (
-        <div className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1">
-          <div>
-            <h2 className="text-lg font-bold">{selected.title}</h2>
-            <p className="text-muted-foreground mt-1 text-sm">
-              {selected.description}
-            </p>
-            <p className="text-muted-foreground mt-2 text-xs">
-              {IDEA_CATEGORY_LABEL[selected.category]} · por{" "}
-              {selected.author ?? "Anónimo"} · {fmt(selected.createdAt)}
-            </p>
-          </div>
-
-          <div className="grid gap-4 sm:grid-cols-2">
-            <div>
-              <Label className="mb-1.5 block text-xs">Estado</Label>
-              <NativeSelect
-                className="w-full"
-                value={draft.status}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, status: e.target.value }))
-                }
-              >
-                {IDEA_STATUSES.map((s) => (
-                  <NativeSelectOption key={s} value={s}>
-                    {IDEA_STATUS_LABEL[s]}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">Prioridad</Label>
-              <NativeSelect
-                className="w-full"
-                value={draft.priority}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, priority: e.target.value }))
-                }
-              >
-                <NativeSelectOption value="">Sin prioridad</NativeSelectOption>
-                {IDEA_PRIORITIES.map((p) => (
-                  <NativeSelectOption key={p} value={p}>
-                    {IDEA_PRIORITY_LABEL[p]}
-                  </NativeSelectOption>
-                ))}
-              </NativeSelect>
-            </div>
-            <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs">Tiempo estimado</Label>
-              <Input
-                value={draft.estimate}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, estimate: e.target.value }))
-                }
-                placeholder="Ej. 2 semanas, 1 jornada…"
-              />
-            </div>
-            <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs">Notas internas</Label>
-              <Textarea
-                value={draft.adminNotes}
-                onChange={(e) =>
-                  setDraft((d) => ({ ...d, adminNotes: e.target.value }))
-                }
-                rows={3}
-                placeholder="Notas del equipo sobre esta idea…"
-              />
-            </div>
-          </div>
-
-          <div className="flex items-center gap-2">
-            <Button onClick={save} disabled={pending}>
-              <SaveIcon />
-              {pending ? "Guardando…" : "Guardar"}
-            </Button>
-            <Button variant="destructive" onClick={remove} disabled={pending}>
-              <Trash2Icon />
-              Eliminar
-            </Button>
-          </div>
-        </div>
+        <IdeaEditor
+          key={selected.id}
+          idea={selected}
+          onDeleted={() => setSelectedId(null)}
+        />
       ) : (
         <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
           Selecciona una idea para revisarla.
         </p>
       )}
+    </div>
+  );
+}
+
+function ideaDraft(idea: Idea) {
+  return {
+    status: idea.status,
+    priority: idea.priority ?? "",
+    estimate: idea.estimate ?? "",
+    adminNotes: idea.adminNotes ?? "",
+  };
+}
+
+function IdeaEditor({
+  idea,
+  onDeleted,
+}: {
+  idea: Idea;
+  onDeleted: () => void;
+}) {
+  const router = useRouter();
+  const [pending, startTransition] = React.useTransition();
+  const [draft, setDraft] = React.useState(() => ideaDraft(idea));
+
+  function save() {
+    startTransition(async () => {
+      const res = await updateIdeaTriage(idea.id, draft);
+      if (res.ok) {
+        toast.success("Idea actualizada");
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  function remove() {
+    if (!confirm(`¿Eliminar la idea "${idea.title}"?`)) return;
+    startTransition(async () => {
+      const res = await deleteIdea(idea.id);
+      if (res.ok) {
+        toast.success("Idea eliminada");
+        onDeleted();
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
+  return (
+    <div className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1">
+      <div>
+        <h2 className="text-lg font-bold">{idea.title}</h2>
+        <p className="text-muted-foreground mt-1 text-sm">
+          {idea.description}
+        </p>
+        <p className="text-muted-foreground mt-2 text-xs">
+          {IDEA_CATEGORY_LABEL[idea.category]} · por{" "}
+          {idea.author ?? "Anónimo"} · {formatCompactDate(idea.createdAt)}
+        </p>
+      </div>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <div>
+          <Label className="mb-1.5 block text-xs">Estado</Label>
+          <NativeSelect
+            className="w-full"
+            value={draft.status}
+            onChange={(e) =>
+              setDraft((d) => ({
+                ...d,
+                status: e.target.value as Idea["status"],
+              }))
+            }
+          >
+            {IDEA_STATUSES.map((s) => (
+              <NativeSelectOption key={s} value={s}>
+                {IDEA_STATUS_LABEL[s]}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">Prioridad</Label>
+          <NativeSelect
+            className="w-full"
+            value={draft.priority}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, priority: e.target.value }))
+            }
+          >
+            <NativeSelectOption value="">Sin prioridad</NativeSelectOption>
+            {IDEA_PRIORITIES.map((p) => (
+              <NativeSelectOption key={p} value={p}>
+                {IDEA_PRIORITY_LABEL[p]}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+        </div>
+        <div className="sm:col-span-2">
+          <Label className="mb-1.5 block text-xs">Tiempo estimado</Label>
+          <Input
+            value={draft.estimate}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, estimate: e.target.value }))
+            }
+            placeholder="Ej. 2 semanas, 1 jornada…"
+          />
+        </div>
+        <div className="sm:col-span-2">
+          <Label className="mb-1.5 block text-xs">Notas internas</Label>
+          <Textarea
+            value={draft.adminNotes}
+            onChange={(e) =>
+              setDraft((d) => ({ ...d, adminNotes: e.target.value }))
+            }
+            rows={3}
+            placeholder="Notas del equipo sobre esta idea…"
+          />
+        </div>
+      </div>
+
+      <div className="flex items-center gap-2">
+        <Button onClick={save} disabled={pending}>
+          <SaveIcon />
+          {pending ? "Guardando…" : "Guardar"}
+        </Button>
+        <Button variant="destructive" onClick={remove} disabled={pending}>
+          <Trash2Icon />
+          Eliminar
+        </Button>
+      </div>
     </div>
   );
 }

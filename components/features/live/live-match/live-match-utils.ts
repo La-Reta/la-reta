@@ -1,3 +1,4 @@
+import { formatTime } from "@/lib/dates";
 import type { LiveGoal } from "./types";
 
 export function countGoalsFor(goals: LiveGoal[], team: "A" | "B") {
@@ -40,10 +41,7 @@ export function formatGoalMinute(at: number, startedAt: number | null) {
 }
 
 export function formatGoalClock(at: number) {
-  return new Date(at).toLocaleTimeString([], {
-    hour: "2-digit",
-    minute: "2-digit",
-  });
+  return formatTime(at);
 }
 
 export function tallyGoalsByPlayer(goals: LiveGoal[]) {

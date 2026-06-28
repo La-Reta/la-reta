@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { SendHorizonalIcon, StarIcon } from "lucide-react";
 import { addPlayerComment, type ClientInfo } from "@/app/actions/comments";
+import { formatLongDate } from "@/lib/dates";
 import type { PlayerComment } from "@/lib/db/schema";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -29,13 +30,6 @@ function collectClient(): ClientInfo {
     userAgent: navigator.userAgent,
   };
 }
-
-const fmt = (d: Date | string) =>
-  new Intl.DateTimeFormat("es-MX", {
-    day: "2-digit",
-    month: "short",
-    year: "numeric",
-  }).format(new Date(d));
 
 /** Read-only star row supporting fractional values (for the average). */
 function Stars({ value, className }: { value: number; className?: string }) {
@@ -225,7 +219,7 @@ export function PlayerComments({
                     {c.author ?? "Anónimo"}
                   </span>
                   <span className="text-muted-foreground text-[11px]">
-                    {fmt(c.createdAt)}
+                    {formatLongDate(c.createdAt)}
                   </span>
                 </div>
                 {c.rating != null && (

@@ -10,17 +10,13 @@ import {
   type ChartConfig,
 } from "@/components/ui/chart";
 import { STAT_KEYS, STAT_LABEL, STAT_ABBR } from "@/lib/constants";
+import { formatShortDate } from "@/lib/dates";
 import type { StatHistory } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
 
 const chartConfig = {
   overall: { label: "Overall", color: "var(--chart-1)" },
 } satisfies ChartConfig;
-
-const fmtDate = (d: Date | string) =>
-  new Intl.DateTimeFormat("es-MX", { day: "2-digit", month: "short" }).format(
-    new Date(d),
-  );
 
 type ChangeEvent = {
   date: Date | string;
@@ -45,7 +41,7 @@ export function PlayerHistory({ history }: { history: StatHistory[] }) {
   }
 
   const chartData = history.map((h) => ({
-    date: fmtDate(h.recordedAt),
+    date: formatShortDate(h.recordedAt),
     overall: h.overall,
   }));
 
@@ -121,7 +117,7 @@ export function PlayerHistory({ history }: { history: StatHistory[] }) {
         {events.map((e, i) => (
           <div key={i} className="border-border border-l-2 pl-3">
             <div className="flex items-center gap-2 text-xs">
-              <span className="font-medium">{fmtDate(e.date)}</span>
+              <span className="font-medium">{formatShortDate(e.date)}</span>
               {e.overallFrom !== e.overallTo && (
                 <span className="text-muted-foreground">
                   OVR {e.overallFrom} → {e.overallTo}

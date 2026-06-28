@@ -4,6 +4,7 @@ import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db, matches, matchGoals } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
+import { formatApiDate } from "@/lib/dates";
 
 type Result = { ok: true; id: number } | { ok: false; error: string };
 
@@ -34,7 +35,7 @@ function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
 
 function matchValues(input: MatchInput) {
   return {
-    playedAt: input.playedAt?.trim() || new Date().toISOString().slice(0, 10),
+    playedAt: input.playedAt?.trim() || formatApiDate(),
     teamAName: input.teamAName?.trim() || "Equipo A",
     teamBName: input.teamBName?.trim() || "Equipo B",
     scoreA: clamp(input.scoreA, 99),

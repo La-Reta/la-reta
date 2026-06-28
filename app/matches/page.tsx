@@ -9,6 +9,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { flagEmoji } from "@/lib/format";
 import { cn } from "@/lib/utils";
+import { formatShortDateOnly } from "@/lib/dates";
 
 function balanceColor(v: number) {
   if (v >= 60) return "bg-emerald-500";
@@ -18,13 +19,6 @@ function balanceColor(v: number) {
 
 export const metadata = { title: "Partidos · Reta Fútbol" };
 export const dynamic = "force-dynamic";
-
-const fmtDate = (d: string) =>
-  new Intl.DateTimeFormat("es-MX", {
-    weekday: "short",
-    day: "2-digit",
-    month: "short",
-  }).format(new Date(`${d}T12:00:00`));
 
 export default async function MatchesPage() {
   const [players, matches, scorers, admin] = await Promise.all([
@@ -73,7 +67,7 @@ export default async function MatchesPage() {
                   >
                     <div className="flex items-center justify-between gap-2">
                       <span className="text-muted-foreground text-xs">
-                        {fmtDate(m.playedAt)}
+                        {formatShortDateOnly(m.playedAt)}
                         {m.durationSec
                           ? ` · ⏱ ${Math.round(m.durationSec / 60)} min`
                           : ""}

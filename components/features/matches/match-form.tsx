@@ -1,6 +1,7 @@
 "use client";
 
 import { createMatch, updateMatch } from "@/app/actions/matches";
+import { formatApiDate } from "@/lib/dates";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -44,7 +45,7 @@ function parseNumberInput(value: string) {
 function useTodayDate() {
   return React.useSyncExternalStore(
     subscribe,
-    () => new Date().toISOString().slice(0, 10),
+    () => formatApiDate(),
     () => "",
   );
 }

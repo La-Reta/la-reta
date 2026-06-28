@@ -8,7 +8,7 @@ export function Commentator() {
       <div className="flex items-stretch">
         <div className="relative w-28 shrink-0 bg-black/30 sm:w-44">
           <Image
-            src="/players/chato-bermudez.png"
+            src="/players/chato-bermudez.webp"
             alt="Chato Bermúdez"
             width={480}
             height={720}

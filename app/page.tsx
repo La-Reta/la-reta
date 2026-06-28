@@ -105,7 +105,7 @@ export default async function DashboardPage() {
 
           <div className="shrink-0 self-center rounded-xl bg-white p-2.5 shadow-xl ring-1 ring-black/10 sm:p-3 md:self-end">
             <Image
-              src="/fifa-credix.png"
+              src="/fifa-credix.webp"
               alt="FIFA 26 × Credix"
               width={1536}
               height={1024}

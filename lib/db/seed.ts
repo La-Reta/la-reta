@@ -15,6 +15,7 @@ import {
 } from "./schema";
 import { computeOverall } from "../ratings";
 import { STAT_KEYS, type Position, type Foot } from "../constants";
+import { formatApiDate } from "../dates";
 
 type Seed = Omit<NewPlayer, "overall" | "id" | "createdAt" | "updatedAt"> & {
   position: Position;
@@ -427,8 +428,7 @@ async function main() {
   console.log("Insertando partidos demo...");
   const id = (name: string) =>
     inserted.find((p) => p.displayName === name)?.id ?? inserted[0].id;
-  const dateAgo = (days: number) =>
-    new Date(now - days * 86_400_000).toISOString().slice(0, 10);
+  const dateAgo = (days: number) => formatApiDate(now - days * 86_400_000);
 
   const [m1] = await db
     .insert(matches)
