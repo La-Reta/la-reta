@@ -1,8 +1,7 @@
-import Link from "next/link";
 import { GROUP_COLOR } from "@/lib/constants";
-import { flagEmoji } from "@/lib/format";
-import { bestEleven } from "@/lib/lineup";
 import type { Player } from "@/lib/db/schema";
+import { bestEleven } from "@/lib/lineup";
+import Link from "next/link";
 
 const CHALK = "rgba(255,255,255,0.55)";
 
@@ -79,7 +78,6 @@ export function LineupBoard({ players }: { players: Player[] }) {
             </span>
             <span className="flex max-w-20 items-center gap-0.5 truncate rounded-sm bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
               <span className="truncate">{p.displayName}</span>
-              <span className="shrink-0">{flagEmoji(p.nationality)}</span>
             </span>
           </Link>
         );
