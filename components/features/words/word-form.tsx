@@ -1,13 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { SparklesIcon } from "lucide-react";
 import { addRetaWord, type ClientInfo } from "@/app/actions/words";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { SparklesIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 function collectClient(): ClientInfo {
   if (typeof navigator === "undefined") return {};
@@ -77,6 +77,7 @@ export function WordForm() {
           aria-label="Tu palabra"
           autoFocus
           className="inline-block max-w-full border-b-4 border-emerald-400/70 bg-transparent text-center text-emerald-300 uppercase caret-emerald-300 placeholder:text-white/25 focus:border-emerald-400 focus:outline-none"
+          required
         />
       </div>
 

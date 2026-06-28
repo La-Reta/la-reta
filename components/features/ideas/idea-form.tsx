@@ -1,19 +1,19 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { LightbulbIcon } from "lucide-react";
 import { createIdea } from "@/app/actions/ideas";
-import { IDEA_CATEGORIES, IDEA_CATEGORY_LABEL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
+import { Textarea } from "@/components/ui/textarea";
+import { IDEA_CATEGORIES, IDEA_CATEGORY_LABEL } from "@/lib/constants";
+import { LightbulbIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 const EMPTY = { title: "", description: "", author: "", category: "mejora" };
 
@@ -84,6 +84,7 @@ export function IdeaForm() {
             onChange={(e) => set("description", e.target.value)}
             placeholder="Cuéntanos el detalle: qué propones y por qué ayudaría a la reta."
             rows={4}
+            required
           />
         </div>
         <div>

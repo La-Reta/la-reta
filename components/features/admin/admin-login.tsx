@@ -1,13 +1,13 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { LockIcon } from "lucide-react";
 import { loginAdmin } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { LockIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 export function AdminLogin() {
   const router = useRouter();
@@ -47,6 +47,7 @@ export function AdminLogin() {
               onChange={(e) => setPin(e.target.value)}
               placeholder="••••••"
               autoFocus
+              required
             />
           </div>
           <Button type="submit" className="w-full" disabled={pending}>

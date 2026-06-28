@@ -301,7 +301,7 @@ function Matchup({ result }: { result: BalancedTeams }) {
           </span>
           <Button
             size="sm"
-            variant="outline"
+            variant="default"
             onClick={download}
             disabled={busy}
           >
