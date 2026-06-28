@@ -1,14 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { useAtom } from "jotai";
-import { toast } from "sonner";
-import { FlagIcon, PlayIcon } from "lucide-react";
-import { liveMatchAtom, EMPTY_LIVE_MATCH } from "@/lib/state/atoms";
 import { createMatch } from "@/app/actions/matches";
-import { formatApiDate } from "@/lib/dates";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -20,7 +12,15 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { LivePlayer } from "./types";
+import { Button } from "@/components/ui/button";
+import { formatApiDate } from "@/lib/dates";
+import { EMPTY_LIVE_MATCH, liveMatchAtom } from "@/lib/state/atoms";
+import { useAtom } from "jotai";
+import { FlagIcon, PlayIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
+import { GoalTimeline } from "./goal-timeline";
 import {
   countGoalsFor,
   createGoalEvent,
@@ -30,12 +30,12 @@ import {
   getScorersSummary,
   tallyGoalsByPlayer,
 } from "./live-match-utils";
+import { LiveScoreboard } from "./live-scoreboard";
+import { ScorerPickerDrawer } from "./scorer-picker-drawer";
+import { StartMatchForm } from "./start-match-form";
+import type { LivePlayer } from "./types";
 import { useHydrated } from "./use-hydrated";
 import { useLiveMatchClock } from "./use-live-match-clock";
-import { StartMatchForm } from "./start-match-form";
-import { LiveScoreboard } from "./live-scoreboard";
-import { GoalTimeline } from "./goal-timeline";
-import { ScorerPickerDrawer } from "./scorer-picker-drawer";
 
 export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const router = useRouter();
@@ -256,11 +256,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
         <AlertDialog>
           <AlertDialogTrigger
             render={
-              <Button
-                size="lg"
-                className="h-12 flex-1 text-base"
-                disabled={pending}
-              >
+              <Button size="lg" className="flex-1" disabled={pending}>
                 <FlagIcon />
                 Finalizar partido
               </Button>
@@ -290,7 +286,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
             render={
               <Button
                 variant="secondary"
-                className="h-12 sm:w-auto"
+                className="sm:w-auto"
                 disabled={pending}
               >
                 Descartar
