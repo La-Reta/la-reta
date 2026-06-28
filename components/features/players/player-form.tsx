@@ -291,19 +291,6 @@ export function PlayerForm({
 
         <div className="flex items-center justify-between gap-2">
           {admin ? (
-            <Alert variant={"default"}>
-              <InfoIcon />
-              <AlertTitle>Acceso de administrador</AlertTitle>
-              <AlertDescription>
-                Para crear un jugador debes ser administrador
-              </AlertDescription>
-              <AlertAction>
-                <Button render={<Link href={"/admin"} />}>
-                  Acceder a Admin
-                </Button>
-              </AlertAction>
-            </Alert>
-          ) : (
             <>
               <Button
                 type="button"
@@ -321,6 +308,19 @@ export function PlayerForm({
                     : "Crear jugador"}
               </Button>
             </>
+          ) : (
+            <Alert variant={"default"}>
+              <InfoIcon />
+              <AlertTitle>Acceso de administrador</AlertTitle>
+              <AlertDescription>
+                Para crear un jugador debes ser administrador
+              </AlertDescription>
+              <AlertAction>
+                <Button render={<Link href={"/admin"} />}>
+                  Acceder a Admin
+                </Button>
+              </AlertAction>
+            </Alert>
           )}
         </div>
       </div>
