@@ -140,7 +140,7 @@ export function PlayersBrowser({
               {g === "ALL" ? "Todos" : GROUP_LABEL[g]}
             </Button>
           ))}
-          <Button size="sm" variant="ghost" onClick={toggleAllFiltered}>
+          <Button size="sm" variant="secondary" onClick={toggleAllFiltered}>
             <ListChecksIcon />
             {allFilteredSelected ? "Quitar" : "Seleccionar"}
           </Button>
