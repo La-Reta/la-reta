@@ -1,13 +1,20 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { RadioIcon } from "lucide-react";
 import { unlockLive } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { RadioIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 export function LiveLock() {
   const router = useRouter();
@@ -29,39 +36,34 @@ export function LiveLock() {
   }
 
   return (
-    <div className="mx-auto max-w-sm py-10">
-      <div className="ring-foreground/10 overflow-hidden rounded-xl bg-[linear-gradient(135deg,#11337a_0%,#0c1f4a_55%,#0a1330_100%)] p-6 text-white ring-1">
-        <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-white/10 text-sky-300 ring-1 ring-white/15">
+    <Card className="mx-auto max-w-sm">
+      <CardHeader>
+        <div className="mb-4 flex size-10 items-center justify-center rounded-md bg-sky-500/10 text-sky-500 ring-1 ring-sky-500/20 dark:bg-sky-400/10 dark:text-sky-400 dark:ring-sky-400/20">
           <RadioIcon className="size-5" />
         </div>
-        <h1 className="text-lg font-bold">Marcador en vivo</h1>
-        <p className="mt-1 text-sm text-white/70">
+        <CardTitle className="text-lg font-bold">Marcador en vivo</CardTitle>
+        <CardDescription className="mt-1">
           Ingresa la contraseña del marcador para iniciar un partido. Así
           evitamos que se llene de partidos de relleno.
-        </p>
+        </CardDescription>
+      </CardHeader>
+      <CardContent>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div>
-            <Label className="mb-1.5 block text-xs text-white/70">
-              Contraseña
-            </Label>
+            <Label className="mb-1.5 block">Contraseña</Label>
             <Input
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
               placeholder="••••••"
               autoFocus
-              className="border-white/20 bg-white/10 text-white placeholder:text-white/40"
             />
           </div>
-          <Button
-            type="submit"
-            disabled={pending}
-            className="w-full bg-sky-500 text-sky-950 hover:bg-sky-400"
-          >
+          <Button type="submit" disabled={pending} className="w-full">
             {pending ? "Verificando…" : "Entrar"}
           </Button>
         </form>
-      </div>
-    </div>
+      </CardContent>
+    </Card>
   );
 }

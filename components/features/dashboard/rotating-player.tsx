@@ -1,14 +1,22 @@
 "use client";
 
-import * as React from "react";
-import Link from "next/link";
-import { ArrowRightIcon } from "lucide-react";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
-import { flagEmoji } from "@/lib/format";
-import { positionGroup, GROUP_COLOR } from "@/lib/constants";
-import { cn } from "@/lib/utils";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import { GROUP_COLOR, positionGroup } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { flagEmoji } from "@/lib/format";
+import { cn } from "@/lib/utils";
+import { ArrowRightIcon } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 
 export function RotatingPlayer({
   players,
@@ -58,25 +66,25 @@ export function RotatingPlayer({
   const activeSlot = index % 12;
 
   return (
-    <section
-      className="bg-card ring-foreground/10 rounded-lg ring-1"
+    <Card
+      className="pb-0"
       aria-label="Conoce a los jugadores"
       onMouseEnter={() => setPaused(true)}
       onMouseLeave={() => setPaused(false)}
       onFocusCapture={() => setPaused(true)}
       onBlurCapture={() => setPaused(false)}
     >
-      <header className="border-b px-4 py-3">
-        <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
+      <CardHeader className="border-b">
+        <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           Conoce a los jugadores
-        </h2>
-        <p className="text-muted-foreground text-[11px]">
+        </CardTitle>
+        <CardDescription className="text-muted-foreground">
           La plantilla completa · actualiza cada momento
-        </p>
-      </header>
+        </CardDescription>
+      </CardHeader>
 
       {/* aria-live so screen readers announce player changes */}
-      <div
+      <CardContent
         aria-live="polite"
         aria-atomic="true"
         className="flex items-center gap-4 p-4 transition-all duration-300"
@@ -129,11 +137,11 @@ export function RotatingPlayer({
             <ArrowRightIcon />
           </Button>
         </div>
-      </div>
+      </CardContent>
 
       {/* dot indicators — touch target mínimo 44×44px via padding */}
-      <footer
-        className="flex flex-wrap justify-center gap-0 border-t px-4"
+      <CardFooter
+        className="flex flex-wrap justify-center gap-0 border-t pt-0!"
         role="group"
         aria-label="Seleccionar jugador"
       >
@@ -160,7 +168,7 @@ export function RotatingPlayer({
             />
           </button>
         ))}
-      </footer>
-    </section>
+      </CardFooter>
+    </Card>
   );
 }

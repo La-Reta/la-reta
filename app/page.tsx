@@ -1,33 +1,24 @@
-import Link from "next/link";
-import Image from "next/image";
+import { ElevenBoard } from "@/components/app/eleven-board";
+import { RankingLevel } from "@/components/app/ranking-level";
+import { ScorerNotFound } from "@/components/app/scorer-not-found";
+import { Spotlight } from "@/components/app/spotlight";
+import { Commentator } from "@/components/features/dashboard/commentator";
+import { PlayerLegend } from "@/components/features/dashboard/player-legend";
+import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
+import { RotatingWord } from "@/components/features/dashboard/rotating-word";
+import { Button } from "@/components/ui/button";
+import { positionGroup, type PositionGroup } from "@/lib/constants";
+import { getBannerWords, getPlayers, getTopScorers } from "@/lib/queries";
 import {
   ArrowRightIcon,
+  ShieldHalfIcon,
   ShuffleIcon,
   UserPlusIcon,
-  ShieldHalfIcon,
-  TrophyIcon,
-  RadioIcon,
 } from "lucide-react";
-import { getPlayers, getBannerWords, getTopScorers } from "@/lib/queries";
-import { FifaCard } from "@/components/shared/fifa-card";
-import { LineupBoard } from "@/components/features/dashboard/lineup-board";
-import { Commentator } from "@/components/features/dashboard/commentator";
-import { RotatingWord } from "@/components/features/dashboard/rotating-word";
-import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
-import { PlayerLegend } from "@/components/features/dashboard/player-legend";
-import { Button } from "@/components/ui/button";
-import { flagEmoji } from "@/lib/format";
-import {
-  positionGroup,
-  GROUP_LABEL,
-  GROUP_COLOR,
-  type PositionGroup,
-} from "@/lib/constants";
-import type { Player } from "@/lib/db/schema";
+import Image from "next/image";
+import Link from "next/link";
 
 export const dynamic = "force-dynamic";
-
-const CREDIX_RED = "#e0312a";
 
 export default async function DashboardPage() {
   const [players, bannerWords, topScorers] = await Promise.all([
@@ -53,8 +44,6 @@ export default async function DashboardPage() {
     FWD: 0,
   };
   for (const p of players) counts[positionGroup(p.position)]++;
-
-  const ranking = players.slice(0, 6);
 
   const topScorer = topScorers[0] ?? null;
   const goleador = topScorer
@@ -159,31 +148,7 @@ export default async function DashboardPage() {
             note={`en ${topScorer.matches} ${topScorer.matches === 1 ? "partido" : "partidos"}`}
           />
         ) : (
-          <section className="bg-card ring-foreground/10 rounded-lg ring-1">
-            <header className="border-b px-4 py-3">
-              <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
-                El goleador
-              </h2>
-              <p className="text-muted-foreground text-[11px]">
-                Máximo anotador de la reta
-              </p>
-            </header>
-            <div className="flex flex-col items-center gap-3 p-6 text-center">
-              <TrophyIcon className="text-muted-foreground size-8" />
-              <p className="text-muted-foreground text-sm">
-                Aún no hay goles registrados. Anota goles en un partido para
-                coronar al goleador.
-              </p>
-              <Button
-                variant="outline"
-                size="sm"
-                render={<Link href="/live" />}
-              >
-                <RadioIcon />
-                Marcador en vivo
-              </Button>
-            </div>
-          </section>
+          <ScorerNotFound />
         )}
         <RotatingPlayer players={players} />
       </div>
@@ -197,144 +162,12 @@ export default async function DashboardPage() {
       {/* ── Pizarra + ranking ──────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
         {/* Pizarra del once ideal */}
-        <section className="bg-card ring-foreground/10 flex flex-col rounded-lg ring-1">
-          <header className="flex items-center justify-between border-b px-4 py-3">
-            <div>
-              <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
-                Once ideal
-              </h2>
-              <p className="text-muted-foreground text-[11px]">
-                El mejor por línea · esquema 4-3-3
-              </p>
-            </div>
-            <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase">
-              4-3-3
-            </span>
-          </header>
-          <LineupBoard players={players} />
-          <footer className="flex flex-wrap items-center gap-x-4 gap-y-1 border-t px-4 py-2.5 text-[11px]">
-            {(Object.keys(counts) as PositionGroup[]).map((g) => (
-              <span key={g} className="flex items-center gap-1.5">
-                <span
-                  className="size-2.5 rounded-full"
-                  style={{ backgroundColor: GROUP_COLOR[g] }}
-                />
-                <span className="text-muted-foreground">{GROUP_LABEL[g]}</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {counts[g]}
-                </span>
-              </span>
-            ))}
-          </footer>
-        </section>
+        <ElevenBoard players={players} counts={counts} />
 
         {/* Ranking */}
-        <section className="bg-card ring-foreground/10 rounded-lg ring-1">
-          <header className="flex items-center justify-between border-b px-4 py-3">
-            <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
-              Ranking de nivel
-            </h2>
-            <Button variant="link" size="sm" render={<Link href="/players" />}>
-              Todos
-              <ArrowRightIcon />
-            </Button>
-          </header>
-          <ol>
-            {ranking.map((p, i) => (
-              <li key={p.id}>
-                <Link
-                  href={`/players/${p.id}`}
-                  className="hover:bg-muted/60 flex items-center gap-3 border-b px-4 py-2 text-sm last:border-b-0"
-                >
-                  <span
-                    className="font-display w-5 text-center text-base font-bold tabular-nums"
-                    style={{ color: i === 0 ? CREDIX_RED : undefined }}
-                  >
-                    {i + 1}
-                  </span>
-                  <span
-                    className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-[10px] font-bold text-white"
-                    style={{
-                      backgroundColor: GROUP_COLOR[positionGroup(p.position)],
-                    }}
-                  >
-                    {p.position}
-                  </span>
-                  <span className="truncate font-medium">{p.name}</span>
-                  <span className="ml-auto shrink-0">
-                    {flagEmoji(p.nationality)}
-                  </span>
-                  <span className="w-8 shrink-0 text-right font-mono font-bold tabular-nums">
-                    {p.overall}
-                  </span>
-                </Link>
-              </li>
-            ))}
-          </ol>
-        </section>
+        <RankingLevel players={players} />
       </div>
     </div>
-  );
-}
-
-function Spotlight({
-  title,
-  subtitle,
-  player,
-  statValue,
-  statLabel,
-  note,
-}: {
-  title: string;
-  subtitle: string;
-  player: Player;
-  statValue: number;
-  statLabel: string;
-  note?: string;
-}) {
-  return (
-    <section className="bg-card ring-foreground/10 rounded-lg ring-1">
-      <header className="border-b px-4 py-3">
-        <h2 className="font-display text-lg font-semibold tracking-wide uppercase">
-          {title}
-        </h2>
-        <p className="text-muted-foreground text-[11px]">{subtitle}</p>
-      </header>
-      <div className="flex items-center gap-4 p-4">
-        <Link
-          href={`/players/${player.id}`}
-          className="w-28 shrink-0 transition-transform hover:-translate-y-1"
-        >
-          <FifaCard player={player} size="sm" />
-        </Link>
-        <div className="min-w-0">
-          <p className="font-display text-2xl leading-none font-bold uppercase">
-            {player.displayName}
-          </p>
-          <p className="text-muted-foreground truncate text-sm">
-            {player.name}
-          </p>
-          <p className="mt-2 font-mono text-3xl font-black tabular-nums">
-            {statValue}
-            <span className="text-muted-foreground ml-1 text-xs font-medium">
-              {statLabel}
-            </span>
-          </p>
-          {note ? (
-            <p className="text-muted-foreground text-[11px]">{note}</p>
-          ) : null}
-          <Button
-            variant="outline"
-            size="xs"
-            className="mt-3"
-            render={<Link href={`/players/${player.id}`} />}
-          >
-            Ver ficha
-            <ArrowRightIcon />
-          </Button>
-        </div>
-      </div>
-    </section>
   );
 }
 

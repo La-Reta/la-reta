@@ -1,10 +1,10 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { LogOutIcon } from "lucide-react";
 import { logoutAdmin } from "@/app/actions/admin";
 import { Button } from "@/components/ui/button";
+import { LogOutIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
 
 export function LogoutButton() {
   const router = useRouter();
@@ -12,8 +12,7 @@ export function LogoutButton() {
 
   return (
     <Button
-      variant="ghost"
-      size="sm"
+      variant="destructive"
       disabled={pending}
       onClick={() =>
         startTransition(async () => {

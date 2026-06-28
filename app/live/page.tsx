@@ -1,7 +1,7 @@
-import { getPlayers } from "@/lib/queries";
-import { isLiveUnlocked } from "@/lib/admin";
-import { LiveMatch } from "@/components/features/live/live-match";
 import { LiveLock } from "@/components/features/live/live-lock";
+import { LiveMatch } from "@/components/features/live/live-match";
+import { isLiveUnlocked } from "@/lib/admin";
+import { getPlayers } from "@/lib/queries";
 
 export const metadata = { title: "En vivo · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -24,7 +24,7 @@ export default async function LivePage() {
           el registro de partidos.
         </p>
       </div>
-      {unlocked ? <LiveMatch players={list} /> : <LiveLock />}
+      {false ? <LiveMatch players={list} /> : <LiveLock />}
     </div>
   );
 }

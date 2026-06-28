@@ -1,10 +1,10 @@
-import Image from "next/image";
 import { MicIcon, QuoteIcon } from "lucide-react";
+import Image from "next/image";
 
 /** Fun "pundit" panel on the dashboard. */
 export function Commentator() {
   return (
-    <section className="ring-foreground/10 overflow-hidden rounded-lg bg-[linear-gradient(120deg,#241433_0%,#150d24_55%,#0b0816_100%)] text-white ring-1">
+    <section className="ring-foreground/10 h-fit overflow-hidden rounded-lg bg-[linear-gradient(120deg,#241433_0%,#150d24_55%,#0b0816_100%)] text-white ring-1">
       <div className="flex items-stretch">
         <div className="relative w-28 shrink-0 bg-black/30 sm:w-44">
           <Image
