@@ -20,6 +20,13 @@ export type IdeaInput = {
   description: string;
   author: string;
   category: string;
+  client?: {
+    language?: string;
+    timezone?: string;
+    screen?: string;
+    platform?: string;
+    userAgent?: string;
+  };
 };
 
 export async function createIdea(input: IdeaInput): Promise<Result> {
@@ -39,6 +46,11 @@ export async function createIdea(input: IdeaInput): Promise<Result> {
       description,
       author: input.author?.trim() || null,
       category,
+      language: input.client?.language?.slice(0, 24) || null,
+      timezone: input.client?.timezone?.slice(0, 64) || null,
+      screen: input.client?.screen?.slice(0, 24) || null,
+      platform: input.client?.platform?.slice(0, 80) || null,
+      userAgent: input.client?.userAgent || null,
     })
     .returning({ id: ideas.id });
 

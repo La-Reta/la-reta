@@ -59,6 +59,7 @@ export default async function IdeasPage() {
                   <TableHead>Prioridad</TableHead>
                   <TableHead>Tiempo</TableHead>
                   <TableHead>Autor</TableHead>
+                  <TableHead>Cliente</TableHead>
                   <TableHead className="text-right">Fecha</TableHead>
                   {admin ? <TableHead className="w-10" /> : null}
                 </TableRow>
@@ -95,6 +96,13 @@ export default async function IdeasPage() {
                     <TableCell className="text-xs">
                       {idea.author ?? "Anónimo"}
                     </TableCell>
+                    <TableCell>
+                      <ClientPills
+                        language={idea.language}
+                        timezone={idea.timezone}
+                        screen={idea.screen}
+                      />
+                    </TableCell>
                     <TableCell className="text-muted-foreground text-right text-xs">
                       {formatShortDate(idea.createdAt)}
                     </TableCell>
@@ -110,6 +118,32 @@ export default async function IdeasPage() {
           </div>
         )}
       </section>
+    </div>
+  );
+}
+
+function ClientPills({
+  language,
+  timezone,
+  screen,
+}: {
+  language: string | null;
+  timezone: string | null;
+  screen: string | null;
+}) {
+  const items = [language, timezone, screen].filter(Boolean);
+
+  if (items.length === 0) {
+    return <span className="text-muted-foreground text-xs">—</span>;
+  }
+
+  return (
+    <div className="flex max-w-48 flex-wrap gap-1">
+      {items.map((item) => (
+        <Pill key={item} className="bg-muted text-muted-foreground">
+          {item}
+        </Pill>
+      ))}
     </div>
   );
 }

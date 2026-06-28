@@ -17,6 +17,23 @@ import {
 
 const EMPTY = { title: "", description: "", author: "", category: "mejora" };
 
+function collectClient() {
+  if (typeof navigator === "undefined") return {};
+  const uaData = (
+    navigator as unknown as { userAgentData?: { platform?: string } }
+  ).userAgentData;
+  return {
+    language: navigator.language,
+    timezone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+    screen:
+      typeof screen !== "undefined"
+        ? `${screen.width}x${screen.height}`
+        : undefined,
+    platform: uaData?.platform ?? navigator.platform,
+    userAgent: navigator.userAgent,
+  };
+}
+
 export function IdeaForm() {
   const router = useRouter();
   const [form, setForm] = React.useState(EMPTY);
@@ -33,7 +50,7 @@ export function IdeaForm() {
       return;
     }
     startTransition(async () => {
-      const res = await createIdea(form);
+      const res = await createIdea({ ...form, client: collectClient() });
       if (res.ok) {
         toast.success("¡Idea enviada! Gracias 🙌");
         setForm(EMPTY);

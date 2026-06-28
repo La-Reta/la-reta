@@ -3,7 +3,7 @@
 import * as React from "react";
 import { useRouter } from "next/navigation";
 import { toast } from "sonner";
-import { Trash2Icon, SaveIcon } from "lucide-react";
+import { MonitorSmartphoneIcon, SaveIcon, Trash2Icon } from "lucide-react";
 import { updateIdeaTriage, deleteIdea } from "@/app/actions/ideas";
 import {
   IDEA_CATEGORY_LABEL,
@@ -149,6 +149,24 @@ function IdeaEditor({
         </p>
       </div>
 
+      <div className="rounded-lg border bg-muted/30 p-3">
+        <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
+          <MonitorSmartphoneIcon className="size-3.5" />
+          Cliente
+        </div>
+        <div className="mt-2 grid gap-2 text-xs sm:grid-cols-2">
+          <ClientInfo label="Idioma" value={idea.language} />
+          <ClientInfo label="Zona" value={idea.timezone} />
+          <ClientInfo label="Pantalla" value={idea.screen} />
+          <ClientInfo label="Plataforma" value={idea.platform} />
+        </div>
+        {idea.userAgent ? (
+          <p className="text-muted-foreground mt-2 line-clamp-2 text-[11px]">
+            {idea.userAgent}
+          </p>
+        ) : null}
+      </div>
+
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
           <Label className="mb-1.5 block text-xs">Estado</Label>
@@ -219,6 +237,21 @@ function IdeaEditor({
           Eliminar
         </Button>
       </div>
+    </div>
+  );
+}
+
+function ClientInfo({
+  label,
+  value,
+}: {
+  label: string;
+  value: string | null;
+}) {
+  return (
+    <div>
+      <p className="text-muted-foreground text-[10px] uppercase">{label}</p>
+      <p className="truncate font-medium">{value ?? "—"}</p>
     </div>
   );
 }

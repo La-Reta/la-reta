@@ -101,6 +101,11 @@ export const ideas = pgTable("ideas", {
   priority: ideaPriorityEnum("priority"),
   estimate: varchar("estimate", { length: 60 }),
   adminNotes: text("admin_notes"),
+  language: varchar("language", { length: 24 }),
+  timezone: varchar("timezone", { length: 64 }),
+  screen: varchar("screen", { length: 24 }),
+  platform: varchar("platform", { length: 80 }),
+  userAgent: text("user_agent"),
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

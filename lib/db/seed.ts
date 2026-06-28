@@ -395,6 +395,10 @@ async function main() {
       status: "planeada",
       priority: "media",
       estimate: "1 jornada",
+      language: "es-MX",
+      timezone: "America/Mexico_City",
+      screen: "390x844",
+      platform: "iPhone",
     },
     {
       title: "Tabla de goleadores en la app",
@@ -405,6 +409,10 @@ async function main() {
       status: "hecha",
       priority: "alta",
       estimate: "Listo",
+      language: "es-MX",
+      timezone: "America/Mexico_City",
+      screen: "1440x900",
+      platform: "macOS",
     },
     {
       title: "Reta nocturna los viernes",
@@ -413,6 +421,10 @@ async function main() {
       author: "Migue",
       category: "social",
       status: "nueva",
+      language: "es-MX",
+      timezone: "America/Mexico_City",
+      screen: "412x915",
+      platform: "Android",
     },
     {
       title: "Rotar al portero cada partido",
@@ -421,6 +433,10 @@ async function main() {
       category: "reglas",
       status: "en_progreso",
       priority: "baja",
+      language: "es-MX",
+      timezone: "America/Mexico_City",
+      screen: "1366x768",
+      platform: "Windows",
     },
   ]);
 
