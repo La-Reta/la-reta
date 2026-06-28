@@ -231,9 +231,18 @@ export function AppSidebar() {
               <p className="text-sidebar-foreground/55 text-[10px] font-semibold tracking-[0.16em] uppercase">
                 Estado actual
               </p>
-              <p className="text-sidebar-foreground mt-1 text-sm font-semibold">
-                {liveActive ? "Partido en juego" : "Sin partido activo"}
-              </p>
+              {liveActive ? (
+                <Link
+                  href={"http://localhost:3000/live"}
+                  className="text-sidebar-foreground mt-1 text-sm font-semibold"
+                >
+                  Partido en juego
+                </Link>
+              ) : (
+                <p className="text-sidebar-foreground mt-1 text-sm font-semibold">
+                  Sin partido activo
+                </p>
+              )}
             </div>
             <div
               className={
