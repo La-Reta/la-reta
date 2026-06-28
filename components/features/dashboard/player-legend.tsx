@@ -6,7 +6,7 @@ export function PlayerLegend() {
   return (
     <section
       aria-label="Jugador leyenda de la reta"
-      className="relative overflow-hidden rounded-lg bg-[linear-gradient(135deg,#3d2a00_0%,#5c3d00_30%,#3d2800_65%,#1e1400_100%)] text-white"
+      className="relative overflow-hidden rounded-lg bg-[linear-gradient(135deg,#3d2a00_0%,#5c3d00_30%,#3d2800_65%,#1e1400_100%)] text-white lg:h-[264px]"
     >
       {/* subtle radial glow behind the image */}
       <div

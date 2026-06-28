@@ -16,8 +16,8 @@ export default async function AdminIdeasPage() {
   const ideas = await getIdeas();
 
   return (
-    <div className="mx-auto max-w-5xl space-y-4">
-      <div className="flex items-center justify-between">
+    <div className="mx-auto max-w-5xl min-w-0 space-y-4">
+      <div className="flex items-center justify-between gap-3">
         <Button variant="secondary" size="sm" render={<Link href="/admin" />}>
           <ArrowLeftIcon />
           Admin

@@ -68,12 +68,12 @@ export default async function DashboardPage() {
           </g>
         </svg>
 
-        <div className="relative flex flex-col gap-6 p-6 md:flex-row md:items-end md:justify-between md:p-9">
+        <div className="relative flex flex-col gap-6 p-6 lg:flex-row lg:items-end lg:justify-between lg:p-9">
           <div>
             <span className="font-display text-xs font-semibold tracking-[0.25em] text-emerald-300/90 uppercase">
               Jornada · Temporada 2026
             </span>
-            <h1 className="font-display mt-1 text-5xl leading-[0.92] font-bold tracking-tight uppercase md:text-7xl">
+            <h1 className="font-display mt-1 text-5xl leading-[0.92] font-bold tracking-tight uppercase sm:text-6xl lg:text-7xl">
               La Reta
               <br />
               <RotatingWord className="text-emerald-300" words={bannerWords} />
@@ -95,14 +95,14 @@ export default async function DashboardPage() {
             </div>
           </div>
 
-          <div className="shrink-0 self-center rounded-xl bg-white p-2.5 shadow-xl ring-1 ring-black/10 sm:p-3 md:self-end">
+          <div className="shrink-0 self-center rounded-xl bg-white p-2.5 shadow-xl ring-1 ring-black/10 sm:p-3 lg:self-end">
             <Image
               src="/fifa-credix.webp"
               alt="FIFA 26 × Credix"
               width={1536}
               height={1024}
               priority
-              className="h-auto w-full max-w-[190px] sm:max-w-[180px] md:max-w-[240px]"
+              className="h-auto w-full max-w-[190px] sm:max-w-[210px] lg:max-w-[240px]"
             />
           </div>
         </div>
@@ -122,7 +122,7 @@ export default async function DashboardPage() {
       </section>
 
       {/* ── Destacados: crack + goleador + jugadores (horizontal en desktop) ───── */}
-      <div className="grid gap-6 md:grid-cols-2 xl:grid-cols-3">
+      <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Spotlight
           title="El crack"
           subtitle="Mayor overall de la plantilla"
@@ -146,7 +146,7 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Comentarista + Leyenda ──────────────────────────────────── */}
-      <div className="grid gap-6 md:grid-cols-2">
+      <div className="grid gap-6 lg:grid-cols-2">
         <Commentator />
         <PlayerLegend />
       </div>

@@ -41,23 +41,23 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
   }
 
   return (
-    <div className="grid gap-4 md:grid-cols-[280px_1fr] md:items-start">
+    <div className="grid min-w-0 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
       {/* Lista */}
-      <div className="divide-border bg-card ring-foreground/10 divide-y rounded-lg ring-1">
+      <div className="divide-border bg-card ring-foreground/10 min-w-0 divide-y overflow-hidden rounded-lg ring-1 lg:sticky lg:top-16 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
         {ideas.map((idea) => (
           <button
             key={idea.id}
             type="button"
             onClick={() => setSelectedId(idea.id)}
             className={cn(
-              "flex w-full flex-col gap-1 px-3 py-2.5 text-left transition-colors",
+              "flex w-full min-w-0 flex-col gap-1 px-3 py-2.5 text-left transition-colors",
               idea.id === selectedId ? "bg-muted" : "hover:bg-muted/50",
             )}
           >
             <span className="line-clamp-1 text-sm font-medium">
               {idea.title}
             </span>
-            <span className="flex items-center gap-2">
+            <span className="flex min-w-0 flex-wrap items-center gap-2">
               <span
                 className={cn(
                   "rounded-sm px-1.5 py-0.5 text-[10px] font-medium",
@@ -137,19 +137,19 @@ function IdeaEditor({
   }
 
   return (
-    <div className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1">
-      <div>
-        <h2 className="text-lg font-bold">{idea.title}</h2>
-        <p className="text-muted-foreground mt-1 text-sm">
+    <div className="bg-card ring-foreground/10 min-w-0 space-y-4 rounded-lg p-4 ring-1">
+      <div className="min-w-0">
+        <h2 className="text-lg font-bold break-words">{idea.title}</h2>
+        <p className="text-muted-foreground mt-1 text-sm break-words">
           {idea.description}
         </p>
-        <p className="text-muted-foreground mt-2 text-xs">
-          {IDEA_CATEGORY_LABEL[idea.category]} · por{" "}
-          {idea.author ?? "Anónimo"} · {formatCompactDate(idea.createdAt)}
+        <p className="text-muted-foreground mt-2 text-xs break-words">
+          {IDEA_CATEGORY_LABEL[idea.category]} · por {idea.author ?? "Anónimo"}{" "}
+          · {formatCompactDate(idea.createdAt)}
         </p>
       </div>
 
-      <div className="rounded-lg border bg-muted/30 p-3">
+      <div className="bg-muted/30 min-w-0 rounded-lg border p-3">
         <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
           <MonitorSmartphoneIcon className="size-3.5" />
           Cliente
@@ -161,7 +161,7 @@ function IdeaEditor({
           <ClientInfo label="Plataforma" value={idea.platform} />
         </div>
         {idea.userAgent ? (
-          <p className="text-muted-foreground mt-2 line-clamp-2 text-[11px]">
+          <p className="text-muted-foreground mt-2 line-clamp-3 text-[11px] break-all">
             {idea.userAgent}
           </p>
         ) : null}
@@ -227,7 +227,7 @@ function IdeaEditor({
         </div>
       </div>
 
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button onClick={save} disabled={pending}>
           <SaveIcon />
           {pending ? "Guardando…" : "Guardar"}
@@ -241,17 +241,11 @@ function IdeaEditor({
   );
 }
 
-function ClientInfo({
-  label,
-  value,
-}: {
-  label: string;
-  value: string | null;
-}) {
+function ClientInfo({ label, value }: { label: string; value: string | null }) {
   return (
-    <div>
+    <div className="min-w-0">
       <p className="text-muted-foreground text-[10px] uppercase">{label}</p>
-      <p className="truncate font-medium">{value ?? "—"}</p>
+      <p className="font-medium break-words">{value ?? "—"}</p>
     </div>
   );
 }
