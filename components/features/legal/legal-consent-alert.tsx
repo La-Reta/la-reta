@@ -4,6 +4,7 @@ import * as React from "react";
 import { toast } from "sonner";
 import { ScaleIcon, ShieldAlertIcon, ShieldCheckIcon } from "lucide-react";
 import Link from "next/link";
+import { usePathname } from "next/navigation";
 
 import { Button } from "@/components/ui/button";
 import {
@@ -24,6 +25,8 @@ const CONSENT_EVENT = "reta-legal-consent-updated";
 type ConsentState = "accepted" | "rejected" | "pending";
 
 export function LegalConsentGate({ children }: { children: React.ReactNode }) {
+  const pathname = usePathname();
+  const isLegalRoute = pathname === "/legal" || pathname.startsWith("/legal/");
   const consent = React.useSyncExternalStore(
     subscribeConsent,
     getConsentSnapshot,
@@ -31,6 +34,15 @@ export function LegalConsentGate({ children }: { children: React.ReactNode }) {
   );
 
   if (consent === "accepted") return children;
+
+  if (isLegalRoute) {
+    return (
+      <>
+        {children}
+        <LegalConsentInline />
+      </>
+    );
+  }
 
   if (consent === "rejected") {
     return <LegalConsentBlocked />;
@@ -41,6 +53,27 @@ export function LegalConsentGate({ children }: { children: React.ReactNode }) {
       {children}
       <LegalConsentDrawer />
     </>
+  );
+}
+
+function LegalConsentInline() {
+  const [pending, startTransition] = React.useTransition();
+
+  return (
+    <div className="bg-card/95 ring-foreground/10 sticky bottom-4 z-30 mx-auto mt-6 max-w-3xl rounded-2xl p-3 shadow-lg ring-1 backdrop-blur">
+      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+        <p className="text-muted-foreground text-sm">
+          Puedes leer estos documentos antes de decidir. Si estás de acuerdo,
+          acepta para usar el resto de la app.
+        </p>
+        <div className="shrink-0 sm:w-44">
+          <ConsentAcceptButton
+            pending={pending}
+            onAccept={() => accept(startTransition)}
+          />
+        </div>
+      </div>
+    </div>
   );
 }
 
