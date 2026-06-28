@@ -1,11 +1,12 @@
 "use client";
 
-import * as React from "react";
-import { toast } from "sonner";
 import { ScaleIcon, ShieldAlertIcon, ShieldCheckIcon } from "lucide-react";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
+import { acceptLegalTerms } from "@/app/actions/legal";
 import { Button } from "@/components/ui/button";
 import {
   Drawer,
@@ -15,7 +16,6 @@ import {
   DrawerHeader,
   DrawerTitle,
 } from "@/components/ui/drawer";
-import { acceptLegalTerms } from "@/app/actions/legal";
 import { LEGAL_CONSENT_VERSION } from "@/lib/legal";
 
 const CONSENT_STORAGE_KEY = `reta-legal-consent:${LEGAL_CONSENT_VERSION}`;
@@ -93,11 +93,30 @@ function LegalConsentDrawer() {
             </DrawerTitle>
             <DrawerDescription className="max-w-3xl leading-relaxed">
               Para usar Reta Credix aceptas los{" "}
-              <Link href="/legal/terminos">términos y condiciones</Link>, el{" "}
-              <Link href="/legal/privacidad">aviso de privacidad</Link> y la
-              política de{" "}
-              <Link href="/legal/ia-y-contenido">IA y contenido</Link>. Al
-              aceptar guardamos evidencia técnica mínima del dispositivo y
+              <Button
+                render={<Link href="/legal/terminos"></Link>}
+                variant={"link"}
+                className={"p-0"}
+              >
+                términos y condiciones
+              </Button>
+              , el{" "}
+              <Button
+                render={<Link href="/legal/privacidad"></Link>}
+                variant={"link"}
+                className={"p-0"}
+              >
+                aviso de privacidad
+              </Button>{" "}
+              y la política de{" "}
+              <Button
+                render={<Link href="/legal/ia-y-contenido"></Link>}
+                variant={"link"}
+                className={"p-0"}
+              >
+                IA y contenido
+              </Button>
+              . Al aceptar guardamos evidencia técnica mínima del dispositivo y
               conexión para seguridad, auditoría y defensa del proyecto.
             </DrawerDescription>
           </DrawerHeader>
