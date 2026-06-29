@@ -139,35 +139,36 @@ export function RotatingPlayer({
         </div>
       </CardContent>
 
-      {/* dot indicators — touch target mínimo 44×44px via padding */}
       <CardFooter
-        className="flex flex-wrap justify-center gap-0 border-t pt-0!"
+        className="justify-center overflow-hidden border-t px-3 pt-2! pb-3!"
         role="group"
         aria-label="Seleccionar jugador"
       >
-        {visibleDots.map((p, i) => (
-          <button
-            key={i}
-            type="button"
-            onClick={() => goTo(i)}
-            aria-label={`Ver jugador ${i + 1}${i === activeSlot ? " (actual)" : ""}`}
-            aria-current={i === activeSlot ? "true" : undefined}
-            className={cn(
-              // 44×44px táctil, punto visual centrado
-              "flex md:min-h-[44px] min-h-[30px] md:min-w-[44px] min-w-[30px] items-center justify-center",
-              "focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none",
-            )}
-          >
-            <span
+        <div className="flex max-w-full scrollbar-none items-center justify-center gap-1.5 overflow-x-auto px-1 py-0.5">
+          {visibleDots.map((p, i) => (
+            <button
+              key={p.id}
+              type="button"
+              onClick={() => goTo(i)}
+              aria-label={`Ver jugador ${i + 1}: ${p.displayName}${i === activeSlot ? " (actual)" : ""}`}
+              aria-current={i === activeSlot ? "true" : undefined}
               className={cn(
-                "block size-2.5 rounded-full transition-all duration-200",
-                i === activeSlot
-                  ? "bg-foreground scale-125"
-                  : "bg-muted-foreground/30 hover:bg-muted-foreground/60",
+                "flex size-5 shrink-0 items-center justify-center rounded-full transition-colors",
+                "focus-visible:ring-ring focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
               )}
-            />
-          </button>
-        ))}
+            >
+              <span
+                className={cn(
+                  "block h-1.5 rounded-full transition-all duration-200",
+                  i === activeSlot
+                    ? "bg-primary w-4"
+                    : "bg-muted-foreground/30 hover:bg-muted-foreground/50 w-1.5",
+                )}
+              />
+              <span className="sr-only">{p.displayName}</span>
+            </button>
+          ))}
+        </div>
       </CardFooter>
     </Card>
   );
