@@ -31,6 +31,7 @@ import {
   type StatKey,
 } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { ageFromBirthDate } from "@/lib/dates";
 import { computeOverall } from "@/lib/ratings";
 import { InfoIcon } from "lucide-react";
 import Link from "next/link";
@@ -41,6 +42,7 @@ import { toast } from "sonner";
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
   right: "Derecho",
+  both: "Ambos",
 };
 
 type FormState = {
@@ -51,7 +53,7 @@ type FormState = {
   preferredFoot: string;
   nationality: string;
   photoUrl: string;
-  age: string;
+  birthDate: string;
   heightCm: string;
   weightKg: string;
 } & Record<StatKey, number>;
@@ -71,7 +73,11 @@ function initialState(player?: Player): FormState {
     preferredFoot: player?.preferredFoot ?? "right",
     nationality: player?.nationality ?? "mx",
     photoUrl: player?.photoUrl ?? "",
-    age: String(player?.age ?? 25),
+    // Prefer the stored birth date; for legacy players without one, approximate
+    // from the stored age so the field and preview stay populated.
+    birthDate:
+      player?.birthDate ??
+      (player ? `${new Date().getFullYear() - player.age}-01-01` : ""),
     heightCm: String(player?.heightCm ?? 175),
     weightKg: String(player?.weightKg ?? 75),
     pace: player?.pace ?? 38,
@@ -108,7 +114,7 @@ export function PlayerForm({
     physical: form.physical,
   };
   const overall = computeOverall(form.position as Player["position"], stats);
-  const age = parseNumberInput(form.age);
+  const age = ageFromBirthDate(form.birthDate);
   const heightCm = parseNumberInput(form.heightCm);
   const weightKg = parseNumberInput(form.weightKg);
 
@@ -124,6 +130,7 @@ export function PlayerForm({
     preferredFoot: form.preferredFoot as Player["preferredFoot"],
     nationality: form.nationality,
     photoUrl: form.photoUrl || null,
+    birthDate: form.birthDate || null,
     age: Number.isFinite(age) ? age : (player?.age ?? 25),
     heightCm: Number.isFinite(heightCm) ? heightCm : (player?.heightCm ?? 175),
     weightKg: Number.isFinite(weightKg) ? weightKg : (player?.weightKg ?? 75),
@@ -242,11 +249,18 @@ export function PlayerForm({
 
         <FormSection title="Perfil físico">
           <div className="grid gap-4 sm:grid-cols-3">
-            <FormField label="Edad">
+            <FormField
+              label={
+                Number.isFinite(age)
+                  ? `Fecha de nacimiento · ${age} años`
+                  : "Fecha de nacimiento"
+              }
+            >
               <Input
-                type="number"
-                value={form.age}
-                onChange={(e) => set("age", e.target.value)}
+                type="date"
+                max={new Date().toISOString().slice(0, 10)}
+                value={form.birthDate}
+                onChange={(e) => set("birthDate", e.target.value)}
               />
             </FormField>
             <FormField label="Altura (cm)">

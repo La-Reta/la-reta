@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { db, players, playerStatHistory } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { computeOverall } from "@/lib/ratings";
+import { ageFromBirthDate } from "@/lib/dates";
 import {
   POSITIONS,
   FEET,
@@ -34,6 +35,7 @@ export type PlayerInput = {
   preferredFoot: string;
   nationality: string;
   photoUrl: string;
+  birthDate: string;
   age: number;
   heightCm: number;
   weightKg: number;
@@ -83,6 +85,11 @@ function normalize(input: PlayerInput) {
 
   const position = input.position as Position;
 
+  // birthDate (YYYY-MM-DD) is the source of truth when present; age is derived
+  // from it. Fall back to the raw age input for entries without a birth date.
+  const birthDate = input.birthDate?.trim() || null;
+  const derivedAge = ageFromBirthDate(birthDate);
+
   return {
     name,
     displayName: displayName.slice(0, 60),
@@ -91,7 +98,13 @@ function normalize(input: PlayerInput) {
     preferredFoot: input.preferredFoot as Foot,
     nationality: (input.nationality?.trim().toLowerCase() || "mx").slice(0, 2),
     photoUrl: input.photoUrl?.trim() || null,
-    age: clamp(input.age, 14, 60, 25),
+    birthDate,
+    age: clamp(
+      Number.isFinite(derivedAge) ? derivedAge : input.age,
+      14,
+      60,
+      25,
+    ),
     heightCm: clamp(input.heightCm, 140, 220, 175),
     weightKg: clamp(input.weightKg, 40, 130, 75),
     ...stats,

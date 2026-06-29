@@ -25,7 +25,7 @@ export const POSITIONS = [
 
 export type Position = (typeof POSITIONS)[number];
 
-export const FEET = ["left", "right"] as const;
+export const FEET = ["left", "right", "both"] as const;
 export type Foot = (typeof FEET)[number];
 
 export type PositionGroup = "GK" | "DEF" | "MID" | "FWD";

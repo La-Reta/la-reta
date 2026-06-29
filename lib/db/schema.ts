@@ -42,7 +42,10 @@ export const players = pgTable("players", {
   photoUrl: varchar("photo_url", { length: 500 }),
 
   // Physical profile
+  // age is kept as a derived snapshot (computed from birthDate when present) so
+  // existing rows/queries keep working; new entries set birthDate and age follows.
   age: smallint("age").notNull(),
+  birthDate: date("birth_date"),
   heightCm: smallint("height_cm").notNull(),
   weightKg: smallint("weight_kg").notNull(),
 

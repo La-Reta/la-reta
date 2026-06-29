@@ -33,6 +33,7 @@ import { notFound } from "next/navigation";
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
   right: "Derecho",
+  both: "Ambos",
 };
 
 function statColor(v: number) {

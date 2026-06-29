@@ -32,3 +32,10 @@ export function formatShortDateOnly(value: string) {
 export function formatTime(value: ConfigType) {
   return dayjs(value).locale("es-mx").format("HH:mm");
 }
+
+/** Full years between a YYYY-MM-DD birth date and today. NaN if unparseable. */
+export function ageFromBirthDate(value?: string | null) {
+  if (!value) return Number.NaN;
+  const d = asDateOnly(value);
+  return d.isValid() ? dayjs().diff(d, "year") : Number.NaN;
+}
