@@ -1,5 +1,4 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   Card,
   CardAction,
@@ -10,13 +9,8 @@ import {
 import { isAdmin } from "@/lib/admin";
 import { formatShortDate } from "@/lib/dates";
 import { RetaWord } from "@/lib/db";
-import {
-  ClockIcon,
-  GlobeIcon,
-  PencilIcon,
-  SmartphoneIcon,
-  TrashIcon,
-} from "lucide-react";
+import { ClockIcon, GlobeIcon, SmartphoneIcon } from "lucide-react";
+import { WordAdminActions } from "./word-admin-actions";
 
 export async function WordItem({ word }: { word: RetaWord }) {
   const admin = await isAdmin();
@@ -32,12 +26,7 @@ export async function WordItem({ word }: { word: RetaWord }) {
         </CardTitle>
         {admin && (
           <CardAction className="flex flex-wrap gap-2">
-            <Button size={"icon-sm"} variant={"secondary"}>
-              <PencilIcon />
-            </Button>
-            <Button size={"icon-sm"} variant={"destructive"}>
-              <TrashIcon />
-            </Button>
+            <WordAdminActions id={word.id} word={word.word} />
           </CardAction>
         )}
       </CardHeader>

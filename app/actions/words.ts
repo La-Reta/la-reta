@@ -1,7 +1,9 @@
 "use server";
 
+import { eq } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { db, retaWords } from "@/lib/db";
+import { isAdmin } from "@/lib/admin";
 
 export type ClientInfo = {
   language?: string;
@@ -33,6 +35,32 @@ export async function addRetaWord(input: WordInput): Promise<Result> {
     platform: input.client?.platform?.slice(0, 80) || null,
     userAgent: input.client?.userAgent || null,
   });
+
+  revalidatePath("/");
+  revalidatePath("/palabras");
+  return { ok: true };
+}
+
+export async function updateRetaWord(
+  id: number,
+  rawWord: string,
+): Promise<Result> {
+  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+  const word = rawWord?.trim().replace(/\s+/g, " ");
+  if (!word) return { ok: false, error: "Escribe una palabra." };
+  if (word.length > 40) return { ok: false, error: "Máximo 40 caracteres." };
+
+  await db.update(retaWords).set({ word }).where(eq(retaWords.id, id));
+
+  revalidatePath("/");
+  revalidatePath("/palabras");
+  return { ok: true };
+}
+
+export async function deleteRetaWord(id: number): Promise<Result> {
+  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+
+  await db.delete(retaWords).where(eq(retaWords.id, id));
 
   revalidatePath("/");
   revalidatePath("/palabras");
