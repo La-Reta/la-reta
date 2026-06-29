@@ -23,7 +23,9 @@ function goalsLabel(goals: number) {
 
 function resultLabel(item: PlayerGoalHistoryItem) {
   if (item.scoreA === item.scoreB) return "Empate";
-  return item.scoreA > item.scoreB ? `Ganó ${item.teamAName}` : `Ganó ${item.teamBName}`;
+  return item.scoreA > item.scoreB
+    ? `Ganó ${item.teamAName}`
+    : `Ganó ${item.teamBName}`;
 }
 
 function playerTeamName(item: PlayerGoalHistoryItem) {
@@ -92,12 +94,14 @@ export function PlayerGoalHistory({
             </div>
 
             {latest ? (
-              <div className="rounded-lg border bg-muted/30 p-3">
+              <div className="bg-muted/30 rounded-lg border p-3">
                 <p className="text-muted-foreground text-[10px] font-semibold uppercase">
                   Último registro
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
-                  <span className="font-semibold">{goalsLabel(latest.goals)}</span>
+                  <span className="font-semibold">
+                    {goalsLabel(latest.goals)}
+                  </span>
                   <span className="text-muted-foreground">
                     {formatShortDateOnly(latest.playedAt)}
                   </span>
@@ -113,7 +117,7 @@ export function PlayerGoalHistory({
               {history.map((item) => (
                 <li
                   key={item.matchId}
-                  className="rounded-lg border p-3 transition-colors hover:bg-muted/35"
+                  className="hover:bg-muted/35 rounded-lg border p-3 transition-colors"
                 >
                   <div className="flex flex-wrap items-start justify-between gap-3">
                     <div className="min-w-0">
@@ -125,7 +129,8 @@ export function PlayerGoalHistory({
                         {item.teamBName}
                       </p>
                       <p className="text-muted-foreground mt-1 text-xs">
-                        {formatShortDateOnly(item.playedAt)} · {resultLabel(item)}
+                        {formatShortDateOnly(item.playedAt)} ·{" "}
+                        {resultLabel(item)}
                         {playerTeamName(item)
                           ? ` · ${playerTeamName(item)}`
                           : ""}
@@ -139,7 +144,9 @@ export function PlayerGoalHistory({
                       <Button
                         size="xs"
                         variant="outline"
-                        render={<Link href={`/matches/${item.matchId}/detail`} />}
+                        render={
+                          <Link href={`/matches/${item.matchId}/detail`} />
+                        }
                       >
                         Ver
                       </Button>
@@ -171,7 +178,7 @@ function GoalStat({
   value: string;
 }) {
   return (
-    <div className="rounded-lg border bg-muted/30 p-3">
+    <div className="bg-muted/30 rounded-lg border p-3">
       <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
         <span className="[&_svg]:size-3.5">{icon}</span>
         {label}

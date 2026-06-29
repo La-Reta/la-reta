@@ -26,7 +26,7 @@ export default function Error({
         error.digest ? (
           <span>
             Código de seguimiento:{" "}
-            <span className="font-mono text-foreground">{error.digest}</span>
+            <span className="text-foreground font-mono">{error.digest}</span>
           </span>
         ) : (
           "Si el problema continúa, vuelve al inicio y prueba de nuevo desde otra sección."

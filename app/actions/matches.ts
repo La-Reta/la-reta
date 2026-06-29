@@ -26,7 +26,10 @@ const clamp = (n: number, max: number) =>
 
 /** Collapses scorer rows to one row per player (summing goals). */
 function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
-  const tally = new Map<string, { playerId: number; team: MatchTeam | null; goals: number }>();
+  const tally = new Map<
+    string,
+    { playerId: number; team: MatchTeam | null; goals: number }
+  >();
   for (const s of scorers ?? []) {
     if (!s.playerId) continue;
     const team = s.team === "A" || s.team === "B" ? s.team : null;

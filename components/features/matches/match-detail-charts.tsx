@@ -45,11 +45,7 @@ export function MatchTeamGoalsChart({ data }: { data: TeamDatum[] }) {
           className="text-[10px]"
         />
         <ChartTooltip cursor={false} content={<ChartTooltipContent />} />
-        <Bar
-          dataKey="goals"
-          fill="var(--color-goals)"
-          radius={[6, 6, 0, 0]}
-        />
+        <Bar dataKey="goals" fill="var(--color-goals)" radius={[6, 6, 0, 0]} />
       </BarChart>
     </ChartContainer>
   );

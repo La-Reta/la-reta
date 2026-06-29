@@ -45,7 +45,10 @@ export function formatGoalClock(at: number) {
 }
 
 export function tallyGoalsByPlayer(goals: LiveGoal[]) {
-  const tally = new Map<string, { playerId: number; team: "A" | "B"; goals: number }>();
+  const tally = new Map<
+    string,
+    { playerId: number; team: "A" | "B"; goals: number }
+  >();
 
   for (const goal of goals) {
     if (goal.playerId == null) continue;
