@@ -57,6 +57,7 @@ export function LiveLock() {
               onChange={(e) => setPin(e.target.value)}
               placeholder="••••••"
               autoFocus
+              required
             />
           </div>
           <Button type="submit" disabled={pending} className="w-full">
