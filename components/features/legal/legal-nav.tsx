@@ -40,13 +40,6 @@ export function LegalNav() {
               )}
               render={<Link href={page.href} />}
             >
-              <span
-                aria-hidden="true"
-                className={cn(
-                  "bg-primary size-1.5 shrink-0 rounded-full opacity-0 transition-opacity",
-                  active && "opacity-100",
-                )}
-              />
               <page.icon
                 className={cn(
                   "text-muted-foreground size-4 shrink-0",

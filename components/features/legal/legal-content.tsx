@@ -192,7 +192,7 @@ function ReferenceLink({
   return (
     <Button
       variant="outline"
-      className="h-auto justify-between gap-3 px-3 py-2 text-left"
+      className="h-auto w-full justify-between gap-3 px-3 py-2 text-left whitespace-normal"
       render={<Link href={href} target="_blank" rel="noreferrer" />}
     >
       <span className="min-w-0 break-words">{children}</span>
