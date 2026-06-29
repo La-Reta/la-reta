@@ -154,7 +154,7 @@ export function RotatingPlayer({
             aria-current={i === activeSlot ? "true" : undefined}
             className={cn(
               // 44×44px táctil, punto visual centrado
-              "flex min-h-[44px] min-w-[44px] items-center justify-center",
+              "flex md:min-h-[44px] min-h-[30px] md:min-w-[44px] min-w-[30px] items-center justify-center",
               "focus-visible:ring-ring rounded-sm focus-visible:ring-2 focus-visible:ring-offset-1 focus-visible:outline-none",
             )}
           >

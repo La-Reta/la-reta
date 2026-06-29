@@ -61,7 +61,6 @@ export function Spotlight({
           ) : null}
           <Button
             variant="default"
-            size="xs"
             className="mt-3"
             render={<Link href={`/players/${player.id}`} />}
           >
