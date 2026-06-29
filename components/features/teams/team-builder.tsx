@@ -24,6 +24,7 @@ import { useAtom } from "jotai";
 import {
   CheckIcon,
   DownloadIcon,
+  LayoutGridIcon,
   ListChecksIcon,
   ListIcon,
   ScaleIcon,
@@ -61,9 +62,8 @@ export function TeamBuilder({ players }: { players: Player[] }) {
     );
   }
 
-  function generate(nextView: "board" | "list") {
+  function generate() {
     if (selectedPlayers.length < 2) return;
-    setView(nextView);
     setResult(balanceTeams(selectedPlayers));
   }
 
@@ -107,20 +107,32 @@ export function TeamBuilder({ players }: { players: Player[] }) {
               Limpiar
             </Button>
           )}
-          <Button
-            variant="outline"
-            onClick={() => generate("list")}
-            disabled={selectedPlayers.length < 2}
-          >
-            <ListIcon />
-            {result && view === "list" ? "Regenerar lista" : "Generar lista"}
-          </Button>
-          <Button
-            onClick={() => generate("board")}
-            disabled={selectedPlayers.length < 2}
-          >
+
+          {/* View switch: changes presentation of the SAME teams, no reshuffle. */}
+          {result && (
+            <div
+              className="bg-muted inline-flex rounded-md p-0.5"
+              role="group"
+              aria-label="Vista"
+            >
+              <ViewTab
+                active={view === "board"}
+                onClick={() => setView("board")}
+                icon={<LayoutGridIcon className="size-3.5" />}
+                label="Tablero"
+              />
+              <ViewTab
+                active={view === "list"}
+                onClick={() => setView("list")}
+                icon={<ListIcon className="size-3.5" />}
+                label="Lista"
+              />
+            </div>
+          )}
+
+          <Button onClick={generate} disabled={selectedPlayers.length < 2}>
             <ShuffleIcon />
-            {result && view === "board" ? "Regenerar" : "Generar equipos"}
+            {result ? "Regenerar" : "Generar equipos"}
           </Button>
         </div>
       </div>
@@ -213,6 +225,35 @@ export function TeamBuilder({ players }: { players: Player[] }) {
         </CardContent>
       </Card>
     </div>
+  );
+}
+
+function ViewTab({
+  active,
+  onClick,
+  icon,
+  label,
+}: {
+  active: boolean;
+  onClick: () => void;
+  icon: React.ReactNode;
+  label: string;
+}) {
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-pressed={active}
+      className={cn(
+        "flex items-center gap-1.5 rounded px-2.5 py-1 text-xs font-medium transition-colors",
+        active
+          ? "bg-background text-foreground shadow-sm"
+          : "text-muted-foreground hover:text-foreground",
+      )}
+    >
+      {icon}
+      {label}
+    </button>
   );
 }
 
