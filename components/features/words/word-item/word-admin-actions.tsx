@@ -11,15 +11,25 @@ import {
   DialogTitle,
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 import { PencilIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function WordAdminActions({ id, word }: { id: number; word: string }) {
+export function WordAdminActions({
+  id,
+  word,
+  author,
+}: {
+  id: number;
+  word: string;
+  author: string | null;
+}) {
   const router = useRouter();
   const [open, setOpen] = React.useState(false);
   const [value, setValue] = React.useState(word);
+  const [authorValue, setAuthorValue] = React.useState(author ?? "");
   const [pending, startTransition] = React.useTransition();
 
   function save() {
@@ -29,7 +39,7 @@ export function WordAdminActions({ id, word }: { id: number; word: string }) {
       return;
     }
     startTransition(async () => {
-      const res = await updateRetaWord(id, next);
+      const res = await updateRetaWord(id, next, authorValue);
       if (res.ok) {
         toast.success("Palabra actualizada");
         setOpen(false);
@@ -61,6 +71,7 @@ export function WordAdminActions({ id, word }: { id: number; word: string }) {
         aria-label="Editar palabra"
         onClick={() => {
           setValue(word);
+          setAuthorValue(author ?? "");
           setOpen(true);
         }}
       >
@@ -81,19 +92,37 @@ export function WordAdminActions({ id, word }: { id: number; word: string }) {
           <DialogHeader>
             <DialogTitle>Editar palabra</DialogTitle>
           </DialogHeader>
-          <Input
-            value={value}
-            onChange={(e) => setValue(e.target.value)}
-            maxLength={40}
-            placeholder="palabra"
-            autoFocus
-            onKeyDown={(e) => {
-              if (e.key === "Enter") {
-                e.preventDefault();
-                save();
-              }
-            }}
-          />
+          <div className="space-y-1.5">
+            <Label className="text-xs">Palabra</Label>
+            <Input
+              value={value}
+              onChange={(e) => setValue(e.target.value)}
+              maxLength={40}
+              placeholder="palabra"
+              autoFocus
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  save();
+                }
+              }}
+            />
+          </div>
+          <div className="space-y-1.5">
+            <Label className="text-xs">Nombre (opcional)</Label>
+            <Input
+              value={authorValue}
+              onChange={(e) => setAuthorValue(e.target.value)}
+              maxLength={60}
+              placeholder="Anónimo"
+              onKeyDown={(e) => {
+                if (e.key === "Enter") {
+                  e.preventDefault();
+                  save();
+                }
+              }}
+            />
+          </div>
           <DialogFooter>
             <DialogClose
               render={<Button variant="secondary" disabled={pending} />}

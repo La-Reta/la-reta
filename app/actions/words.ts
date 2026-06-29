@@ -44,13 +44,15 @@ export async function addRetaWord(input: WordInput): Promise<Result> {
 export async function updateRetaWord(
   id: number,
   rawWord: string,
+  rawAuthor: string,
 ): Promise<Result> {
   if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
   const word = rawWord?.trim().replace(/\s+/g, " ");
   if (!word) return { ok: false, error: "Escribe una palabra." };
   if (word.length > 40) return { ok: false, error: "Máximo 40 caracteres." };
+  const author = rawAuthor?.trim().slice(0, 60) || null;
 
-  await db.update(retaWords).set({ word }).where(eq(retaWords.id, id));
+  await db.update(retaWords).set({ word, author }).where(eq(retaWords.id, id));
 
   revalidatePath("/");
   revalidatePath("/palabras");

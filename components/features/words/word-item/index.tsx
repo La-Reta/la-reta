@@ -26,7 +26,11 @@ export async function WordItem({ word }: { word: RetaWord }) {
         </CardTitle>
         {admin && (
           <CardAction className="flex flex-wrap gap-2">
-            <WordAdminActions id={word.id} word={word.word} />
+            <WordAdminActions
+              id={word.id}
+              word={word.word}
+              author={word.author}
+            />
           </CardAction>
         )}
       </CardHeader>
