@@ -1,11 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { CheckCircle2Icon, LifeBuoyIcon, SendIcon } from "lucide-react";
 import { createReport } from "@/app/actions/reports";
-import { REPORT_CATEGORIES, REPORT_CATEGORY_LABEL } from "@/lib/constants";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -15,6 +10,11 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
+import { REPORT_CATEGORIES, REPORT_CATEGORY_LABEL } from "@/lib/constants";
+import { CheckCircle2Icon, LifeBuoyIcon, SendIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 const EMPTY = {
   title: "",
@@ -148,10 +148,8 @@ export function ReportForm() {
           </div>
 
           <div className="bg-muted/40 text-muted-foreground rounded-lg border p-3 text-xs leading-relaxed">
-            Al enviar, guardaremos información técnica básica del navegador y
-            request, como idioma, pantalla, plataforma, user agent, IP y
-            ubicación aproximada si el proveedor la informa. Esto ayuda a
-            investigar errores, abuso o solicitudes sensibles.
+            Al enviar, guardaremos información técnica básica del navegador.
+            Esto ayuda a investigar errores, abuso o solicitudes sensibles.
           </div>
 
           <Button type="submit" disabled={pending} className="w-full sm:w-fit">
