@@ -1,4 +1,8 @@
-import { positionGroup, type Position } from "@/lib/constants";
+import {
+  positionGroup,
+  type Position,
+  type PositionGroup,
+} from "@/lib/constants";
 import { playerPositions } from "@/lib/format";
 import type { Player } from "@/lib/db/schema";
 
@@ -12,6 +16,22 @@ export type BalancedTeams = {
   ratingB: number;
   /** Absolute difference between the two team average ratings. */
   diff: number;
+};
+
+type OutfieldGroup = "DEF" | "MID" | "FWD";
+const OUTFIELD_GROUPS: OutfieldGroup[] = ["DEF", "MID", "FWD"];
+// Lines laid out keeper→striker, so "nearest" line = smallest index distance.
+const GROUP_INDEX: Record<PositionGroup, number> = {
+  GK: 0,
+  DEF: 1,
+  MID: 2,
+  FWD: 3,
+};
+// Position shown when a player is flexed into a line they don't naturally play.
+const GROUP_ANCHOR: Record<OutfieldGroup, Position> = {
+  DEF: "CB",
+  MID: "CM",
+  FWD: "ST",
 };
 
 function shuffle<T>(arr: T[]): T[] {
@@ -32,9 +52,77 @@ function average(lineups: Lineup[]): number {
 const canKeepGoal = (p: Player) =>
   playerPositions(p).some((pos) => positionGroup(pos) === "GK");
 
-/** When fielded outfield, prefer a non-GK position over the GK one. */
-const outfieldRole = (p: Player): Position =>
-  playerPositions(p).find((pos) => positionGroup(pos) !== "GK") ?? p.position;
+/** A player's outfield positions (primary first), falling back to CM for a pure GK. */
+function outfieldPositions(p: Player): Position[] {
+  const ps = playerPositions(p).filter((pos) => positionGroup(pos) !== "GK");
+  return ps.length ? ps : ["CM"];
+}
+
+const primaryGroup = (p: Player): OutfieldGroup =>
+  positionGroup(outfieldPositions(p)[0]) as OutfieldGroup;
+
+const playsGroup = (p: Player, g: OutfieldGroup) =>
+  outfieldPositions(p).some((pos) => positionGroup(pos) === g);
+
+/**
+ * Lays out a team's outfielders so the board reads like a real formation:
+ *
+ *  1. Everyone starts in their primary line, so a natural 3-2-1 stays 3-2-1.
+ *  2. Only a line that gets overcrowded sheds players into the nearest line with
+ *     room — preferring movers whose secondary already fits there, then the most
+ *     versatile. A player's primary line is otherwise never disturbed.
+ *
+ * Keeps people closest to their real position and only relocates when full.
+ */
+function assignRoles(outfielders: Player[]): Lineup[] {
+  if (outfielders.length === 0) return [];
+
+  const lines: Record<OutfieldGroup, Player[]> = { DEF: [], MID: [], FWD: [] };
+  for (const p of outfielders) lines[primaryGroup(p)].push(p);
+
+  // A line may hold a third more than an even share before it looks crowded;
+  // this leaves natural shapes (3-2-1) intact but breaks up 5-6 stacks.
+  const cap = Math.max(2, Math.ceil(outfielders.length / 3) + 1);
+
+  for (let guard = 0; guard < 100; guard++) {
+    const over = OUTFIELD_GROUPS.find((g) => lines[g].length > cap);
+    if (!over) break;
+
+    const target = OUTFIELD_GROUPS.filter(
+      (g) => g !== over && lines[g].length < cap,
+    ).sort(
+      (a, b) =>
+        Math.abs(GROUP_INDEX[a] - GROUP_INDEX[over]) -
+          Math.abs(GROUP_INDEX[b] - GROUP_INDEX[over]) ||
+        lines[a].length - lines[b].length,
+    )[0];
+    if (!target) break; // every other line is full too; leave it.
+
+    // Move the best-fitting player: one who already plays the target line, then
+    // the most versatile, then the weakest (keep stronger players in their slot).
+    const mover = [...lines[over]].sort((a, b) => {
+      const fitA = playsGroup(a, target) ? 0 : 1;
+      const fitB = playsGroup(b, target) ? 0 : 1;
+      const optsA = new Set(outfieldPositions(a).map(positionGroup)).size;
+      const optsB = new Set(outfieldPositions(b).map(positionGroup)).size;
+      return fitA - fitB || optsB - optsA || a.overall - b.overall;
+    })[0];
+
+    lines[over] = lines[over].filter((p) => p !== mover);
+    lines[target].push(mover);
+  }
+
+  const result: Lineup[] = [];
+  for (const g of OUTFIELD_GROUPS) {
+    for (const p of lines[g]) {
+      const ownPos = outfieldPositions(p).find(
+        (pos) => positionGroup(pos) === g,
+      );
+      result.push({ player: p, role: ownPos ?? GROUP_ANCHOR[g] });
+    }
+  }
+  return result;
+}
 
 /**
  * Splits the selected players into two teams of similar strength.
@@ -44,25 +132,26 @@ const outfieldRole = (p: Player): Position =>
  *     generations and plays out on others — regenerating gives real variety.
  *  2. Everyone else is sorted strongest-first (ties shuffled) and greedily
  *     assigned to the lighter team, keeping squad sizes and totals even.
- *
- * Each player carries the `role` they were given so the UI can show whether a
- * flexible player ended up as keeper or outfielder this time.
+ *  3. Each team's outfielders are then spread across the lines by position so
+ *     the board reads like a real formation (see `assignRoles`).
  */
 export function balanceTeams(selected: Player[]): BalancedTeams {
-  const teamA: Lineup[] = [];
-  const teamB: Lineup[] = [];
+  const gkA: Lineup[] = [];
+  const gkB: Lineup[] = [];
+  const membersA: Player[] = [];
+  const membersB: Player[] = [];
   let sumA = 0;
   let sumB = 0;
 
   const keepers = shuffle(selected.filter(canKeepGoal));
   const assignedAsGK = new Set<number>();
   if (keepers[0]) {
-    teamA.push({ player: keepers[0], role: "GK" });
+    gkA.push({ player: keepers[0], role: "GK" });
     sumA += keepers[0].overall;
     assignedAsGK.add(keepers[0].id);
   }
   if (keepers[1]) {
-    teamB.push({ player: keepers[1], role: "GK" });
+    gkB.push({ player: keepers[1], role: "GK" });
     sumB += keepers[1].overall;
     assignedAsGK.add(keepers[1].id);
   }
@@ -72,18 +161,20 @@ export function balanceTeams(selected: Player[]): BalancedTeams {
   ).sort((a, b) => b.overall - a.overall);
 
   for (const player of outfield) {
-    const aLighter =
-      teamA.length < teamB.length ||
-      (teamA.length === teamB.length && sumA <= sumB);
-    const lineup: Lineup = { player, role: outfieldRole(player) };
+    const lenA = membersA.length + gkA.length;
+    const lenB = membersB.length + gkB.length;
+    const aLighter = lenA < lenB || (lenA === lenB && sumA <= sumB);
     if (aLighter) {
-      teamA.push(lineup);
+      membersA.push(player);
       sumA += player.overall;
     } else {
-      teamB.push(lineup);
+      membersB.push(player);
       sumB += player.overall;
     }
   }
+
+  const teamA = [...gkA, ...assignRoles(membersA)];
+  const teamB = [...gkB, ...assignRoles(membersB)];
 
   const ratingA = average(teamA);
   const ratingB = average(teamB);

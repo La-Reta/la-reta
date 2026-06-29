@@ -1,5 +1,6 @@
 "use client";
 
+import { MatchupList } from "@/components/features/teams/matchup-list";
 import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -24,6 +25,7 @@ import {
   CheckIcon,
   DownloadIcon,
   ListChecksIcon,
+  ListIcon,
   ScaleIcon,
   ShuffleIcon,
   UsersIcon,
@@ -39,6 +41,7 @@ const EXPORT_BOARD_WIDTH = 1120;
 export function TeamBuilder({ players }: { players: Player[] }) {
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const [result, setResult] = React.useState<BalancedTeams | null>(null);
+  const [view, setView] = React.useState<"board" | "list">("board");
   const [mounted, setMounted] = React.useState(false);
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
@@ -58,8 +61,9 @@ export function TeamBuilder({ players }: { players: Player[] }) {
     );
   }
 
-  function generate() {
+  function generate(nextView: "board" | "list") {
     if (selectedPlayers.length < 2) return;
+    setView(nextView);
     setResult(balanceTeams(selectedPlayers));
   }
 
@@ -103,16 +107,27 @@ export function TeamBuilder({ players }: { players: Player[] }) {
               Limpiar
             </Button>
           )}
-          <Button onClick={generate} disabled={selectedPlayers.length < 2}>
+          <Button
+            variant="outline"
+            onClick={() => generate("list")}
+            disabled={selectedPlayers.length < 2}
+          >
+            <ListIcon />
+            {result && view === "list" ? "Regenerar lista" : "Generar lista"}
+          </Button>
+          <Button
+            onClick={() => generate("board")}
+            disabled={selectedPlayers.length < 2}
+          >
             <ShuffleIcon />
-            {result ? "Regenerar" : "Generar equipos"}
+            {result && view === "board" ? "Regenerar" : "Generar equipos"}
           </Button>
         </div>
       </div>
 
       {/* Matchup */}
       {result ? (
-        <Matchup result={result} />
+        <Matchup result={result} view={view} />
       ) : (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-12 text-center">
           <ScaleIcon className="text-muted-foreground size-8" />
@@ -201,17 +216,27 @@ export function TeamBuilder({ players }: { players: Player[] }) {
   );
 }
 
-function Matchup({ result }: { result: BalancedTeams }) {
+function Matchup({
+  result,
+  view,
+}: {
+  result: BalancedTeams;
+  view: "board" | "list";
+}) {
   const { ratingA, ratingB, diff, teamA, teamB } = result;
   const total = ratingA + ratingB || 1;
   const aPct = Math.round((ratingA / total) * 100);
 
   const pitchRef = React.useRef<HTMLDivElement>(null);
   const exportPitchRef = React.useRef<HTMLDivElement>(null);
+  const listRef = React.useRef<HTMLDivElement>(null);
   const [busy, setBusy] = React.useState(false);
 
   async function download() {
-    const node = exportPitchRef.current ?? pitchRef.current;
+    const node =
+      view === "list"
+        ? listRef.current
+        : (exportPitchRef.current ?? pitchRef.current);
     if (!node) return;
     setBusy(true);
     try {
@@ -293,7 +318,7 @@ function Matchup({ result }: { result: BalancedTeams }) {
         </p>
       </div>
 
-      {/* Pitch (capturable) */}
+      {/* Alineación: tablero o lista */}
       <div className="bg-card space-y-3 px-4 py-4">
         <div className="flex items-center justify-between">
           <span className="font-display text-muted-foreground text-xs font-semibold tracking-wide uppercase">
@@ -309,48 +334,63 @@ function Matchup({ result }: { result: BalancedTeams }) {
             {busy ? "Generando…" : "Descargar imagen"}
           </Button>
         </div>
-        <MatchupPitch
-          ref={pitchRef}
-          teamA={teamA}
-          teamB={teamB}
-          ratingA={ratingA}
-          ratingB={ratingB}
-        />
-        <div
-          aria-hidden="true"
-          className="pointer-events-none fixed top-0"
-          style={{ left: -10000, width: EXPORT_BOARD_WIDTH }}
-        >
-          <MatchupPitch
-            ref={exportPitchRef}
+
+        {view === "list" ? (
+          <MatchupList
+            ref={listRef}
             teamA={teamA}
             teamB={teamB}
             ratingA={ratingA}
             ratingB={ratingB}
           />
-        </div>
-        <div className="flex items-center justify-center lg:hidden">
-          <Badge variant={"outline"}>
-            La descarga se genera en tamaño desktop.
-          </Badge>
-        </div>
+        ) : (
+          <>
+            <MatchupPitch
+              ref={pitchRef}
+              teamA={teamA}
+              teamB={teamB}
+              ratingA={ratingA}
+              ratingB={ratingB}
+            />
+            <div
+              aria-hidden="true"
+              className="pointer-events-none fixed top-0"
+              style={{ left: -10000, width: EXPORT_BOARD_WIDTH }}
+            >
+              <MatchupPitch
+                ref={exportPitchRef}
+                teamA={teamA}
+                teamB={teamB}
+                ratingA={ratingA}
+                ratingB={ratingB}
+              />
+            </div>
+            <div className="flex items-center justify-center lg:hidden">
+              <Badge variant={"outline"}>
+                La descarga se genera en tamaño desktop.
+              </Badge>
+            </div>
+          </>
+        )}
       </div>
 
-      {/* Team sheets */}
-      <div className="bg-border grid gap-px md:grid-cols-2">
-        <TeamSheet
-          team="Equipo A"
-          color={TEAM_A}
-          lineups={teamA}
-          rating={ratingA}
-        />
-        <TeamSheet
-          team="Equipo B"
-          color={TEAM_B}
-          lineups={teamB}
-          rating={ratingB}
-        />
-      </div>
+      {/* Team sheets (solo en modo tablero; la lista ya los muestra) */}
+      {view === "board" && (
+        <div className="bg-border grid gap-px md:grid-cols-2">
+          <TeamSheet
+            team="Equipo A"
+            color={TEAM_A}
+            lineups={teamA}
+            rating={ratingA}
+          />
+          <TeamSheet
+            team="Equipo B"
+            color={TEAM_B}
+            lineups={teamB}
+            rating={ratingB}
+          />
+        </div>
+      )}
     </section>
   );
 }

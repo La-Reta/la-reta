@@ -36,8 +36,11 @@ function place(lineups: Lineup[], side: "A" | "B"): Placed[] {
   for (const g of ORDER) {
     const arr = groups[g];
     const n = arr.length;
+    // Center small lines and only spread toward the touchlines as a line grows,
+    // so a 2- or 3-man line reads as a tidy row instead of hugging the edges.
+    const span = Math.min(72, 26 + 14 * (n - 2));
     arr.forEach((lineup, i) => {
-      const y = n === 1 ? 50 : 16 + (i * 68) / (n - 1);
+      const y = n === 1 ? 50 : 50 - span / 2 + (i * span) / (n - 1);
       placed.push({ lineup, x: bands[g], y });
     });
   }
