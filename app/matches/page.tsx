@@ -1,5 +1,6 @@
 import { DeleteMatchButton } from "@/components/features/matches/delete-match-button";
 import { MatchForm } from "@/components/features/matches/match-form";
+import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
@@ -59,6 +60,8 @@ export default async function MatchesPage() {
               {matches.map((m) => {
                 const aWon = m.scoreA > m.scoreB;
                 const bWon = m.scoreB > m.scoreA;
+                const goleadores = m.scorers.filter((s) => s.goals > 0);
+                const asistentes = m.scorers.filter((s) => s.goals === 0);
                 return (
                   <div
                     key={m.id}
@@ -136,19 +139,31 @@ export default async function MatchesPage() {
                         {m.balance}
                       </span>
                     </div>
-                    {m.scorers.length > 0 && (
-                      <div className="mt-3 flex flex-wrap justify-center gap-1.5 border-t pt-3">
-                        {m.scorers.map((s) => (
-                          <span
-                            key={s.playerId}
-                            className="bg-muted inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px]"
-                          >
-                            ⚽ {s.displayName}
-                            {s.goals > 1 ? (
-                              <span className="font-bold">×{s.goals}</span>
-                            ) : null}
-                          </span>
-                        ))}
+                    {(goleadores.length > 0 || asistentes.length > 0) && (
+                      <div className="mt-3 space-y-2 border-t pt-3">
+                        {goleadores.length > 0 && (
+                          <div className="flex flex-wrap justify-center gap-1.5">
+                            {goleadores.map((s) => (
+                              <span
+                                key={s.playerId}
+                                className="bg-muted inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px]"
+                              >
+                                ⚽ {s.displayName}
+                                {s.goals > 1 ? (
+                                  <span className="font-bold">×{s.goals}</span>
+                                ) : null}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        {asistentes.length > 0 && (
+                          <p className="text-muted-foreground text-center text-[11px]">
+                            <span className="font-medium">
+                              También jugaron:
+                            </span>{" "}
+                            {asistentes.map((s) => s.displayName).join(", ")}
+                          </p>
+                        )}
                       </div>
                     )}
                     {m.notes && (
@@ -161,6 +176,9 @@ export default async function MatchesPage() {
               })}
             </div>
           )}
+
+          {/* Gráfica de apoyo, debajo del historial */}
+          {matches.length > 0 && <MatchesChart matches={matches} />}
         </section>
 
         {/* Goleadores */}

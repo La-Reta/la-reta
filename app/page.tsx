@@ -1,5 +1,6 @@
 import { ElevenBoard } from "@/components/app/eleven-board";
 import { RankingLevel } from "@/components/app/ranking-level";
+import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { ScorerNotFound } from "@/components/app/scorer-not-found";
 import { Spotlight } from "@/components/app/spotlight";
 import { Commentator } from "@/components/features/dashboard/commentator";
@@ -8,7 +9,12 @@ import { RotatingPlayer } from "@/components/features/dashboard/rotating-player"
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
 import { Button } from "@/components/ui/button";
 import { positionGroup, type PositionGroup } from "@/lib/constants";
-import { getBannerWords, getPlayers, getTopScorers } from "@/lib/queries";
+import {
+  getBannerWords,
+  getMatches,
+  getPlayers,
+  getTopScorers,
+} from "@/lib/queries";
 import {
   ArrowRightIcon,
   ShieldHalfIcon,
@@ -21,10 +27,11 @@ import Link from "next/link";
 export const dynamic = "force-dynamic";
 
 export default async function DashboardPage() {
-  const [players, bannerWords, topScorers] = await Promise.all([
+  const [players, bannerWords, topScorers, matches] = await Promise.all([
     getPlayers(),
     getBannerWords(),
     getTopScorers(),
+    getMatches(),
   ]);
 
   if (players.length === 0) {
@@ -152,12 +159,15 @@ export default async function DashboardPage() {
       </div>
 
       {/* ── Pizarra + ranking ──────────────────────────────────────── */}
-      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr]">
+      <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
         {/* Pizarra del once ideal */}
         <ElevenBoard players={players} counts={counts} />
 
-        {/* Ranking */}
-        <RankingLevel players={players} />
+        {/* Ranking + gráfica comparativa de partidos */}
+        <div className="space-y-6">
+          <RankingLevel players={players} />
+          {matches.length > 0 && <MatchesChart matches={matches} />}
+        </div>
       </div>
     </div>
   );

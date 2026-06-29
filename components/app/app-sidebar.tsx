@@ -12,7 +12,6 @@ import {
   SidebarMenuBadge,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarSeparator,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { liveMatchAtom } from "@/lib/state/atoms";
@@ -143,6 +142,38 @@ const NAV_SECTIONS: NavSection[] = [
   },
 ];
 
+// "Administración" section in the nav: a single entry point for non-admins
+// (the login lives at /admin), expanding to the admin pages once signed in.
+const NON_ADMIN_ITEMS: NavItem[] = [
+  {
+    title: "Admin",
+    href: "/admin",
+    icon: LockIcon,
+    hint: "Acceso de administrador",
+  },
+];
+
+const ADMIN_ITEMS: NavItem[] = [
+  {
+    title: "Panel",
+    href: "/admin",
+    icon: LockIcon,
+    hint: "Tablero de control",
+  },
+  {
+    title: "Reportes",
+    href: "/admin/reportes",
+    icon: LifeBuoyIcon,
+    hint: "Bandeja de reportes",
+  },
+  {
+    title: "Ideas",
+    href: "/admin/ideas",
+    icon: LightbulbIcon,
+    hint: "Bandeja de ideas",
+  },
+];
+
 const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
 const liveMatchActiveAtom = atom((get) => get(liveMatchAtom).active);
 
@@ -183,7 +214,7 @@ const SidebarNavItem = React.memo(function SidebarNavItem({
   );
 });
 
-export function AppSidebar() {
+export function AppSidebar({ admin }: { admin: boolean }) {
   const pathname = usePathname();
   const liveActive = useAtomValue(liveMatchActiveAtom);
   const { isMobile, state } = useSidebar();
@@ -192,7 +223,9 @@ export function AppSidebar() {
 
   const activeHref = React.useMemo(
     () =>
-      ALL_NAV_ITEMS.reduce<string | null>((bestHref, item) => {
+      [...ALL_NAV_ITEMS, ...(admin ? ADMIN_ITEMS : NON_ADMIN_ITEMS)].reduce<
+        string | null
+      >((bestHref, item) => {
         if (item.href === "/") {
           return pathname === "/" ? "/" : bestHref;
         }
@@ -208,7 +241,7 @@ export function AppSidebar() {
 
         return bestHref;
       }, null),
-    [pathname],
+    [pathname, admin],
   );
 
   return (
@@ -303,25 +336,30 @@ export function AppSidebar() {
             </SidebarGroupContent>
           </SidebarGroup>
         ))}
+
+        <SidebarGroup className="px-2 py-1 group-data-[collapsible=icon]:px-0">
+          {!isCollapsed ? (
+            <SidebarGroupLabel className="text-sidebar-foreground/45 px-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
+              Administración
+            </SidebarGroupLabel>
+          ) : null}
+          <SidebarGroupContent>
+            <SidebarMenu className="group-data-[collapsible=icon]:items-center">
+              {(admin ? ADMIN_ITEMS : NON_ADMIN_ITEMS).map((item) => (
+                <SidebarNavItem
+                  key={item.href}
+                  item={item}
+                  active={item.href === activeHref}
+                  liveActive={liveActive}
+                  showTooltip={showTooltip}
+                />
+              ))}
+            </SidebarMenu>
+          </SidebarGroupContent>
+        </SidebarGroup>
       </SidebarContent>
 
       <SidebarFooter className="gap-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1">
-        <SidebarSeparator />
-        <SidebarMenu>
-          <SidebarMenuItem>
-            <SidebarMenuButton
-              isActive={pathname === "/admin" || pathname.startsWith("/admin/")}
-              tooltip={showTooltip ? "Admin" : undefined}
-              variant="outline"
-              render={<Link href="/admin" />}
-              className="h-10 rounded-xl px-3 group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl"
-            >
-              <LockIcon />
-              <span>Admin</span>
-            </SidebarMenuButton>
-          </SidebarMenuItem>
-        </SidebarMenu>
-
         <div className="border-sidebar-border/70 bg-sidebar-accent/35 rounded-xl border px-3 py-2 group-data-[collapsible=icon]:hidden">
           <div className="text-sidebar-foreground/72 flex items-center gap-2 text-[11px] font-medium">
             <SparkleIcon className="text-sidebar-primary size-3.5" />

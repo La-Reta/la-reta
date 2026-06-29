@@ -147,7 +147,7 @@ function TeamRosterCard({
     <div className="rounded-lg border">
       <div className="flex items-center justify-between border-b px-3 py-2">
         <p className="text-sm font-semibold">{title}</p>
-        <Badge variant="outline">{scorers.length}</Badge>
+        <Badge variant="outline">{scorers.length} jugadores</Badge>
       </div>
       {scorers.length === 0 ? (
         <p className="text-muted-foreground p-3 text-xs">
@@ -217,7 +217,6 @@ export default async function MatchDetailPage({
   const unassignedScorers = match.scorers.filter(
     (scorer) => scorer.team !== "A" && scorer.team !== "B",
   );
-  const matchTopScorer = topScorer(match.scorers);
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
   const teamChartData = [
@@ -283,7 +282,7 @@ export default async function MatchDetailPage({
         ) : null}
       </section>
 
-      <section className="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+      <section className="grid gap-3 sm:grid-cols-3">
         <StatTile
           icon={<TargetIcon />}
           label="Goles totales"
@@ -303,16 +302,6 @@ export default async function MatchDetailPage({
             match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"
           }
           detail={match.durationSec ? "Registrado en vivo" : "Sin reloj"}
-        />
-        <StatTile
-          icon={<MedalIcon />}
-          label="Figura"
-          value={matchTopScorer ? matchTopScorer.displayName : "—"}
-          detail={
-            matchTopScorer
-              ? `${matchTopScorer.goals} gol${matchTopScorer.goals === 1 ? "" : "es"}`
-              : "Sin goleadores"
-          }
         />
       </section>
 

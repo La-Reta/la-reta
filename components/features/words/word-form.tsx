@@ -71,7 +71,7 @@ export function WordForm() {
         <input
           value={word}
           onChange={(e) => setWord(e.target.value)}
-          maxLength={40}
+          maxLength={30}
           placeholder="________"
           size={Math.max(word.length, 8)}
           aria-label="Tu palabra"

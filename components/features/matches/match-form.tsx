@@ -97,8 +97,12 @@ export function MatchForm({
   );
 
   function addScorer() {
-    if (scorers.length >= 10) {
-      toast.error("No puedes agregar más de 10 goleadores");
+    if (scorers.length >= 22) {
+      toast.error("No puedes agregar más de 22 participantes");
+      return;
+    }
+    if (scorers.length >= players.length) {
+      toast.error("Ya agregaste a todos los jugadores");
       return;
     }
     setScorers((s) => [...s, { playerId: "", team: "A", goals: "1" }]);
@@ -111,6 +115,10 @@ export function MatchForm({
   function removeScorer(i: number) {
     setScorers((s) => s.filter((_, idx) => idx !== i));
   }
+
+  const takenPlayerIds = new Set(
+    scorers.map((s) => s.playerId).filter(Boolean),
+  );
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -232,69 +240,106 @@ export function MatchForm({
         />
       </div>
 
-      {/* Goleadores */}
+      {/* Participantes */}
       <div className="space-y-2">
         <div className="flex items-center justify-between">
-          <Label className="text-xs">Jugadores y goles (opcional)</Label>
-          <Button type="button" variant="outline" onClick={addScorer}>
+          <Label className="text-xs">
+            Jugadores (goles y asistencia)
+            {scorers.length > 0 ? (
+              <span className="text-muted-foreground ml-1 font-normal">
+                · {scorers.length}
+              </span>
+            ) : null}
+          </Label>
+          <Button
+            type="button"
+            variant="outline"
+            onClick={addScorer}
+            disabled={!admin}
+          >
             <PlusIcon />
             Añadir
           </Button>
         </div>
         {scorers.length === 0 ? (
           <p className="text-muted-foreground text-xs">
-            Agrega jugadores para asignarlos a un equipo y registrar sus goles.
+            Agrega a quienes jugaron y asígnalos a un equipo. Deja los goles en
+            0 para registrar solo su asistencia.
           </p>
         ) : (
-          <div className="space-y-2">
-            {scorers.map((row, i) => (
-              <div
-                key={i}
-                className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_4rem_auto]"
-              >
-                <NativeSelect
-                  className="w-full"
-                  value={row.playerId}
-                  onChange={(e) =>
-                    updateScorer(i, { playerId: e.target.value })
-                  }
+          <div className="space-y-1.5">
+            <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+              <span className="text-center">#</span>
+              <span>Jugador</span>
+              <span>Equipo</span>
+              <span className="text-center">Goles</span>
+              <span className="sr-only">Quitar</span>
+            </div>
+            {scorers.map((row, i) => {
+              // Hide players already chosen in other rows; keep this row's pick.
+              const available = players.filter(
+                (p) =>
+                  String(p.id) === row.playerId ||
+                  !takenPlayerIds.has(String(p.id)),
+              );
+              return (
+                <div
+                  key={i}
+                  className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_auto]"
                 >
-                  <NativeSelectOption value="">— jugador —</NativeSelectOption>
-                  {players.map((p) => (
-                    <NativeSelectOption key={p.id} value={String(p.id)}>
-                      {p.name}
+                  <span className="text-muted-foreground text-center text-xs font-medium tabular-nums">
+                    {i + 1}
+                  </span>
+                  <NativeSelect
+                    className="w-full"
+                    value={row.playerId}
+                    onChange={(e) =>
+                      updateScorer(i, { playerId: e.target.value })
+                    }
+                  >
+                    <NativeSelectOption value="">
+                      — jugador —
                     </NativeSelectOption>
-                  ))}
-                </NativeSelect>
-                <NativeSelect
-                  className="w-full"
-                  value={row.team}
-                  onChange={(e) => updateScorer(i, { team: e.target.value })}
-                  aria-label="Equipo"
-                >
-                  <NativeSelectOption value="">Sin equipo</NativeSelectOption>
-                  <NativeSelectOption value="A">{teamAName}</NativeSelectOption>
-                  <NativeSelectOption value="B">{teamBName}</NativeSelectOption>
-                </NativeSelect>
-                <Input
-                  type="number"
-                  min={0}
-                  value={row.goals}
-                  onChange={(e) => updateScorer(i, { goals: e.target.value })}
-                  className="w-full text-center"
-                  aria-label="Goles"
-                />
-                <Button
-                  type="button"
-                  variant="destructive"
-                  size="icon-sm"
-                  onClick={() => removeScorer(i)}
-                  aria-label="Quitar"
-                >
-                  <XIcon />
-                </Button>
-              </div>
-            ))}
+                    {available.map((p) => (
+                      <NativeSelectOption key={p.id} value={String(p.id)}>
+                        {p.name}
+                      </NativeSelectOption>
+                    ))}
+                  </NativeSelect>
+                  <NativeSelect
+                    className="w-full"
+                    value={row.team}
+                    onChange={(e) => updateScorer(i, { team: e.target.value })}
+                    aria-label="Equipo"
+                  >
+                    <NativeSelectOption value="">Sin equipo</NativeSelectOption>
+                    <NativeSelectOption value="A">
+                      {teamAName}
+                    </NativeSelectOption>
+                    <NativeSelectOption value="B">
+                      {teamBName}
+                    </NativeSelectOption>
+                  </NativeSelect>
+                  <Input
+                    type="number"
+                    min={0}
+                    value={row.goals}
+                    onChange={(e) => updateScorer(i, { goals: e.target.value })}
+                    className="w-full text-center"
+                    aria-label="Goles"
+                  />
+                  <Button
+                    type="button"
+                    variant="destructive"
+                    size="icon-sm"
+                    onClick={() => removeScorer(i)}
+                    aria-label="Quitar"
+                  >
+                    <XIcon />
+                  </Button>
+                </div>
+              );
+            })}
           </div>
         )}
       </div>
