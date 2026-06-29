@@ -15,6 +15,8 @@ import {
   IDEA_CATEGORIES,
   IDEA_STATUSES,
   IDEA_PRIORITIES,
+  REPORT_CATEGORIES,
+  REPORT_STATUSES,
 } from "@/lib/constants";
 
 /**
@@ -220,3 +222,41 @@ export const legalAcceptances = pgTable("legal_acceptances", {
 
 export type LegalAcceptance = typeof legalAcceptances.$inferSelect;
 export type NewLegalAcceptance = typeof legalAcceptances.$inferInsert;
+
+// ── Reports ────────────────────────────────────────────────────────────────
+export const reportCategoryEnum = pgEnum("report_category", REPORT_CATEGORIES);
+export const reportStatusEnum = pgEnum("report_status", REPORT_STATUSES);
+
+export const reports = pgTable("reports", {
+  id: serial("id").primaryKey(),
+  title: varchar("title", { length: 140 }).notNull(),
+  description: text("description").notNull(),
+  category: reportCategoryEnum("category").notNull().default("ayuda"),
+  reporterName: varchar("reporter_name", { length: 80 }),
+  contact: varchar("contact", { length: 160 }),
+  relatedPath: varchar("related_path", { length: 240 }),
+  status: reportStatusEnum("status").notNull().default("nuevo"),
+  adminNotes: text("admin_notes"),
+  language: varchar("language", { length: 24 }),
+  languages: varchar("languages", { length: 240 }),
+  timezone: varchar("timezone", { length: 64 }),
+  timezoneOffset: smallint("timezone_offset"),
+  screen: varchar("screen", { length: 32 }),
+  viewport: varchar("viewport", { length: 32 }),
+  pixelRatio: varchar("pixel_ratio", { length: 16 }),
+  platform: varchar("platform", { length: 80 }),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 64 }),
+  forwardedFor: varchar("forwarded_for", { length: 500 }),
+  country: varchar("country", { length: 8 }),
+  region: varchar("region", { length: 120 }),
+  city: varchar("city", { length: 120 }),
+  latitude: varchar("latitude", { length: 40 }),
+  longitude: varchar("longitude", { length: 40 }),
+  acceptLanguage: varchar("accept_language", { length: 240 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type Report = typeof reports.$inferSelect;
+export type NewReport = typeof reports.$inferInsert;

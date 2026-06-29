@@ -1,7 +1,7 @@
 import Link from "next/link";
-import { LightbulbIcon, ArrowRightIcon } from "lucide-react";
+import { LifeBuoyIcon, LightbulbIcon, ArrowRightIcon } from "lucide-react";
 import { isAdmin } from "@/lib/admin";
-import { getIdeas } from "@/lib/queries";
+import { getIdeas, getReports } from "@/lib/queries";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
 
@@ -11,8 +11,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   if (!(await isAdmin())) return <AdminLogin />;
 
-  const ideas = await getIdeas();
+  const [ideas, reports] = await Promise.all([getIdeas(), getReports()]);
   const pending = ideas.filter((i) => i.status === "nueva").length;
+  const pendingReports = reports.filter(
+    (report) => report.status === "nuevo",
+  ).length;
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
@@ -26,22 +29,48 @@ export default async function AdminPage() {
         <LogoutButton />
       </div>
 
-      <Link
-        href="/admin/ideas"
-        className="bg-card ring-foreground/10 hover:bg-muted/50 flex items-center gap-4 rounded-lg p-4 ring-1 transition-colors"
-      >
-        <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-md">
-          <LightbulbIcon className="size-5" />
-        </div>
-        <div className="flex-1">
-          <p className="font-semibold">Ideas</p>
-          <p className="text-muted-foreground text-xs">
-            {ideas.length} en total
-            {pending > 0 ? ` · ${pending} sin revisar` : ""}
-          </p>
-        </div>
-        <ArrowRightIcon className="text-muted-foreground size-4" />
-      </Link>
+      <div className="grid gap-3">
+        <AdminLink
+          href="/admin/ideas"
+          icon={LightbulbIcon}
+          title="Ideas"
+          description={`${ideas.length} en total${pending > 0 ? ` · ${pending} sin revisar` : ""}`}
+        />
+        <AdminLink
+          href="/admin/reportes"
+          icon={LifeBuoyIcon}
+          title="Reportes"
+          description={`${reports.length} en total${pendingReports > 0 ? ` · ${pendingReports} nuevos` : ""}`}
+        />
+      </div>
     </div>
+  );
+}
+
+function AdminLink({
+  href,
+  icon: Icon,
+  title,
+  description,
+}: {
+  href: string;
+  icon: React.ComponentType<React.ComponentProps<"svg">>;
+  title: string;
+  description: string;
+}) {
+  return (
+    <Link
+      href={href}
+      className="bg-card ring-foreground/10 hover:bg-muted/50 flex items-center gap-4 rounded-lg p-4 ring-1 transition-colors"
+    >
+      <div className="bg-primary/10 text-primary flex size-10 items-center justify-center rounded-md">
+        <Icon className="size-5" />
+      </div>
+      <div className="min-w-0 flex-1">
+        <p className="font-semibold">{title}</p>
+        <p className="text-muted-foreground text-xs">{description}</p>
+      </div>
+      <ArrowRightIcon className="text-muted-foreground size-4" />
+    </Link>
   );
 }

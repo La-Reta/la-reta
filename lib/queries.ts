@@ -11,12 +11,14 @@ import {
   matchGoals,
   retaWords,
   playerComments,
+  reports,
   type Player,
   type StatHistory,
   type Idea,
   type Match,
   type RetaWord,
   type PlayerComment,
+  type Report,
 } from "@/lib/db";
 import { rotatingWords } from "@/constants/rotatingWords";
 
@@ -123,6 +125,12 @@ export async function getPlayerGoalHistory(
 /** All ideas, newest first. */
 export async function getIdeas(): Promise<Idea[]> {
   return db.select().from(ideas).orderBy(desc(ideas.createdAt));
+}
+
+// ── Reports ──────────────────────────────────────────────────────────────
+/** Private admin reports, newest first. */
+export async function getReports(): Promise<Report[]> {
+  return db.select().from(reports).orderBy(desc(reports.createdAt));
 }
 
 // ── Matches ──────────────────────────────────────────────────────────────

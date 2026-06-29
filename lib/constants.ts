@@ -198,3 +198,45 @@ export const IDEA_PRIORITY_CLASS: Record<IdeaPriority, string> = {
   alta: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
   critica: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
 };
+
+// ── Reports ──────────────────────────────────────────────────────────────
+export const REPORT_CATEGORIES = [
+  "ayuda",
+  "bug",
+  "privacidad",
+  "conducta",
+  "datos",
+  "otro",
+] as const;
+export type ReportCategory = (typeof REPORT_CATEGORIES)[number];
+
+export const REPORT_CATEGORY_LABEL: Record<ReportCategory, string> = {
+  ayuda: "Ayuda general",
+  bug: "Error de la app",
+  privacidad: "Privacidad / imagen",
+  conducta: "Conducta o seguridad",
+  datos: "Datos incorrectos",
+  otro: "Otro",
+};
+
+export const REPORT_STATUSES = [
+  "nuevo",
+  "revisando",
+  "resuelto",
+  "descartado",
+] as const;
+export type ReportStatus = (typeof REPORT_STATUSES)[number];
+
+export const REPORT_STATUS_LABEL: Record<ReportStatus, string> = {
+  nuevo: "Nuevo",
+  revisando: "Revisando",
+  resuelto: "Resuelto",
+  descartado: "Descartado",
+};
+
+export const REPORT_STATUS_CLASS: Record<ReportStatus, string> = {
+  nuevo: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  revisando: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  resuelto: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  descartado: "bg-muted text-muted-foreground",
+};

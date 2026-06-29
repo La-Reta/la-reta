@@ -23,6 +23,7 @@ import {
   CircleDotIcon,
   LayoutDashboardIcon,
   LightbulbIcon,
+  LifeBuoyIcon,
   LockIcon,
   MapIcon,
   RadioIcon,
@@ -114,6 +115,12 @@ const NAV_SECTIONS: NavSection[] = [
         href: "/ideas",
         icon: LightbulbIcon,
         hint: "Mejoras y propuestas",
+      },
+      {
+        title: "Reportar",
+        href: "/reportes",
+        icon: LifeBuoyIcon,
+        hint: "Ayuda y denuncias",
       },
       {
         title: "La Reta ___",
