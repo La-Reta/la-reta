@@ -2,13 +2,13 @@ import { DeleteMatchButton } from "@/components/features/matches/delete-match-bu
 import { MatchForm } from "@/components/features/matches/match-form";
 import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import { formatShortDateOnly } from "@/lib/dates";
 import { flagEmoji } from "@/lib/format";
 import { getMatches, getPlayers, getTopScorers } from "@/lib/queries";
 import { cn } from "@/lib/utils";
-import { NotebookTabsIcon, PencilIcon } from "lucide-react";
+import { ChevronRightIcon, NotebookTabsIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
 
 function balanceColor(v: number) {
@@ -182,39 +182,47 @@ export default async function MatchesPage() {
         </section>
 
         {/* Goleadores */}
-        <Card className="h-fit">
-          <CardHeader className="border-b">
-            <CardTitle>Goleadores</CardTitle>
-          </CardHeader>
-          <CardContent className="p-0">
-            {scorers.length === 0 ? (
-              <p className="text-muted-foreground p-4 text-xs">
-                Aún sin goles registrados.
-              </p>
-            ) : (
-              <ol>
-                {scorers.map((s, i) => (
-                  <li
-                    key={s.playerId}
-                    className="flex items-center gap-2 border-b px-3 py-2 text-sm last:border-b-0"
-                  >
-                    <span className="font-display text-muted-foreground w-4 text-center font-bold tabular-nums">
-                      {i + 1}
-                    </span>
-                    <span>{flagEmoji(s.nationality)}</span>
-                    <span className="truncate">{s.name}</span>
-                    <span className="text-muted-foreground ml-auto text-[10px]">
-                      {s.matches} {s.matches === 1 ? "partido" : "partidos"}
-                    </span>
-                    <span className="w-6 text-right font-mono font-bold tabular-nums">
-                      {s.goals}
-                    </span>
-                  </li>
-                ))}
-              </ol>
-            )}
-          </CardContent>
-        </Card>
+        <section className="space-y-3 lg:sticky lg:top-6">
+          <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase">
+            <span className="bg-primary h-4 w-1 rounded-full" />
+            Goleadores
+          </h2>
+          <Card className="h-fit">
+            <CardContent className="p-0">
+              {scorers.length === 0 ? (
+                <p className="text-muted-foreground p-4 text-xs">
+                  Aún sin goles registrados.
+                </p>
+              ) : (
+                <ol>
+                  {scorers.map((s, i) => (
+                    <li key={s.playerId} className="border-b last:border-b-0">
+                      <Link
+                        href={`/players/${s.playerId}`}
+                        className="hover:bg-muted group flex items-center gap-2 px-3 py-2 text-sm transition-colors"
+                      >
+                        <span className="font-display text-muted-foreground w-4 text-center font-bold tabular-nums">
+                          {i + 1}
+                        </span>
+                        <span>{flagEmoji(s.nationality)}</span>
+                        <span className="group-hover:text-primary truncate transition-colors">
+                          {s.name}
+                        </span>
+                        <span className="text-muted-foreground ml-auto text-[10px]">
+                          {s.matches} {s.matches === 1 ? "partido" : "partidos"}
+                        </span>
+                        <span className="w-6 text-right font-mono font-bold tabular-nums">
+                          {s.goals}
+                        </span>
+                        <ChevronRightIcon className="text-muted-foreground size-3.5 shrink-0 opacity-0 transition-opacity group-hover:opacity-100" />
+                      </Link>
+                    </li>
+                  ))}
+                </ol>
+              )}
+            </CardContent>
+          </Card>
+        </section>
       </div>
     </div>
   );
