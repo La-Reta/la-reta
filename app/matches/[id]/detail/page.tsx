@@ -26,6 +26,19 @@ import type { ReactNode } from "react";
 export const metadata = { title: "Detalle de partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
+// Icon-chip tints for the stat tiles, built from theme + Tailwind basics.
+const STAT_TONES = {
+  primary: "bg-primary/10 text-primary",
+  emerald: "bg-emerald-500/10 text-emerald-600 dark:text-emerald-400",
+  amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
+  rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
+  sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+} as const;
+
+function balanceTone(value: number) {
+  return value >= 60 ? "emerald" : value >= 40 ? "amber" : "rose";
+}
+
 function balanceLabel(value: number) {
   if (value >= 80) return "Parejísimo";
   if (value >= 60) return "Equilibrado";
@@ -60,16 +73,25 @@ function StatTile({
   label,
   value,
   detail,
+  tone = "primary",
 }: {
   icon: ReactNode;
   label: string;
   value: string;
   detail?: string;
+  tone?: keyof typeof STAT_TONES;
 }) {
   return (
-    <div className="bg-muted/30 rounded-lg border p-3">
-      <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
-        <span className="[&_svg]:size-3.5">{icon}</span>
+    <div className="bg-card rounded-lg border p-3">
+      <div className="text-muted-foreground flex items-center gap-2 text-[10px] font-semibold uppercase">
+        <span
+          className={cn(
+            "flex size-6 items-center justify-center rounded-md [&_svg]:size-3.5",
+            STAT_TONES[tone],
+          )}
+        >
+          {icon}
+        </span>
         {label}
       </div>
       <p className="mt-2 text-2xl font-black tabular-nums">{value}</p>
@@ -105,7 +127,9 @@ function TeamFigureCard({
       </CardHeader>
       <CardContent className="space-y-3">
         <div className="flex items-start gap-3">
-          <MedalIcon className="text-muted-foreground mt-0.5 size-4" />
+          <span className="mt-0.5 flex size-7 items-center justify-center rounded-md bg-amber-500/10 text-amber-600 dark:text-amber-400 [&_svg]:size-4">
+            <MedalIcon />
+          </span>
           <div className="min-w-0">
             <p className="text-sm font-semibold">
               {figure ? figure.name : "Sin figura asignada"}
@@ -165,7 +189,7 @@ function TeamRosterCard({
                   </span>
                   <Link
                     href={`/players/${scorer.playerId}`}
-                    className="min-w-0 flex-1 truncate text-sm font-medium hover:underline"
+                    className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium transition-colors"
                   >
                     {scorer.name}
                   </Link>
@@ -175,7 +199,7 @@ function TeamRosterCard({
                 </div>
                 <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                   <div
-                    className="h-full rounded-full bg-emerald-500"
+                    className="bg-primary h-full rounded-full"
                     style={{
                       width:
                         scorer.goals > 0
@@ -257,7 +281,9 @@ export default async function MatchDetailPage({
               {formatShortDateOnly(match.playedAt)}
             </Badge>
             <h1 className="text-2xl font-black tracking-tight">
-              {match.teamAName} vs {match.teamBName}
+              {match.teamAName}
+              <span className="text-muted-foreground mx-2 font-normal">vs</span>
+              {match.teamBName}
             </h1>
             <p className="text-muted-foreground text-sm">
               {matchResult(
@@ -288,12 +314,14 @@ export default async function MatchDetailPage({
           label="Goles totales"
           value={String(totalGoals)}
           detail={pace ? `1 gol cada ${pace} min` : "Ritmo pendiente"}
+          tone="primary"
         />
         <StatTile
           icon={<ScaleIcon />}
           label="Balance"
           value={`${match.balance}/100`}
           detail={balanceLabel(match.balance)}
+          tone={balanceTone(match.balance)}
         />
         <StatTile
           icon={<ClockIcon />}
@@ -302,6 +330,7 @@ export default async function MatchDetailPage({
             match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"
           }
           detail={match.durationSec ? "Registrado en vivo" : "Sin reloj"}
+          tone="sky"
         />
       </section>
 
@@ -378,7 +407,9 @@ export default async function MatchDetailPage({
           </CardHeader>
           <CardContent className="space-y-4">
             <div className="flex items-start gap-3">
-              <ShieldIcon className="text-muted-foreground mt-0.5 size-4" />
+              <span className="bg-primary/10 text-primary mt-0.5 flex size-7 items-center justify-center rounded-md [&_svg]:size-4">
+                <ShieldIcon />
+              </span>
               <div>
                 <p className="text-sm font-semibold">
                   {winner
