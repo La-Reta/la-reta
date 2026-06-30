@@ -8,25 +8,33 @@ type DB = NeonHttpDatabase<typeof schema>;
 let instance: DB | null = null;
 
 // Neon scales the compute to zero when idle; the first query after a suspend can
-// fail (network error or 5xx) while it wakes. Retry transient failures so pages
-// don't 500 on a cold DB. ponytail: fixed 2 retries; revisit if waits grow.
+// fail (network error or 5xx) while it wakes, and local network blips drop the
+// occasional fetch. Retry with exponential backoff + jitter so pages don't 500
+// on a transient failure. ponytail: ~250ms→2s backoff over 5 tries (~3.75s max);
+// if a blip outlasts that the query still throws and the error boundary catches it.
+const MAX_RETRIES = 4;
+
+function backoff(attempt: number): Promise<void> {
+  const ms = Math.min(250 * 2 ** attempt, 2000) + Math.random() * 100;
+  return new Promise((r) => setTimeout(r, ms));
+}
+
 async function fetchWithRetry(
   input: RequestInfo | URL,
   init?: RequestInit,
 ): Promise<Response> {
   let lastErr: unknown;
-  for (let attempt = 0; attempt <= 2; attempt++) {
+  for (let attempt = 0; attempt <= MAX_RETRIES; attempt++) {
     try {
       const res = await fetch(input, init);
-      if (res.status >= 500 && attempt < 2) {
-        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+      if (res.status >= 500 && attempt < MAX_RETRIES) {
+        await backoff(attempt);
         continue;
       }
       return res;
     } catch (err) {
       lastErr = err;
-      if (attempt < 2)
-        await new Promise((r) => setTimeout(r, 300 * (attempt + 1)));
+      if (attempt < MAX_RETRIES) await backoff(attempt);
     }
   }
   throw lastErr;
