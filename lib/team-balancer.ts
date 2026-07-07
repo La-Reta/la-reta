@@ -3,8 +3,8 @@ import {
   type Position,
   type PositionGroup,
 } from "@/lib/constants";
-import { playerPositions } from "@/lib/format";
 import type { Player } from "@/lib/db/schema";
+import { playerPositions } from "@/lib/format";
 
 /** A player together with the role they were assigned in this generation. */
 export type Lineup = { player: Player; role: Position };

@@ -14,7 +14,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
-import { EMPTY_LIVE_MATCH, liveMatchAtom } from "@/lib/state/atoms";
+import {
+  EMPTY_LIVE_MATCH,
+  liveMatchAtom,
+  teamNameAAtom,
+  teamNameBAtom,
+} from "@/lib/state/atoms";
 import { useAtom } from "jotai";
 import { FlagIcon, PlayIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -40,12 +45,12 @@ import { useLiveMatchClock } from "./use-live-match-clock";
 export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const router = useRouter();
   const [live, setLive] = useAtom(liveMatchAtom);
+  // Team names are shared with the "armar equipos" flow (persisted), so a
+  // matchup generated there lands here prefilled.
+  const [nameA, setNameA] = useAtom(teamNameAAtom);
+  const [nameB, setNameB] = useAtom(teamNameBAtom);
   const hydrated = useHydrated();
   const elapsedSec = useLiveMatchClock(live.active, live.startedAt);
-  const [setup, setSetup] = React.useState({
-    teamA: "",
-    teamB: "",
-  });
   const [attrId, setAttrId] = React.useState<string | null>(null);
   const [filter, setFilter] = React.useState("");
   const deferredFilter = React.useDeferredValue(filter.trim().toLowerCase());
@@ -76,25 +81,16 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
       : live.teamB
     : "";
 
-  function updateSetup<K extends keyof typeof setup>(
-    key: K,
-    value: (typeof setup)[K],
-  ) {
-    setSetup((current) => ({ ...current, [key]: value }));
-  }
-
   function swapTeams() {
-    setSetup((current) => ({
-      teamA: current.teamB,
-      teamB: current.teamA,
-    }));
+    setNameA(nameB);
+    setNameB(nameA);
   }
 
   function start() {
     setLive({
       active: true,
-      teamA: setup.teamA.trim() || "Equipo A",
-      teamB: setup.teamB.trim() || "Equipo B",
+      teamA: nameA.trim() || "Equipo A",
+      teamB: nameB.trim() || "Equipo B",
       startedAt: Date.now(),
       goals: [],
     });
@@ -187,10 +183,10 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   if (!live.active) {
     return (
       <StartMatchForm
-        teamA={setup.teamA}
-        teamB={setup.teamB}
-        onTeamAChange={(value) => updateSetup("teamA", value)}
-        onTeamBChange={(value) => updateSetup("teamB", value)}
+        teamA={nameA}
+        teamB={nameB}
+        onTeamAChange={setNameA}
+        onTeamBChange={setNameB}
         onSwapTeams={swapTeams}
         onStart={start}
       />

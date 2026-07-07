@@ -98,10 +98,19 @@ function Token({
 
 export const MatchupPitch = React.forwardRef<
   HTMLDivElement,
-  { teamA: Lineup[]; teamB: Lineup[]; ratingA: number; ratingB: number }
->(function MatchupPitch({ teamA, teamB, ratingA, ratingB }, ref) {
+  {
+    teamA: Lineup[];
+    teamB: Lineup[];
+    ratingA: number;
+    ratingB: number;
+    nameA?: string;
+    nameB?: string;
+  }
+>(function MatchupPitch({ teamA, teamB, ratingA, ratingB, nameA, nameB }, ref) {
   const a = place(teamA, "A");
   const b = place(teamB, "B");
+  const teamAName = nameA?.trim() || "Equipo A";
+  const teamBName = nameB?.trim() || "Equipo B";
 
   return (
     <div
@@ -130,22 +139,22 @@ export const MatchupPitch = React.forwardRef<
 
       {/* Header */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 bg-black/25 px-4 py-2.5">
-        <div className="text-left leading-none">
-          <p className="font-display text-[11px] font-semibold tracking-[0.18em] text-sky-300 uppercase">
-            Equipo A
+        <div className="min-w-0 text-left leading-none">
+          <p className="font-display truncate text-2xl font-black tracking-tight text-sky-300 uppercase">
+            {teamAName}
           </p>
-          <p className="font-mono text-2xl font-black tabular-nums">
+          <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 tabular-nums">
             {ratingA}
           </p>
         </div>
-        <p className="font-display text-sm font-bold tracking-[0.25em] text-white/70 uppercase">
+        <p className="font-display shrink-0 text-sm font-bold tracking-[0.25em] text-white/70 uppercase">
           La Reta · VS
         </p>
-        <div className="text-right leading-none">
-          <p className="font-display text-[11px] font-semibold tracking-[0.18em] text-rose-300 uppercase">
-            Equipo B
+        <div className="min-w-0 text-right leading-none">
+          <p className="font-display truncate text-2xl font-black tracking-tight text-rose-300 uppercase">
+            {teamBName}
           </p>
-          <p className="font-mono text-2xl font-black tabular-nums">
+          <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 tabular-nums">
             {ratingB}
           </p>
         </div>

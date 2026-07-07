@@ -30,8 +30,8 @@ import {
   positionGroup,
   type StatKey,
 } from "@/lib/constants";
-import type { Player } from "@/lib/db/schema";
 import { ageFromBirthDate } from "@/lib/dates";
+import type { Player } from "@/lib/db/schema";
 import { computeOverall } from "@/lib/ratings";
 import { InfoIcon } from "lucide-react";
 import Link from "next/link";
@@ -286,9 +286,18 @@ export function PlayerForm({
               <div key={key} className="space-y-1.5">
                 <div className="flex items-center justify-between text-xs">
                   <span className="font-medium">{STAT_LABEL[key]}</span>
-                  <span className="font-mono font-bold tabular-nums">
-                    {form[key]}
-                  </span>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={99}
+                    value={form[key]}
+                    onChange={(e) => {
+                      const n = Number(e.target.value);
+                      if (Number.isNaN(n)) return;
+                      set(key, Math.max(1, Math.min(99, n)));
+                    }}
+                    className="h-7 w-16 font-mono font-bold tabular-nums"
+                  />
                 </div>
                 <Slider
                   min={1}

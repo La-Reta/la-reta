@@ -4,6 +4,7 @@ import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { ScorerNotFound } from "@/components/app/scorer-not-found";
 import { Spotlight } from "@/components/app/spotlight";
 import { Commentator } from "@/components/features/dashboard/commentator";
+import { RetaCountdownBanner } from "@/components/features/dashboard/reta-countdown-banner";
 import { PlayerLegend } from "@/components/features/dashboard/player-legend";
 import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
@@ -59,6 +60,9 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6">
+      {/* ── Countdown a la próxima reta (solo ≤2 días antes) ───────── */}
+      <RetaCountdownBanner />
+
       {/* ── Matchday banner ───────────────────────────────────────── */}
       <section className="ring-foreground/10 relative overflow-hidden rounded-lg bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] text-white ring-1">
         {/* faint chalk pitch, drawn from the right touchline */}

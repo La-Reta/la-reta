@@ -10,6 +10,10 @@ export const selectedIdsAtom = atomWithStorage<number[]>(
   [],
 );
 
+/** Custom team names for the matchup, persisted so they survive regenerate/reload. */
+export const teamNameAAtom = atomWithStorage("reta:team-name-a", "");
+export const teamNameBAtom = atomWithStorage("reta:team-name-b", "");
+
 /** Convenience writer to toggle a single player in/out of the pool. */
 export const toggleSelectedAtom = atom(null, (get, set, id: number) => {
   const current = get(selectedIdsAtom);

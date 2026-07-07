@@ -30,10 +30,65 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_URL
+    ? `https://${process.env.VERCEL_URL}`
+    : "http://localhost:3000");
+
 export const metadata: Metadata = {
-  title: "Reta Fútbol · Manager",
+  metadataBase: new URL(siteUrl),
+  title: {
+    default: "Reta Fútbol · Manager estilo FIFA para tu reta",
+    template: "%s",
+  },
   description:
-    "Dashboard estilo FIFA para organizar la reta: jugadores, stats y equipos balanceados.",
+    "Organiza tu reta como un club: crea jugadores con stats FIFA, arma equipos balanceados por overall y posición, lleva el marcador en vivo y guarda el registro de partidos y goleadores.",
+  applicationName: "Reta Fútbol",
+  keywords: [
+    "reta",
+    "fútbol",
+    "cascarita",
+    "armar equipos",
+    "equipos balanceados",
+    "FIFA",
+    "manager de fútbol",
+    "marcador en vivo",
+    "goleadores",
+    "fútbol amateur",
+  ],
+  authors: [{ name: "Reta Fútbol" }],
+  creator: "Reta Fútbol",
+  publisher: "Reta Fútbol",
+  category: "sports",
+  alternates: { canonical: "/" },
+  formatDetection: { telephone: false, email: false, address: false },
+  openGraph: {
+    type: "website",
+    siteName: "Reta Fútbol",
+    title: "Reta Fútbol · Manager estilo FIFA para tu reta",
+    description:
+      "Crea jugadores con stats FIFA, arma equipos parejos y lleva el marcador en vivo. El club de la reta en modo carrera.",
+    url: "/",
+    locale: "es_MX",
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Reta Fútbol · Manager estilo FIFA para tu reta",
+    description:
+      "Crea jugadores con stats FIFA, arma equipos parejos y lleva el marcador en vivo.",
+  },
+  robots: {
+    index: true,
+    follow: true,
+    googleBot: {
+      index: true,
+      follow: true,
+      "max-image-preview": "large",
+      "max-snippet": -1,
+    },
+  },
+  appleWebApp: { capable: true, title: "Reta Fútbol" },
 };
 
 export default function RootLayout({

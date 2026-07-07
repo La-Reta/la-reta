@@ -122,8 +122,17 @@ function Crest({
 
 export const MatchupList = React.forwardRef<
   HTMLDivElement,
-  { teamA: Lineup[]; teamB: Lineup[]; ratingA: number; ratingB: number }
->(function MatchupList({ teamA, teamB, ratingA, ratingB }, ref) {
+  {
+    teamA: Lineup[];
+    teamB: Lineup[];
+    ratingA: number;
+    ratingB: number;
+    nameA?: string;
+    nameB?: string;
+  }
+>(function MatchupList({ teamA, teamB, ratingA, ratingB, nameA, nameB }, ref) {
+  const teamAName = nameA?.trim() || "Equipo A";
+  const teamBName = nameB?.trim() || "Equipo B";
   return (
     <div
       ref={ref}
@@ -171,12 +180,20 @@ export const MatchupList = React.forwardRef<
           La Reta · Convocatoria
         </p>
 
-        {/* Crests + ratings */}
+        {/* Crests + team names (rating de-emphasized) */}
         <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
           <div className="flex items-center justify-end gap-3">
-            <p className="font-mono text-4xl font-black tabular-nums">
-              {ratingA}
-            </p>
+            <div className="min-w-0 text-right">
+              <p
+                className="font-display truncate text-xl leading-tight font-black"
+                style={{ color: TEAM_A }}
+              >
+                {teamAName}
+              </p>
+              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+                OVR {ratingA}
+              </p>
+            </div>
             <Crest letter="A" color={TEAM_A} count={teamA.length} />
           </div>
           <span className="font-display rounded-md border border-white/25 px-3 py-1 text-sm font-black tracking-widest text-white/80">
@@ -184,9 +201,17 @@ export const MatchupList = React.forwardRef<
           </span>
           <div className="flex items-center gap-3">
             <Crest letter="B" color={TEAM_B} count={teamB.length} />
-            <p className="font-mono text-4xl font-black tabular-nums">
-              {ratingB}
-            </p>
+            <div className="min-w-0 text-left">
+              <p
+                className="font-display truncate text-xl leading-tight font-black"
+                style={{ color: TEAM_B }}
+              >
+                {teamBName}
+              </p>
+              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+                OVR {ratingB}
+              </p>
+            </div>
           </div>
         </div>
 
