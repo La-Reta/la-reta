@@ -1,6 +1,7 @@
 "use client";
 
 import { createPlayerSignup } from "@/app/actions/player-signups";
+import { CountrySelect } from "@/components/features/players/country-select";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Field, FieldLabel } from "@/components/ui/field";
@@ -112,12 +113,10 @@ export function PlayerSignupForm() {
                 maxLength={60}
               />
             </SignupField>
-            <SignupField label="País (código ISO, 2 letras)">
-              <Input
+            <SignupField label="País">
+              <CountrySelect
                 value={form.nationality}
-                onChange={(e) => set("nationality", e.target.value)}
-                placeholder="mx"
-                maxLength={2}
+                onChange={(code) => set("nationality", code)}
               />
             </SignupField>
             <SignupField label="Posición principal">

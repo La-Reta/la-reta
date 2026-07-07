@@ -5,6 +5,7 @@ import {
   updatePlayer,
   type PlayerInput,
 } from "@/app/actions/players";
+import { CountrySelect } from "@/components/features/players/country-select";
 import { FifaCard } from "@/components/shared/fifa-card";
 import {
   Alert,
@@ -33,7 +34,7 @@ import {
 import { ageFromBirthDate } from "@/lib/dates";
 import type { Player } from "@/lib/db/schema";
 import { computeOverall } from "@/lib/ratings";
-import { InfoIcon } from "lucide-react";
+import { ChevronLeftIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -241,12 +242,10 @@ export function PlayerForm({
                 ))}
               </NativeSelect>
             </FormField>
-            <FormField label="País (código ISO, 2 letras)">
-              <Input
+            <FormField label="País">
+              <CountrySelect
                 value={form.nationality}
-                onChange={(e) => set("nationality", e.target.value)}
-                placeholder="mx"
-                maxLength={2}
+                onChange={(code) => set("nationality", code)}
               />
             </FormField>
             <FormField label="URL de foto (opcional)" className="sm:col-span-2">
@@ -329,10 +328,11 @@ export function PlayerForm({
             <>
               <Button
                 type="button"
-                variant="destructive"
+                variant="outline"
                 onClick={() => router.back()}
                 disabled={pending}
               >
+                <ChevronLeftIcon />
                 Cancelar
               </Button>
               <Button type="submit" disabled={pending}>
