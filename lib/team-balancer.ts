@@ -135,6 +135,79 @@ function assignRoles(outfielders: Player[]): Lineup[] {
  *  3. Each team's outfielders are then spread across the lines by position so
  *     the board reads like a real formation (see `assignRoles`).
  */
+/**
+ * Label-agnostic fingerprint of a split: each side's player ids sorted and
+ * joined with ",", both sides sorted and joined with "|". The same matchup
+ * with A/B swapped produces the same signature.
+ */
+export function splitSignature(aIds: number[], bIds: number[]): string {
+  const side = (ids: number[]) => [...ids].sort((x, y) => x - y).join(",");
+  return [side(aIds), side(bIds)].sort().join("|");
+}
+
+export function lineupSignature(teamA: Lineup[], teamB: Lineup[]): string {
+  return splitSignature(
+    teamA.map((l) => l.player.id),
+    teamB.map((l) => l.player.id),
+  );
+}
+
+/** Unordered same-team pairs ("3-7") of a side, for overlap scoring. */
+function sidePairs(ids: number[]): string[] {
+  const sorted = [...ids].sort((x, y) => x - y);
+  const out: string[] = [];
+  for (let i = 0; i < sorted.length; i++)
+    for (let j = i + 1; j < sorted.length; j++)
+      out.push(`${sorted[i]}-${sorted[j]}`);
+  return out;
+}
+
+/** A previously generated split, as stored in `generated_reta_players`. */
+export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
+
+/**
+ * Like `balanceTeams`, but among several balanced candidates prefers the one
+ * that repeats recent history the least — teams stay parejos without being
+ * the same split every time.
+ */
+export function balanceTeamsVaried(
+  selected: Player[],
+  recent: RecentSplit[],
+  attempts = 12,
+): BalancedTeams {
+  if (recent.length === 0) return balanceTeams(selected);
+
+  const recentSignatures = new Set(
+    recent.map((r) => splitSignature(r.teamAIds, r.teamBIds)),
+  );
+  const recentPairs = new Set(
+    recent.flatMap((r) => [...sidePairs(r.teamAIds), ...sidePairs(r.teamBIds)]),
+  );
+
+  let best: BalancedTeams | null = null;
+  let bestScore = Infinity;
+  for (let i = 0; i < attempts; i++) {
+    const candidate = balanceTeams(selected);
+    const aIds = candidate.teamA.map((l) => l.player.id);
+    const bIds = candidate.teamB.map((l) => l.player.id);
+    const pairs = [...sidePairs(aIds), ...sidePairs(bIds)];
+    const overlap = pairs.length
+      ? pairs.filter((p) => recentPairs.has(p)).length / pairs.length
+      : 0;
+    // ponytail: heurística lineal — un split idéntico "cuesta" 3 pts de OVR y
+    // repetir todas las parejas otros 3; sube los pesos si sigue saliendo igual.
+    const score =
+      candidate.diff +
+      (recentSignatures.has(splitSignature(aIds, bIds)) ? 3 : 0) +
+      overlap * 3;
+    if (score < bestScore) {
+      bestScore = score;
+      best = candidate;
+    }
+  }
+  return best ?? balanceTeams(selected);
+}
+
 export function balanceTeams(selected: Player[]): BalancedTeams {
   const gkA: Lineup[] = [];
   const gkB: Lineup[] = [];

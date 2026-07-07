@@ -1,14 +1,17 @@
-import { getPlayers } from "@/lib/queries";
 import { TeamBuilder } from "@/components/features/teams/team-builder";
+import { getPlayers, getRecentSplits } from "@/lib/queries";
 
 export const metadata = { title: "Armar equipos · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {
-  const players = await getPlayers();
+  const [players, recentSplits] = await Promise.all([
+    getPlayers(),
+    getRecentSplits(),
+  ]);
 
   return (
-    <div className="mx-auto max-w-4xl space-y-6">
+    <div className="mx-auto space-y-6 md:max-w-4xl lg:container lg:max-w-none">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Armar equipos</h1>
         <p className="text-muted-foreground text-sm">
@@ -16,7 +19,7 @@ export default async function TeamsPage() {
           overall y posición.
         </p>
       </div>
-      <TeamBuilder players={players} />
+      <TeamBuilder players={players} recentSplits={recentSplits} />
     </div>
   );
 }

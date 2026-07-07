@@ -14,6 +14,15 @@ export const selectedIdsAtom = atomWithStorage<number[]>(
 export const teamNameAAtom = atomWithStorage("reta:team-name-a", "");
 export const teamNameBAtom = atomWithStorage("reta:team-name-b", "");
 
+/**
+ * Id of the last generated reta saved to the DB. Persisted so the live flow can
+ * link the finalized match back to that generation (goals per generated team).
+ */
+export const currentGeneratedRetaIdAtom = atomWithStorage<number | null>(
+  "reta:current-generated-reta",
+  null,
+);
+
 /** Convenience writer to toggle a single player in/out of the pool. */
 export const toggleSelectedAtom = atom(null, (get, set, id: number) => {
   const current = get(selectedIdsAtom);

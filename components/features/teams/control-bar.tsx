@@ -1,8 +1,9 @@
 "use client";
 
-import { Button } from "@/components/ui/button";
 import { ViewTab } from "@/components/features/teams/view-tab";
+import { Button } from "@/components/ui/button";
 import {
+  ChartNoAxesColumnIcon,
   LayoutGridIcon,
   ListChecksIcon,
   ListIcon,
@@ -26,6 +27,7 @@ export function ControlBar({
   onGenerate,
   generateDisabled,
   onGoLive,
+  onRegistro,
 }: {
   selectedCount: number;
   allSelected: boolean;
@@ -38,16 +40,35 @@ export function ControlBar({
   onGenerate: () => void;
   generateDisabled: boolean;
   onGoLive: () => void;
+  onRegistro: () => void;
 }) {
   return (
-    <div className="bg-card ring-foreground/10 flex flex-wrap items-center justify-between gap-3 rounded-lg p-3 ring-1">
-      <div className="flex items-center gap-2 text-sm">
-        <UsersIcon className="text-muted-foreground size-4" />
-        <span className="font-mono text-lg font-bold tabular-nums">
-          {selectedCount}
-        </span>
-        <span className="text-muted-foreground">convocados</span>
+    <div className="bg-card ring-foreground/10 flex flex-col gap-3 rounded-lg p-3 ring-1 sm:flex-row sm:items-center sm:justify-between">
+      {/* Info: convocados + acceso al registro */}
+      <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-3">
+        <div className="flex items-center gap-2.5">
+          <span className="bg-primary/10 text-primary grid size-9 shrink-0 place-items-center rounded-md">
+            <UsersIcon className="size-4.5" />
+          </span>
+          <div className="leading-none">
+            <p className="font-mono text-xl font-bold tabular-nums">
+              {selectedCount}
+            </p>
+            <p className="text-muted-foreground text-[11px]">convocados</p>
+          </div>
+        </div>
+        <Button
+          variant="ghost"
+          size="sm"
+          onClick={onRegistro}
+          className="text-muted-foreground"
+        >
+          <ChartNoAxesColumnIcon />
+          Registros
+        </Button>
       </div>
+
+      {/* Acciones: selección · vista · matchup */}
       <div className="flex flex-wrap items-center gap-2">
         <Button variant="outline" size="sm" onClick={onToggleAll}>
           <ListChecksIcon />
@@ -82,17 +103,27 @@ export function ControlBar({
           </div>
         )}
 
-        <Button onClick={onGenerate} disabled={generateDisabled}>
-          <ShuffleIcon />
-          {hasResult ? "Regenerar" : "Generar equipos"}
-        </Button>
-
-        {hasResult && (
-          <Button variant="outline" onClick={onGoLive}>
-            <RadioIcon />
-            Ir al live
+        {/* Primary CTA (+ live) — full-width row on mobile, inline on desktop */}
+        <div className="flex w-full gap-2 sm:w-auto">
+          <Button
+            className="flex-1 sm:flex-none"
+            onClick={onGenerate}
+            disabled={generateDisabled}
+          >
+            <ShuffleIcon />
+            {hasResult ? "Regenerar" : "Generar equipos"}
           </Button>
-        )}
+          {hasResult && (
+            <Button
+              variant="secondary"
+              className="flex-1 sm:flex-none"
+              onClick={onGoLive}
+            >
+              <RadioIcon />
+              Ir al live
+            </Button>
+          )}
+        </div>
       </div>
     </div>
   );

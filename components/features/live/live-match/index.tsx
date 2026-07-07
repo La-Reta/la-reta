@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
 import {
+  currentGeneratedRetaIdAtom,
   EMPTY_LIVE_MATCH,
   liveMatchAtom,
   teamNameAAtom,
@@ -49,6 +50,9 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   // matchup generated there lands here prefilled.
   const [nameA, setNameA] = useAtom(teamNameAAtom);
   const [nameB, setNameB] = useAtom(teamNameBAtom);
+  const [generatedRetaId, setGeneratedRetaId] = useAtom(
+    currentGeneratedRetaIdAtom,
+  );
   const hydrated = useHydrated();
   const elapsedSec = useLiveMatchClock(live.active, live.startedAt);
   const [attrId, setAttrId] = React.useState<string | null>(null);
@@ -159,12 +163,14 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
         balance: 50,
         durationSec,
         notes: "",
+        generatedRetaId,
         scorers: tallyGoalsByPlayer(live.goals),
       });
 
       if (res.ok) {
         toast.success("Partido finalizado y guardado en el registro");
         setLive(EMPTY_LIVE_MATCH);
+        setGeneratedRetaId(null);
         router.push("/matches");
         router.refresh();
         return;

@@ -1,5 +1,6 @@
 "use client";
 
+import { saveGeneratedReta } from "@/app/actions/retas";
 import {
   ControlBar,
   type MatchupView,
@@ -8,25 +9,50 @@ import { Convocatoria } from "@/components/features/teams/convocatoria";
 import { Matchup } from "@/components/features/teams/matchup";
 import { TeamNameInputs } from "@/components/features/teams/team-name-inputs";
 import type { Player } from "@/lib/db/schema";
+import type { RecentSplit } from "@/lib/queries";
 import {
+  currentGeneratedRetaIdAtom,
   selectedIdsAtom,
   teamNameAAtom,
   teamNameBAtom,
 } from "@/lib/state/atoms";
-import { balanceTeams, type BalancedTeams } from "@/lib/team-balancer";
-import { useAtom } from "jotai";
+import {
+  balanceTeamsVaried,
+  type BalancedTeams,
+  type Lineup,
+} from "@/lib/team-balancer";
+import { useAtom, useSetAtom } from "jotai";
 import { ScaleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-export function TeamBuilder({ players }: { players: Player[] }) {
+const sideRows = (lineups: Lineup[], team: "A" | "B") =>
+  lineups.map((l) => ({
+    playerId: l.player.id,
+    team,
+    role: l.role,
+    overall: l.player.overall,
+  }));
+
+export function TeamBuilder({
+  players,
+  recentSplits = [],
+}: {
+  players: Player[];
+  recentSplits?: RecentSplit[];
+}) {
   const router = useRouter();
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const [result, setResult] = React.useState<BalancedTeams | null>(null);
   const [view, setView] = React.useState<MatchupView>("board");
   const [nameA, setNameA] = useAtom(teamNameAAtom);
   const [nameB, setNameB] = useAtom(teamNameBAtom);
+  const setCurrentRetaId = useSetAtom(currentGeneratedRetaIdAtom);
   const [mounted, setMounted] = React.useState(false);
+  // Splits generated this session, so consecutive regenerations vary even
+  // before the server round-trip lands.
+  const [sessionSplits, setSessionSplits] = React.useState<RecentSplit[]>([]);
+  const [, startSave] = React.useTransition();
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
@@ -47,7 +73,31 @@ export function TeamBuilder({ players }: { players: Player[] }) {
 
   function generate() {
     if (selectedPlayers.length < 2) return;
-    setResult(balanceTeams(selectedPlayers));
+
+    const teams = balanceTeamsVaried(selectedPlayers, [
+      ...sessionSplits,
+      ...recentSplits,
+    ]);
+    setResult(teams);
+
+    const teamAIds = teams.teamA.map((l) => l.player.id);
+    const teamBIds = teams.teamB.map((l) => l.player.id);
+    setSessionSplits((prev) => [{ teamAIds, teamBIds }, ...prev].slice(0, 30));
+
+    // Persist the generation (fire-and-forget) and remember its id for the live
+    // flow. A failed save just leaves the matchup unlinked — non-blocking.
+    setCurrentRetaId(null);
+    startSave(async () => {
+      const res = await saveGeneratedReta({
+        teamAName: nameA,
+        teamBName: nameB,
+        ratingA: teams.ratingA,
+        ratingB: teams.ratingB,
+        diff: teams.diff,
+        players: [...sideRows(teams.teamA, "A"), ...sideRows(teams.teamB, "B")],
+      });
+      if (res.ok) setCurrentRetaId(res.id);
+    });
   }
 
   const allSelected = players.length > 0 && selected.length === players.length;
@@ -80,6 +130,7 @@ export function TeamBuilder({ players }: { players: Player[] }) {
         onGenerate={generate}
         generateDisabled={selectedPlayers.length < 2}
         onGoLive={() => router.push("/live")}
+        onRegistro={() => router.push("/teams/registro")}
       />
 
       <TeamNameInputs

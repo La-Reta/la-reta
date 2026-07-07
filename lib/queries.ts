@@ -1,7 +1,7 @@
 import "server-only";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
-import { and, asc, desc, eq, gt, sql } from "drizzle-orm";
+import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import {
   db,
   players,
@@ -9,6 +9,8 @@ import {
   ideas,
   matches,
   matchGoals,
+  generatedRetas,
+  generatedRetaPlayers,
   retaWords,
   playerComments,
   reports,
@@ -16,10 +18,12 @@ import {
   type StatHistory,
   type Idea,
   type Match,
+  type GeneratedReta,
   type RetaWord,
   type PlayerComment,
   type Report,
 } from "@/lib/db";
+import type { Position } from "@/lib/constants";
 import { rotatingWords } from "@/constants/rotatingWords";
 
 /**
@@ -242,6 +246,107 @@ export async function getTopScorers(): Promise<TopScorer[]> {
     .groupBy(players.id, players.name, players.displayName, players.nationality)
     .having(sql`sum(${matchGoals.goals}) > 0`)
     .orderBy(desc(totalGoals));
+}
+
+// ── Generated retas ──────────────────────────────────────────────────────────
+export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
+
+/**
+ * The most recent generated splits (ids per side), for feeding variety into the
+ * balancer. Cheap: only ids, newest first.
+ */
+export async function getRecentSplits(limit = 20): Promise<RecentSplit[]> {
+  const retas = await db
+    .select({ id: generatedRetas.id })
+    .from(generatedRetas)
+    .orderBy(desc(generatedRetas.createdAt))
+    .limit(limit);
+  if (retas.length === 0) return [];
+
+  const rows = await db
+    .select({
+      retaId: generatedRetaPlayers.retaId,
+      playerId: generatedRetaPlayers.playerId,
+      team: generatedRetaPlayers.team,
+    })
+    .from(generatedRetaPlayers)
+    .where(
+      inArray(
+        generatedRetaPlayers.retaId,
+        retas.map((r) => r.id),
+      ),
+    );
+
+  const byReta = new Map<number, RecentSplit>();
+  for (const r of retas) byReta.set(r.id, { teamAIds: [], teamBIds: [] });
+  for (const row of rows) {
+    const split = byReta.get(row.retaId);
+    if (!split) continue;
+    (row.team === "A" ? split.teamAIds : split.teamBIds).push(row.playerId);
+  }
+  return retas.map((r) => byReta.get(r.id)!);
+}
+
+export type GeneratedRetaPlayerRow = {
+  playerId: number;
+  team: string;
+  role: Position;
+  overall: number;
+  name: string;
+  displayName: string;
+  nationality: string;
+};
+export type GeneratedRetaWithPlayers = GeneratedReta & {
+  players: GeneratedRetaPlayerRow[];
+};
+
+/** Generated retas (newest first) with their player assignments attached. */
+export async function getGeneratedRetas(
+  limit = 200,
+): Promise<GeneratedRetaWithPlayers[]> {
+  const retas = await db
+    .select()
+    .from(generatedRetas)
+    .orderBy(desc(generatedRetas.createdAt), desc(generatedRetas.id))
+    .limit(limit);
+  if (retas.length === 0) return [];
+
+  const rows = await db
+    .select({
+      retaId: generatedRetaPlayers.retaId,
+      playerId: generatedRetaPlayers.playerId,
+      team: generatedRetaPlayers.team,
+      role: generatedRetaPlayers.role,
+      overall: generatedRetaPlayers.overall,
+      name: players.name,
+      displayName: players.displayName,
+      nationality: players.nationality,
+    })
+    .from(generatedRetaPlayers)
+    .innerJoin(players, eq(generatedRetaPlayers.playerId, players.id))
+    .where(
+      inArray(
+        generatedRetaPlayers.retaId,
+        retas.map((r) => r.id),
+      ),
+    );
+
+  const byReta = new Map<number, GeneratedRetaPlayerRow[]>();
+  for (const row of rows) {
+    const list = byReta.get(row.retaId) ?? [];
+    list.push({
+      playerId: row.playerId,
+      team: row.team,
+      role: row.role,
+      overall: row.overall,
+      name: row.name,
+      displayName: row.displayName,
+      nationality: row.nationality,
+    });
+    byReta.set(row.retaId, list);
+  }
+
+  return retas.map((r) => ({ ...r, players: byReta.get(r.id) ?? [] }));
 }
 
 // ── Reta words ─────────────────────────────────────────────────────────────

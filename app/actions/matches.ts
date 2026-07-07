@@ -18,6 +18,8 @@ export type MatchInput = {
   balance: number;
   notes: string;
   durationSec?: number | null;
+  // Which generated lineup this match came from (set from the live flow).
+  generatedRetaId?: number | null;
   scorers: { playerId: number; goals: number; team?: MatchTeam | null }[];
 };
 
@@ -68,7 +70,10 @@ export async function createMatch(input: MatchInput): Promise<Result> {
   try {
     const [m] = await db
       .insert(matches)
-      .values(matchValues(input))
+      .values({
+        ...matchValues(input),
+        generatedRetaId: input.generatedRetaId ?? null,
+      })
       .returning({ id: matches.id });
 
     const rows = scorerRows(m.id, input.scorers);

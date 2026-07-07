@@ -8,6 +8,8 @@ import {
   timestamp,
   text,
   date,
+  real,
+  index,
 } from "drizzle-orm/pg-core";
 import {
   POSITIONS,
@@ -118,6 +120,60 @@ export const ideas = pgTable("ideas", {
 export type Idea = typeof ideas.$inferSelect;
 export type NewIdea = typeof ideas.$inferInsert;
 
+// ── Generated retas ─────────────────────────────────────────────────────────
+/**
+ * One row per "Generar equipos" run: which players landed on which side, so we
+ * can measure repetition across generations and feed variety back into the
+ * balancer. A match played from this generation links back via
+ * `matches.generatedRetaId`.
+ */
+export const generatedRetas = pgTable(
+  "generated_retas",
+  {
+    id: serial("id").primaryKey(),
+    /**
+     * Label-agnostic fingerprint of the split: each side's player ids sorted
+     * and joined with ",", both sides sorted and joined with "|". Two
+     * generations with the same signature are the same matchup even if A/B
+     * are swapped.
+     */
+    signature: varchar("signature", { length: 600 }).notNull(),
+    teamAName: varchar("team_a_name", { length: 60 })
+      .notNull()
+      .default("Equipo A"),
+    teamBName: varchar("team_b_name", { length: 60 })
+      .notNull()
+      .default("Equipo B"),
+    ratingA: real("rating_a").notNull().default(0),
+    ratingB: real("rating_b").notNull().default(0),
+    diff: real("diff").notNull().default(0),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [index("generated_retas_signature_idx").on(t.signature)],
+);
+
+export type GeneratedReta = typeof generatedRetas.$inferSelect;
+export type NewGeneratedReta = typeof generatedRetas.$inferInsert;
+
+/** A player's assignment inside a generated reta (side, role, OVR snapshot). */
+export const generatedRetaPlayers = pgTable("generated_reta_players", {
+  id: serial("id").primaryKey(),
+  retaId: integer("reta_id")
+    .notNull()
+    .references(() => generatedRetas.id, { onDelete: "cascade" }),
+  playerId: integer("player_id")
+    .notNull()
+    .references(() => players.id, { onDelete: "cascade" }),
+  // "A" | "B", same convention as match_goals.team.
+  team: varchar("team", { length: 1 }).notNull(),
+  role: positionEnum("role").notNull(),
+  // Overall at generation time, so history survives later stat edits.
+  overall: smallint("overall").notNull(),
+});
+
+export type GeneratedRetaPlayer = typeof generatedRetaPlayers.$inferSelect;
+export type NewGeneratedRetaPlayer = typeof generatedRetaPlayers.$inferInsert;
+
 // ── Matches ────────────────────────────────────────────────────────────────
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
@@ -135,6 +191,11 @@ export const matches = pgTable("matches", {
   // Duration in seconds (set by the live scoreboard; null for manual entries).
   durationSec: integer("duration_sec"),
   notes: text("notes"),
+  // Which generated lineup this match came from (null for manual entries).
+  generatedRetaId: integer("generated_reta_id").references(
+    () => generatedRetas.id,
+    { onDelete: "set null" },
+  ),
   createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
