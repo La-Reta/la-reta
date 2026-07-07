@@ -58,14 +58,20 @@ type FormState = {
   weightKg: string;
 } & Record<StatKey, number>;
 
+/** Identity/physical fields that can be prefilled on a new player (e.g. from a signup). */
+export type PlayerFormPrefill = Partial<FormState>;
+
 function parseNumberInput(value: string) {
   if (!value.trim()) return Number.NaN;
   const parsed = Number(value);
   return Number.isFinite(parsed) ? parsed : Number.NaN;
 }
 
-function initialState(player?: Player): FormState {
-  return {
+function initialState(
+  player?: Player,
+  prefill?: Partial<FormState>,
+): FormState {
+  const base: FormState = {
     name: player?.name ?? "",
     displayName: player?.displayName ?? "",
     position: player?.position ?? "ST",
@@ -87,18 +93,24 @@ function initialState(player?: Player): FormState {
     defending: player?.defending ?? 38,
     physical: player?.physical ?? 38,
   };
+  // Prefill only applies to new players (from a signup request), never on edit.
+  return player ? base : { ...base, ...prefill };
 }
 
 export function PlayerForm({
   player,
   admin,
+  prefill,
 }: {
   player?: Player;
   admin: boolean;
+  prefill?: Partial<FormState>;
 }) {
   const router = useRouter();
   const isEdit = Boolean(player);
-  const [form, setForm] = React.useState<FormState>(() => initialState(player));
+  const [form, setForm] = React.useState<FormState>(() =>
+    initialState(player, prefill),
+  );
   const [pending, startTransition] = React.useTransition();
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {

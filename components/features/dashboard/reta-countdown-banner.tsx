@@ -1,7 +1,12 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { CalendarClockIcon, RadioIcon, ShuffleIcon } from "lucide-react";
+import {
+  CalendarClockIcon,
+  RadioIcon,
+  ShuffleIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 import * as React from "react";
 
@@ -142,24 +147,35 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
         </div>
 
         <div>
-          <Button
-            variant="default"
-            size={"sm"}
-            className="mb-2 shrink-0"
-            render={<Link href={kicked ? "/live" : "/teams"} />}
-          >
-            {kicked ? (
-              <>
-                <RadioIcon />
-                Ir al live
-              </>
-            ) : (
-              <>
-                <ShuffleIcon />
-                Armar equipos
-              </>
-            )}
-          </Button>
+          <div className="mb-2 flex flex-wrap gap-2">
+            <Button
+              variant="secondary"
+              size="sm"
+              className="shrink-0"
+              render={<Link href="/players/registro" />}
+            >
+              <UserRoundPlusIcon />
+              Registrarme
+            </Button>
+            <Button
+              variant="default"
+              size="sm"
+              className="shrink-0"
+              render={<Link href={kicked ? "/live" : "/teams"} />}
+            >
+              {kicked ? (
+                <>
+                  <RadioIcon />
+                  Ir al live
+                </>
+              ) : (
+                <>
+                  <ShuffleIcon />
+                  Armar equipos
+                </>
+              )}
+            </Button>
+          </div>
           <div className="flex shrink-0 flex-col items-start gap-4 sm:flex-row sm:items-center">
             {!kicked && (
               <div className="flex gap-2" aria-hidden="true">

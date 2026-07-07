@@ -240,3 +240,23 @@ export const REPORT_STATUS_CLASS: Record<ReportStatus, string> = {
   resuelto: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   descartado: "bg-muted text-muted-foreground",
 };
+
+// ── Player signups (solicitudes para registrarse como jugador) ───────────────
+export const SIGNUP_STATUSES = [
+  "pendiente",
+  "aprobado",
+  "rechazado",
+] as const;
+export type SignupStatus = (typeof SIGNUP_STATUSES)[number];
+
+export const SIGNUP_STATUS_LABEL: Record<SignupStatus, string> = {
+  pendiente: "Pendiente",
+  aprobado: "Aprobado",
+  rechazado: "Rechazado",
+};
+
+export const SIGNUP_STATUS_CLASS: Record<SignupStatus, string> = {
+  pendiente: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
+  aprobado: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
+  rechazado: "bg-muted text-muted-foreground",
+};

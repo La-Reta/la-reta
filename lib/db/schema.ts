@@ -19,6 +19,7 @@ import {
   IDEA_PRIORITIES,
   REPORT_CATEGORIES,
   REPORT_STATUSES,
+  SIGNUP_STATUSES,
 } from "@/lib/constants";
 
 /**
@@ -324,3 +325,53 @@ export const reports = pgTable("reports", {
 
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
+
+// ── Player signups ───────────────────────────────────────────────────────────
+export const signupStatusEnum = pgEnum("signup_status", SIGNUP_STATUSES);
+
+/**
+ * A person asking to be registered as a player. Identity + physical profile
+ * only (no attributes) plus light client context. Admins review these and
+ * create the real player "as it should be" from the prefilled new-player form.
+ */
+export const playerSignups = pgTable("player_signups", {
+  id: serial("id").primaryKey(),
+  name: varchar("name", { length: 120 }).notNull(),
+  displayName: varchar("display_name", { length: 60 }),
+  position: positionEnum("position").notNull(),
+  position2: positionEnum("position2"),
+  preferredFoot: footEnum("preferred_foot").notNull().default("right"),
+  nationality: varchar("nationality", { length: 2 }).notNull().default("mx"),
+  photoUrl: varchar("photo_url", { length: 500 }),
+  birthDate: date("birth_date"),
+  heightCm: smallint("height_cm"),
+  weightKg: smallint("weight_kg"),
+  // How to reach them + anything they want to add.
+  contact: varchar("contact", { length: 160 }),
+  note: text("note"),
+  status: signupStatusEnum("status").notNull().default("pendiente"),
+  adminNotes: text("admin_notes"),
+  // Light client context (same shape as reports).
+  language: varchar("language", { length: 24 }),
+  languages: varchar("languages", { length: 240 }),
+  timezone: varchar("timezone", { length: 64 }),
+  timezoneOffset: smallint("timezone_offset"),
+  screen: varchar("screen", { length: 32 }),
+  viewport: varchar("viewport", { length: 32 }),
+  pixelRatio: varchar("pixel_ratio", { length: 16 }),
+  platform: varchar("platform", { length: 80 }),
+  userAgent: text("user_agent"),
+  ipAddress: varchar("ip_address", { length: 64 }),
+  forwardedFor: varchar("forwarded_for", { length: 500 }),
+  country: varchar("country", { length: 8 }),
+  region: varchar("region", { length: 120 }),
+  city: varchar("city", { length: 120 }),
+  latitude: varchar("latitude", { length: 40 }),
+  longitude: varchar("longitude", { length: 40 }),
+  acceptLanguage: varchar("accept_language", { length: 240 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+  updatedAt: timestamp("updated_at").notNull().defaultNow(),
+});
+
+export type PlayerSignup = typeof playerSignups.$inferSelect;
+export type NewPlayerSignup = typeof playerSignups.$inferInsert;

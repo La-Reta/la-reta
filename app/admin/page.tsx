@@ -1,7 +1,12 @@
 import Link from "next/link";
-import { LifeBuoyIcon, LightbulbIcon, ArrowRightIcon } from "lucide-react";
+import {
+  LifeBuoyIcon,
+  LightbulbIcon,
+  ArrowRightIcon,
+  ClipboardListIcon,
+} from "lucide-react";
 import { isAdmin } from "@/lib/admin";
-import { getIdeas, getReports } from "@/lib/queries";
+import { getIdeas, getPendingSignupCount, getReports } from "@/lib/queries";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
 
@@ -11,7 +16,11 @@ export const dynamic = "force-dynamic";
 export default async function AdminPage() {
   if (!(await isAdmin())) return <AdminLogin />;
 
-  const [ideas, reports] = await Promise.all([getIdeas(), getReports()]);
+  const [ideas, reports, pendingSignups] = await Promise.all([
+    getIdeas(),
+    getReports(),
+    getPendingSignupCount(),
+  ]);
   const pending = ideas.filter((i) => i.status === "nueva").length;
   const pendingReports = reports.filter(
     (report) => report.status === "nuevo",
@@ -41,6 +50,16 @@ export default async function AdminPage() {
           icon={LifeBuoyIcon}
           title="Reportes"
           description={`${reports.length} en total${pendingReports > 0 ? ` · ${pendingReports} nuevos` : ""}`}
+        />
+        <AdminLink
+          href="/admin/registros"
+          icon={ClipboardListIcon}
+          title="Solicitudes de jugadores"
+          description={
+            pendingSignups > 0
+              ? `${pendingSignups} en espera de darse de alta`
+              : "Sin solicitudes pendientes"
+          }
         />
       </div>
     </div>

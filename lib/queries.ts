@@ -14,6 +14,7 @@ import {
   retaWords,
   playerComments,
   reports,
+  playerSignups,
   type Player,
   type StatHistory,
   type Idea,
@@ -22,6 +23,7 @@ import {
   type RetaWord,
   type PlayerComment,
   type Report,
+  type PlayerSignup,
 } from "@/lib/db";
 import type { Position } from "@/lib/constants";
 import { rotatingWords } from "@/constants/rotatingWords";
@@ -135,6 +137,40 @@ export async function getIdeas(): Promise<Idea[]> {
 /** Private admin reports, newest first. */
 export async function getReports(): Promise<Report[]> {
   return db.select().from(reports).orderBy(desc(reports.createdAt));
+}
+
+// ── Player signups ─────────────────────────────────────────────────────────
+/** Signup requests to become a player, pending first then newest. */
+export async function getPlayerSignups(): Promise<PlayerSignup[]> {
+  return db
+    .select()
+    .from(playerSignups)
+    .orderBy(
+      // pendientes primero, luego por fecha desc
+      sql`case when ${playerSignups.status} = 'pendiente' then 0 else 1 end`,
+      desc(playerSignups.createdAt),
+    );
+}
+
+/** One signup by id (to prefill the new-player form). */
+export async function getPlayerSignupById(
+  id: number,
+): Promise<PlayerSignup | null> {
+  const [row] = await db
+    .select()
+    .from(playerSignups)
+    .where(eq(playerSignups.id, id))
+    .limit(1);
+  return row ?? null;
+}
+
+/** How many signups are still waiting — for the admin badge. */
+export async function getPendingSignupCount(): Promise<number> {
+  const [row] = await db
+    .select({ n: sql<number>`count(*)`.mapWith(Number) })
+    .from(playerSignups)
+    .where(eq(playerSignups.status, "pendiente"));
+  return row?.n ?? 0;
 }
 
 // ── Matches ──────────────────────────────────────────────────────────────
