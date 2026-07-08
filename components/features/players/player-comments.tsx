@@ -153,6 +153,11 @@ export function PlayerComments({
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
+    toast.error(
+      "¡Ups! Estamos mejorando esta sección. Por ahora no se pueden enviar reseñas.",
+    );
+    return;
+
     const b = body.trim();
     if (!b) {
       toast.error("Escribe un comentario.");
@@ -226,7 +231,6 @@ export function PlayerComments({
             placeholder="Tu nombre (opcional)"
             maxLength={60}
             className="flex-1"
-            disabled // TODO: we need to figure out how to handle others people names on a message, to avoid problems
           />
           <Button type="submit" disabled={pending}>
             <SendHorizonalIcon />
