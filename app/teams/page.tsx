@@ -11,7 +11,7 @@ export default async function TeamsPage() {
   ]);
 
   return (
-    <div className="mx-auto space-y-6 md:max-w-4xl lg:container lg:max-w-none">
+    <div className="mx-auto space-y-6 md:max-w-4xl lg:max-w-6xl 2xl:max-w-7xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Armar equipos</h1>
         <p className="text-muted-foreground text-sm">

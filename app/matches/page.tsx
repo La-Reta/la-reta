@@ -32,7 +32,7 @@ export default async function MatchesPage() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6 lg:max-w-6xl 2xl:max-w-7xl">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Partidos</h1>
         <p className="text-muted-foreground text-sm">
