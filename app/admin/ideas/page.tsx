@@ -4,8 +4,9 @@ import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "Ideas · Admin" };
+export const metadata: Metadata = { title: "Ideas · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminIdeasPage() {

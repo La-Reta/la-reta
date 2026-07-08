@@ -19,11 +19,12 @@ import {
   ShieldIcon,
   TargetIcon,
 } from "lucide-react";
+import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
 
-export const metadata = { title: "Detalle de partido · Reta Fútbol" };
+export const metadata: Metadata = { title: "Detalle de partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 // Icon-chip tints for the stat tiles, built from theme + Tailwind basics.

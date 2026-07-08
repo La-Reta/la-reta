@@ -9,8 +9,9 @@ import { isAdmin } from "@/lib/admin";
 import { getIdeas, getPendingSignupCount, getReports } from "@/lib/queries";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
+import { Metadata } from "next";
 
-export const metadata = { title: "Admin · Reta Fútbol" };
+export const metadata: Metadata = { title: "Admin · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminPage() {

@@ -1,7 +1,8 @@
 import { TeamBuilder } from "@/components/features/teams/team-builder";
 import { getPlayers, getRecentSplits } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "Armar equipos · Reta Fútbol" };
+export const metadata: Metadata = { title: "Armar equipos · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function TeamsPage() {

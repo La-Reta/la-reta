@@ -15,9 +15,10 @@ import {
   ShuffleIcon,
   UsersIcon,
 } from "lucide-react";
+import { Metadata } from "next";
 import Link from "next/link";
 
-export const metadata = { title: "Registro de retas · Reta Fútbol" };
+export const metadata: Metadata = { title: "Registro de retas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function RetaRegistroPage() {

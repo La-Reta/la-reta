@@ -4,8 +4,9 @@ import {
 } from "@/components/features/players/player-form";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerSignupById } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "Nuevo jugador · Reta Fútbol" };
+export const metadata: Metadata = { title: "Nuevo jugador · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function NewPlayerPage({

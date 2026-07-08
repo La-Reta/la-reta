@@ -4,8 +4,9 @@ import { LogoutButton } from "@/components/features/admin/logout-button";
 import { AdminSignups } from "@/components/features/players/admin-signups";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerSignups } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "Solicitudes de jugadores · Admin" };
+export const metadata: Metadata = { title: "Solicitudes de jugadores · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminSignupsPage() {

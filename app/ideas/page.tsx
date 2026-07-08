@@ -3,8 +3,9 @@ import { IdeasView } from "@/components/features/ideas/ideas-view";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { Metadata } from "next";
 
-export const metadata = { title: "Ideas · Reta Fútbol" };
+export const metadata: Metadata = { title: "Ideas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function IdeasPage() {

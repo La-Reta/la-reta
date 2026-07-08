@@ -1,8 +1,9 @@
 import { WordForm } from "@/components/features/words/word-form";
 import { WordItem } from "@/components/features/words/word-item";
 import { getRetaWords } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "La Reta ____ · Reta Fútbol" };
+export const metadata: Metadata = { title: "La Reta ____ · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function PalabrasPage() {

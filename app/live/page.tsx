@@ -2,8 +2,9 @@ import { LiveLock } from "@/components/features/live/live-lock";
 import { LiveMatch } from "@/components/features/live/live-match";
 import { isLiveUnlocked } from "@/lib/admin";
 import { getPlayers } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "En vivo · Reta Fútbol" };
+export const metadata: Metadata = { title: "En vivo · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function LivePage() {

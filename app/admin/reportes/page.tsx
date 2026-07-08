@@ -4,8 +4,9 @@ import { AdminReports } from "@/components/features/admin/admin-reports";
 import { LogoutButton } from "@/components/features/admin/logout-button";
 import { isAdmin } from "@/lib/admin";
 import { getReports } from "@/lib/queries";
+import { Metadata } from "next";
 
-export const metadata = { title: "Reportes · Admin" };
+export const metadata: Metadata = { title: "Reportes · Admin" };
 export const dynamic = "force-dynamic";
 
 export default async function AdminReportsPage() {

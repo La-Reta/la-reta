@@ -8,6 +8,7 @@ import { formatShortDateOnly } from "@/lib/dates";
 import { getMatches, getPlayers, getTopScorers } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { ChevronRightIcon, NotebookTabsIcon, PencilIcon } from "lucide-react";
+import { Metadata } from "next";
 import Link from "next/link";
 
 function balanceColor(v: number) {
@@ -16,7 +17,7 @@ function balanceColor(v: number) {
   return "bg-rose-500";
 }
 
-export const metadata = { title: "Partidos · Reta Fútbol" };
+export const metadata: Metadata = { title: "Partidos · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function MatchesPage() {

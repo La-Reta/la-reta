@@ -2,9 +2,10 @@ import { MatchForm } from "@/components/features/matches/match-form";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { isAdmin } from "@/lib/admin";
 import { getMatchById, getPlayers } from "@/lib/queries";
+import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
 
-export const metadata = { title: "Editar partido · Reta Fútbol" };
+export const metadata: Metadata = { title: "Editar partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 export default async function EditMatchPage({

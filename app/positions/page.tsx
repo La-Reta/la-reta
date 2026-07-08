@@ -13,8 +13,9 @@ import {
   type Position,
   type PositionGroup,
 } from "@/lib/constants";
+import { Metadata } from "next";
 
-export const metadata = { title: "Posiciones · Reta Fútbol" };
+export const metadata: Metadata = { title: "Posiciones · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
 const GROUP_ORDER: PositionGroup[] = ["GK", "DEF", "MID", "FWD"];

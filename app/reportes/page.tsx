@@ -1,8 +1,9 @@
 import { ReportForm } from "@/components/features/reports/report-form";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlertIcon } from "lucide-react";
+import { Metadata } from "next";
 
-export const metadata = { title: "Reportar · Reta Fútbol" };
+export const metadata: Metadata = { title: "Reportar · Reta Fútbol" };
 
 export default function ReportsPage() {
   return (

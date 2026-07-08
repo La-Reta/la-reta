@@ -1,6 +1,7 @@
 import { PlayerSignupForm } from "@/components/features/players/player-signup-form";
+import { Metadata } from "next";
 
-export const metadata = { title: "Registrarme como jugador · Reta Fútbol" };
+export const metadata: Metadata = { title: "Registrarme como jugador · Reta Fútbol" };
 
 export default function PlayerSignupPage() {
   return (
