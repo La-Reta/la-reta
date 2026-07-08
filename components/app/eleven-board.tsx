@@ -1,5 +1,6 @@
 import { GROUP_COLOR, GROUP_LABEL, PositionGroup } from "@/lib/constants";
 import { Player } from "@/lib/db";
+import Link from "next/link";
 import { LineupBoard } from "../features/dashboard/lineup-board";
 import {
   Card,
@@ -29,6 +30,12 @@ export function ElevenBoard({
           <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase">
             4-3-3
           </span>
+          <Link
+            href={"/players"}
+            className="font-display bg-foreground text-background ms-2 rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase"
+          >
+            Ver todos los jugadores
+          </Link>
         </CardAction>
       </CardHeader>
       <CardContent className="p-0">
