@@ -13,7 +13,12 @@ import * as React from "react";
 // ponytail: la reta cae cada 14 días. Ancla = próximo jueves conocido; edítala
 // a tu fecha real y todo lo demás se deriva sola.
 const RETA_ANCHOR = "2026-07-09"; // jueves
-const KICKOFF_HOUR = 20; // 20:00 hrs
+// La reta arranca 7pm hora CDMX. México no usa horario de verano desde 2022, así
+// que CDMX es UTC-6 fijo — anclamos el instante con ese offset para que el conteo
+// sea correcto sin importar la zona horaria del visitante.
+const CDMX_TZ = "America/Mexico_City";
+const CDMX_OFFSET = "-06:00";
+const KICKOFF_TIME = "19:00:00"; // 7:00 pm CDMX
 const DAY_MS = 86_400_000;
 const SHOW_WITHIN_DAYS = 2; // muestra cuando falten ≤2 días; se oculta pasada la reta
 
@@ -23,15 +28,29 @@ function midnight(date: Date) {
   return d;
 }
 
-/** Días hasta la próxima reta (0 = hoy) y su hora de arranque. */
+/** Fecha de hoy (YYYY-MM-DD) en CDMX, para que el día de la reta sea consistente. */
+function cdmxDateStr(date: Date) {
+  return new Intl.DateTimeFormat("en-CA", { timeZone: CDMX_TZ }).format(date);
+}
+
+function addDaysStr(ymd: string, days: number) {
+  return new Date(Date.parse(`${ymd}T00:00:00Z`) + days * DAY_MS)
+    .toISOString()
+    .slice(0, 10);
+}
+
+/** Días hasta la próxima reta (0 = hoy) y el instante exacto de arranque (7pm CDMX). */
 export function computeReta(now: Date) {
-  const todayMid = midnight(now).getTime();
-  const anchorMid = midnight(new Date(`${RETA_ANCHOR}T00:00:00`)).getTime();
-  const elapsedDays = Math.round((todayMid - anchorMid) / DAY_MS);
+  const todayStr = cdmxDateStr(now);
+  const elapsedDays = Math.round(
+    (Date.parse(`${todayStr}T00:00:00Z`) -
+      Date.parse(`${RETA_ANCHOR}T00:00:00Z`)) /
+      DAY_MS,
+  );
   const mod = ((elapsedDays % 14) + 14) % 14;
   const daysUntil = mod === 0 ? 0 : 14 - mod;
-  const kickoff = new Date(todayMid + daysUntil * DAY_MS);
-  kickoff.setHours(KICKOFF_HOUR, 0, 0, 0);
+  const retaDateStr = addDaysStr(todayStr, daysUntil);
+  const kickoff = new Date(`${retaDateStr}T${KICKOFF_TIME}${CDMX_OFFSET}`);
   return { daysUntil, kickoff };
 }
 
@@ -39,6 +58,12 @@ const dateFmt = new Intl.DateTimeFormat("es-MX", {
   weekday: "long",
   day: "numeric",
   month: "long",
+  timeZone: CDMX_TZ,
+});
+const timeFmt = new Intl.DateTimeFormat("es-MX", {
+  hour: "numeric",
+  minute: "2-digit",
+  timeZone: CDMX_TZ,
 });
 const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
 const pad = (n: number) => String(n).padStart(2, "0");
@@ -96,6 +121,7 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
   ];
 
   const dateLabel = cap(dateFmt.format(kickoff));
+  const timeLabel = timeFmt.format(kickoff);
   const accent = isToday ? "text-amber-300" : "text-emerald-300";
   const dot = isToday ? "bg-amber-400" : "bg-emerald-400";
 
@@ -108,7 +134,7 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
       }}
       aria-label={
         kicked
-          ? `La reta es hoy, ${dateLabel} a las ${KICKOFF_HOUR}:00`
+          ? `La reta es hoy, ${dateLabel} a las ${timeLabel} CDMX`
           : `Faltan ${units[0].value} días para la reta del ${dateLabel}`
       }
     >
@@ -141,7 +167,7 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
           <p className="mt-2 flex items-center gap-1.5 text-sm text-white/70">
             <CalendarClockIcon className="size-4 shrink-0 text-white/50" />
             <span className="truncate">
-              {dateLabel} · {pad(KICKOFF_HOUR)}:00 hrs
+              {dateLabel} · {timeLabel} CDMX
             </span>
           </p>
         </div>
