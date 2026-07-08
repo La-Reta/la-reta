@@ -207,7 +207,7 @@ export function PlayerSignupForm() {
             alta.
           </div>
 
-          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:items-center sm:justify-between">
             <Button
               type="button"
               variant="outline"
