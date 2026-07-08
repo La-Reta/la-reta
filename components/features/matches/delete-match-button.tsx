@@ -1,11 +1,11 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { Trash2Icon } from "lucide-react";
-import { toast } from "sonner";
 import { deleteMatch } from "@/app/actions/matches";
 import { Button } from "@/components/ui/button";
+import { Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function DeleteMatchButton({ id }: { id: number }) {
   const router = useRouter();
@@ -14,7 +14,7 @@ export function DeleteMatchButton({ id }: { id: number }) {
   return (
     <Button
       variant="destructive"
-      size="icon-sm"
+      size="icon"
       aria-label="Eliminar partido"
       disabled={pending}
       onClick={() => {

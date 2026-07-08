@@ -87,7 +87,7 @@ export default async function MatchesPage() {
                           <>
                             <Button
                               variant="outline"
-                              size="icon-sm"
+                              size="icon"
                               aria-label="Editar partido"
                               render={<Link href={`/matches/${m.id}/edit`} />}
                             >

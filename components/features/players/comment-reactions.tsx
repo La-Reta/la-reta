@@ -57,6 +57,7 @@ export function CommentReactions({
   const [pinned, setPinned] = React.useState(false);
 
   // Read localStorage after mount to avoid SSR/client mismatch.
+  // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMine(readMine()), []);
 
   const paletteOpen = pinned || hovered || pickerOpen;

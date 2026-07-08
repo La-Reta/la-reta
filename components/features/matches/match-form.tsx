@@ -331,7 +331,7 @@ export function MatchForm({
                   <Button
                     type="button"
                     variant="destructive"
-                    size="icon-sm"
+                    size="icon"
                     onClick={() => removeScorer(i)}
                     aria-label="Quitar"
                   >

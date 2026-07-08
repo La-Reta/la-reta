@@ -108,7 +108,7 @@ export function GoalTimeline({
 
               <Button
                 variant="secondary"
-                size="icon-sm"
+                size="icon"
                 onClick={() => onRemove(goal.id)}
                 aria-label="Eliminar gol"
               >

@@ -1,10 +1,6 @@
 "use client";
 
-import { useRouter } from "next/navigation";
-import { useTransition } from "react";
-import { toast } from "sonner";
-import { MoreVerticalIcon, CheckCircle2Icon, Trash2Icon } from "lucide-react";
-import { setIdeaStatus, deleteIdea } from "@/app/actions/ideas";
+import { deleteIdea, setIdeaStatus } from "@/app/actions/ideas";
 import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
@@ -13,6 +9,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { CheckCircle2Icon, MoreVerticalIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import { useTransition } from "react";
+import { toast } from "sonner";
 
 export function IdeaRowActions({ id, status }: { id: number; status: string }) {
   const router = useRouter();
@@ -36,7 +36,7 @@ export function IdeaRowActions({ id, status }: { id: number; status: string }) {
         render={
           <Button
             variant="ghost"
-            size="icon-sm"
+            size="icon"
             aria-label="Acciones"
             disabled={pending}
           >

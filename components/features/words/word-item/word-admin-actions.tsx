@@ -66,7 +66,7 @@ export function WordAdminActions({
   return (
     <>
       <Button
-        size="icon-sm"
+        size="icon"
         variant="secondary"
         aria-label="Editar palabra"
         onClick={() => {
@@ -78,7 +78,7 @@ export function WordAdminActions({
         <PencilIcon />
       </Button>
       <Button
-        size="icon-sm"
+        size="icon"
         variant="destructive"
         aria-label="Eliminar palabra"
         disabled={pending}
