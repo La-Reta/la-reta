@@ -1,4 +1,6 @@
+import { GROUP_COLOR, positionGroup } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { flagEmoji } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
@@ -38,7 +40,7 @@ export function Spotlight({
   contentStyle?: React.CSSProperties;
 }) {
   return (
-    <Card className={cn("h-fit", footer && "pb-0")}>
+    <Card className={cn(footer && "pb-0")}>
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           {title}
@@ -48,7 +50,7 @@ export function Spotlight({
         </CardDescription>
       </CardHeader>
       <CardContent
-        className={cn("flex items-center gap-4", contentClassName)}
+        className={cn("flex flex-1 items-center gap-4", contentClassName)}
         style={contentStyle}
       >
         <Link
@@ -64,7 +66,21 @@ export function Spotlight({
           <p className="text-muted-foreground truncate text-sm">
             {player.name}
           </p>
-          <p className="mt-2 font-mono text-3xl font-black tabular-nums">
+          <div className="mt-1 flex items-center gap-2">
+            <span
+              className="inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-bold text-white"
+              style={{
+                backgroundColor: GROUP_COLOR[positionGroup(player.position)],
+              }}
+            >
+              {player.position}
+            </span>
+            <span className="text-sm" aria-hidden="true">
+              {flagEmoji(player.nationality)}
+            </span>
+            <span className="sr-only">{player.nationality}</span>
+          </div>
+          <p className="mt-1.5 font-mono text-3xl font-black tabular-nums">
             {statValue}
             <span className="text-muted-foreground ml-1 text-xs font-medium">
               {statLabel}

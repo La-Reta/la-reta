@@ -87,7 +87,7 @@ export function RotatingPlayer({
       <CardContent
         aria-live="polite"
         aria-atomic="true"
-        className="flex items-center gap-4 p-4 transition-all duration-300"
+        className="flex flex-1 items-center gap-4 p-4 transition-all duration-300"
         style={{
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(4px)",

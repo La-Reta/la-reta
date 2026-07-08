@@ -32,7 +32,7 @@ export function ElevenBoard({
           </span>
           <Link
             href={"/players"}
-            className="font-display bg-foreground text-background ms-2 rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase"
+            className="font-display bg-primary text-background ms-2 rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase"
           >
             Ver todos los jugadores
           </Link>

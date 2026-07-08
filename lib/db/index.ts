@@ -10,12 +10,13 @@ let instance: DB | null = null;
 // Neon scales the compute to zero when idle; the first query after a suspend can
 // fail (network error or 5xx) while it wakes, and local network blips drop the
 // occasional fetch. Retry with exponential backoff + jitter so pages don't 500
-// on a transient failure. ponytail: ~250ms→2s backoff over 5 tries (~3.75s max);
-// if a blip outlasts that the query still throws and the error boundary catches it.
-const MAX_RETRIES = 4;
+// on a transient failure. ponytail: ~250ms→3s backoff over 7 tries (~10.75s max)
+// to outlast a cold start; if a blip outlasts that the query still throws and the
+// error boundary catches it. Bump MAX_RETRIES if cold starts still slip through.
+const MAX_RETRIES = 6;
 
 function backoff(attempt: number): Promise<void> {
-  const ms = Math.min(250 * 2 ** attempt, 2000) + Math.random() * 100;
+  const ms = Math.min(250 * 2 ** attempt, 3000) + Math.random() * 100;
   return new Promise((r) => setTimeout(r, ms));
 }
 

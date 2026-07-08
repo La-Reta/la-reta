@@ -2,6 +2,20 @@
   "name": "reta-futbol",
   "version": "1.0.0",
   "private": true,
+  "description": "A FIFA-style manager for organizing pickup football (la reta): player cards, ratings, a live scoreboard, and a balanced-team generator.",
+  "license": "MIT",
+  "author": "Luis Alvarez",
+  "homepage": "https://github.com/mrluisfer/la-reta#readme",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/mrluisfer/la-reta.git"
+  },
+  "bugs": {
+    "url": "https://github.com/mrluisfer/la-reta/issues"
+  },
+  "engines": {
+    "node": ">=20"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

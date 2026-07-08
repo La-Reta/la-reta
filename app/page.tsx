@@ -11,7 +11,13 @@ import { RotatingWord } from "@/components/features/dashboard/rotating-word";
 import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
-import { positionGroup, type PositionGroup } from "@/lib/constants";
+import {
+  positionGroup,
+  STAT_ABBR,
+  STAT_KEYS,
+  type PositionGroup,
+} from "@/lib/constants";
+import type { Player } from "@/lib/db/schema";
 import {
   getBannerWords,
   getMatches,
@@ -157,6 +163,7 @@ export default async function DashboardPage() {
           player={best}
           statValue={best.overall}
           statLabel="OVR"
+          footer={<StatStrip player={best} />}
         />
         {tiedScorers.length > 0 ? (
           <RotatingScorer scorers={tiedScorers} />
@@ -194,6 +201,24 @@ export default async function DashboardPage() {
           {matches.length > 0 && <MatchesChart matches={matches} />}
         </div>
       </div>
+    </div>
+  );
+}
+
+/** Compact 6-attribute strip used in the "El crack" spotlight footer. */
+function StatStrip({ player }: { player: Player }) {
+  return (
+    <div className="grid w-full grid-cols-6 gap-1">
+      {STAT_KEYS.map((k) => (
+        <div key={k} className="text-center">
+          <p className="font-mono text-sm leading-none font-bold tabular-nums">
+            {player[k]}
+          </p>
+          <p className="text-muted-foreground mt-0.5 text-[9px] font-semibold tracking-wide">
+            {STAT_ABBR[k]}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
