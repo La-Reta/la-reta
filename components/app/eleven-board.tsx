@@ -1,4 +1,4 @@
-import { GROUP_COLOR, GROUP_LABEL, PositionGroup } from "@/lib/constants";
+import { GROUP_COLOR, PositionGroup } from "@/lib/constants";
 import { Player } from "@/lib/db";
 import Link from "next/link";
 import { LineupBoard } from "../features/dashboard/lineup-board";
@@ -11,6 +11,14 @@ import {
   CardHeader,
   CardTitle,
 } from "../ui/card";
+
+// Plural, person-oriented labels so each chip reads as a plain count ("3 Porteros").
+const GROUP_LABEL_PLURAL: Record<PositionGroup, string> = {
+  GK: "Porteros",
+  DEF: "Defensas",
+  MID: "Mediocampistas",
+  FWD: "Delanteros",
+};
 
 export function ElevenBoard({
   players,
@@ -41,19 +49,26 @@ export function ElevenBoard({
       <CardContent className="p-0">
         <LineupBoard players={players} />
       </CardContent>
-      <CardFooter className="flex-wrap gap-x-4 gap-y-1">
-        {(Object.keys(counts) as PositionGroup[]).map((g) => (
-          <span key={g} className="flex items-center gap-1.5">
-            <span
-              className="size-2.5 rounded-full"
-              style={{ backgroundColor: GROUP_COLOR[g] }}
-            />
-            <span className="text-muted-foreground">{GROUP_LABEL[g]}</span>
-            <span className="font-mono font-bold tabular-nums">
-              {counts[g]}
+      <CardFooter className="flex-col items-start gap-2">
+        <p className="text-muted-foreground text-[11px] font-semibold tracking-[0.14em] uppercase">
+          Plantel por posición
+        </p>
+        <div className="flex flex-wrap gap-x-4 gap-y-1.5">
+          {(Object.keys(counts) as PositionGroup[]).map((g) => (
+            <span key={g} className="flex items-center gap-1.5">
+              <span
+                className="size-2.5 rounded-full"
+                style={{ backgroundColor: GROUP_COLOR[g] }}
+              />
+              <span className="font-mono font-bold tabular-nums">
+                {counts[g]}
+              </span>
+              <span className="text-muted-foreground">
+                {GROUP_LABEL_PLURAL[g]}
+              </span>
             </span>
-          </span>
-        ))}
+          ))}
+        </div>
       </CardFooter>
     </Card>
   );
