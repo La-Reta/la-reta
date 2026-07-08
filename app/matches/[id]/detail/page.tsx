@@ -256,7 +256,7 @@ export default async function MatchDetailPage({
     }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6">
+    <div className="mx-auto max-w-5xl space-y-6 lg:container">
       <div className="flex flex-wrap items-center justify-between gap-3">
         <Button variant="secondary" size="sm" render={<Link href="/matches" />}>
           <ArrowLeftIcon />
@@ -277,7 +277,7 @@ export default async function MatchDetailPage({
       <section className="bg-card rounded-lg border p-4 shadow-xs">
         <div className="flex flex-wrap items-center justify-between gap-3">
           <div className="space-y-1">
-            <Badge variant="secondary">
+            <Badge variant="default" className="uppercase">
               {formatShortDateOnly(match.playedAt)}
             </Badge>
             <h1 className="text-2xl font-black tracking-tight">
@@ -302,7 +302,7 @@ export default async function MatchDetailPage({
         </div>
 
         {match.notes ? (
-          <p className="text-muted-foreground bg-muted/40 mt-4 rounded-lg p-3 text-sm italic">
+          <p className="text-muted-foreground bg-muted/40 mt-4 rounded-lg p-3 text-sm italic lg:w-fit">
             {match.notes}
           </p>
         ) : null}
@@ -378,7 +378,15 @@ export default async function MatchDetailPage({
                 No se registraron jugadores ni goleadores para este partido.
               </p>
             ) : (
-              <>
+              <div
+                className={cn(
+                  "grid grid-cols-1",
+                  unassignedScorers.length > 0
+                    ? "lg:grid-cols-3"
+                    : "lg:grid-cols-2",
+                  "gap-3",
+                )}
+              >
                 <TeamRosterCard
                   title={match.teamAName}
                   scorers={teamAScorers}
@@ -396,7 +404,7 @@ export default async function MatchDetailPage({
                     maxGoals={maxScorerGoals}
                   />
                 ) : null}
-              </>
+              </div>
             )}
           </CardContent>
         </Card>

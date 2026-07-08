@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import { formatShortDateOnly } from "@/lib/dates";
-import { flagEmoji } from "@/lib/format";
 import { getMatches, getPlayers, getTopScorers } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import { ChevronRightIcon, NotebookTabsIcon, PencilIcon } from "lucide-react";
@@ -204,7 +203,6 @@ export default async function MatchesPage() {
                         <span className="font-display text-muted-foreground w-4 text-center font-bold tabular-nums">
                           {i + 1}
                         </span>
-                        <span>{flagEmoji(s.nationality)}</span>
                         <span className="group-hover:text-primary truncate transition-colors">
                           {s.name}
                         </span>
