@@ -3,7 +3,11 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from "@/lib/admin";
 import { getPendingSignupCount, getPlayers } from "@/lib/queries";
-import { ClipboardListIcon, UserPlusIcon, UserRoundPlusIcon } from "lucide-react";
+import {
+  ClipboardListIcon,
+  UserPlusIcon,
+  UserRoundPlusIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 export const metadata = { title: "Jugadores · Reta Fútbol" };
@@ -14,7 +18,7 @@ export default async function PlayersPage() {
   const pendingSignups = admin ? await getPendingSignupCount() : 0;
 
   return (
-    <div className="container space-y-6">
+    <div className="space-y-6">
       <div className="flex flex-wrap items-center justify-between gap-4">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Jugadores</h1>
@@ -24,10 +28,7 @@ export default async function PlayersPage() {
         </div>
         <div className="flex flex-wrap items-center gap-2">
           {admin && (
-            <Button
-              variant="outline"
-              render={<Link href="/admin/registros" />}
-            >
+            <Button variant="outline" render={<Link href="/admin/registros" />}>
               <ClipboardListIcon />
               Solicitudes
               {pendingSignups > 0 ? (
