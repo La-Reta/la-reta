@@ -1,13 +1,14 @@
 import { ElevenBoard } from "@/components/app/eleven-board";
 import { RankingLevel } from "@/components/app/ranking-level";
-import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { ScorerNotFound } from "@/components/app/scorer-not-found";
 import { Spotlight } from "@/components/app/spotlight";
 import { Commentator } from "@/components/features/dashboard/commentator";
-import { RetaCountdownBanner } from "@/components/features/dashboard/reta-countdown-banner";
 import { PlayerLegend } from "@/components/features/dashboard/player-legend";
+import { RetaCountdownBanner } from "@/components/features/dashboard/reta-countdown-banner";
 import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
+import { MatchesChart } from "@/components/features/matches/matches-chart";
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { positionGroup, type PositionGroup } from "@/lib/constants";
 import {
@@ -18,6 +19,7 @@ import {
 } from "@/lib/queries";
 import {
   ArrowRightIcon,
+  InfoIcon,
   ShieldHalfIcon,
   ShuffleIcon,
   UserPlusIcon,
@@ -164,8 +166,19 @@ export default async function DashboardPage() {
 
       {/* ── Pizarra + ranking ──────────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
-        {/* Pizarra del once ideal */}
-        <ElevenBoard players={players} counts={counts} />
+        <div className="space-y-2">
+          {/* Pizarra del once ideal */}
+          <ElevenBoard players={players} counts={counts} />
+          <Alert>
+            <InfoIcon />
+            <AlertTitle>Importante!</AlertTitle>
+            <AlertDescription>
+              Este proyecto es solo &quot;For Fun&quot;. No se busca lucro ni
+              afectar a terceros. La idea es pasarnosla bien y divertirnos en
+              cada reta.
+            </AlertDescription>
+          </Alert>
+        </div>
 
         {/* Ranking + gráfica comparativa de partidos */}
         <div className="space-y-6">
