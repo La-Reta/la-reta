@@ -1,9 +1,17 @@
+import { Button } from "@/components/ui/button";
 import {
+  DialogClose,
   DialogContent,
   DialogDescription,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { FlameIcon, SparklesIcon, StarIcon, TrophyIcon } from "lucide-react";
+import {
+  FlameIcon,
+  SparklesIcon,
+  StarIcon,
+  TrophyIcon,
+  XIcon,
+} from "lucide-react";
 import { LegendVideo } from "./legend-video";
 
 /** Quick real-life profile chips. */
@@ -49,20 +57,39 @@ const FACTS: { icon: typeof StarIcon; text: string }[] = [
  */
 export function ChouchaLegend() {
   return (
-    <DialogContent className="overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl 2xl:max-w-5xl">
-      {/* Fixed responsive row height drives both the video and the info panel,
-          so the video grows on larger/taller desktops while staying aligned. */}
-      <div className="flex flex-col sm:h-[34rem] sm:flex-row lg:h-[40rem] 2xl:h-[46rem]">
-        {/* ── Video (drives the height) ─────────────────────────────── */}
+    <DialogContent
+      showCloseButton={false}
+      className="overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl 2xl:max-w-5xl"
+    >
+      {/* Floating close: solid + centered-over-video on mobile (the ghost X
+          gets lost on the black video), plain top-right ghost from sm+. */}
+      <DialogClose
+        render={
+          <Button
+            variant="secondary"
+            size="icon-sm"
+            aria-label="Cerrar"
+            className="absolute top-3 right-3 z-10 rounded-full shadow-md sm:bg-transparent sm:shadow-none"
+          />
+        }
+      >
+        <XIcon />
+      </DialogClose>
+
+      {/* Height is capped to the viewport so the dialog always fits. On mobile
+          it's a scrollable column; from sm+ a fixed row height drives the video
+          and info panel side by side. */}
+      <div className="flex max-h-[85dvh] flex-col sm:h-[34rem] sm:max-h-[90dvh] sm:flex-row lg:h-[40rem] 2xl:h-[46rem]">
+        {/* ── Video (drives the height on sm+) ──────────────────────── */}
         <div className="relative shrink-0 bg-black">
           <LegendVideo
             src="/choucha-video.webm"
-            className="mx-auto h-72 w-auto object-contain sm:h-full"
+            className="mx-auto h-56 w-auto object-contain sm:h-full"
           />
         </div>
 
-        {/* ── Info ──────────────────────────────────────────────────── */}
-        <div className="flex flex-1 flex-col gap-3 overflow-y-auto p-6">
+        {/* ── Info (min-h-0 lets it scroll inside the flex parent) ──── */}
+        <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 sm:p-6">
           <span className="font-display inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-amber-500 uppercase ring-1 ring-amber-400/30 dark:text-amber-300">
             <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />
             El GOAT del fútbol de barrio
