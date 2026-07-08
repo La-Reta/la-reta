@@ -2,7 +2,6 @@ import {
   CircleDotIcon,
   ExternalLinkIcon,
   GitBranchIcon,
-  GitForkIcon,
   StarIcon,
 } from "lucide-react";
 import Link from "next/link";
@@ -38,8 +37,27 @@ async function getRepositoryInfo(): Promise<GitHubRepository | null> {
   }
 }
 
+// ponytail: counts only the first page (100 branches). Add pagination if the repo ever exceeds that.
+async function getBranchCount(): Promise<number | null> {
+  try {
+    const response = await fetch(`${REPOSITORY_API_URL}/branches?per_page=100`, {
+      headers: { Accept: "application/vnd.github+json" },
+      next: { revalidate: 60 * 60 },
+    });
+
+    if (!response.ok) return null;
+
+    return ((await response.json()) as unknown[]).length;
+  } catch {
+    return null;
+  }
+}
+
 export async function RepositoryButton() {
-  const repository = await getRepositoryInfo();
+  const [repository, branchCount] = await Promise.all([
+    getRepositoryInfo(),
+    getBranchCount(),
+  ]);
 
   return (
     <Tooltip>
@@ -76,9 +94,9 @@ export async function RepositoryButton() {
                 value={repository.stargazers_count}
               />
               <RepositoryMetric
-                icon={GitForkIcon}
-                label="Forks"
-                value={repository.forks_count}
+                icon={GitBranchIcon}
+                label="Branches"
+                value={branchCount ?? 0}
               />
               <RepositoryMetric
                 icon={CircleDotIcon}
