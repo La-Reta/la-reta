@@ -207,16 +207,22 @@ export function PlayerSignupForm() {
             alta.
           </div>
 
-          <div className="flex flex-col gap-2 sm:flex-row sm:justify-between">
+          <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-between">
             <Button
               type="button"
               variant="outline"
               render={<Link href="/players" />}
+              size={"sm"}
             >
               <ChevronLeftIcon />
               Volver a jugadores
             </Button>
-            <Button type="submit" disabled={pending} className="sm:w-fit">
+            <Button
+              type="submit"
+              disabled={pending}
+              className="sm:w-fit"
+              size={"lg"}
+            >
               <SendIcon />
               {pending ? "Enviando…" : "Enviar solicitud"}
             </Button>
