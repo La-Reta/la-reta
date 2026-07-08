@@ -115,7 +115,7 @@ export function ControlBar({
           </Button>
           {hasResult && (
             <Button
-              variant="secondary"
+              variant="destructive"
               className="flex-1 sm:flex-none"
               onClick={onGoLive}
             >
