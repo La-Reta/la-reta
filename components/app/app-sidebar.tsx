@@ -368,7 +368,7 @@ export function AppSidebar({ admin }: { admin: boolean }) {
           <p className="text-sidebar-foreground/58 mt-1 text-[11px]">
             Next.js React.js Neon Drizzle y más para la mejor reta.
           </p>
-          <Badge variant={"outline"}>Beta v1.0.0</Badge>
+          <Badge variant={"outline"}>Beta v1.1.0</Badge>
         </div>
       </SidebarFooter>
     </Sidebar>
