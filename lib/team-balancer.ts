@@ -34,6 +34,16 @@ const GROUP_ANCHOR: Record<OutfieldGroup, Position> = {
   FWD: "ST",
 };
 
+// Slots per line, ordered center-out: a small line fills the tidy central spots
+// first and only widens as it grows. Used to give same-line players distinct
+// positions — in fútbol 7 the exact spot is loose, so two natural CBs simply
+// split into e.g. CB + RB instead of stacking.
+const GROUP_SLOTS: Record<OutfieldGroup, Position[]> = {
+  DEF: ["CB", "RB", "LB", "RWB", "LWB"],
+  MID: ["CM", "CDM", "CAM", "RM", "LM"],
+  FWD: ["ST", "CF", "RW", "LW"],
+};
+
 function shuffle<T>(arr: T[]): T[] {
   const a = [...arr];
   for (let i = a.length - 1; i > 0; i--) {
@@ -114,11 +124,32 @@ function assignRoles(outfielders: Player[]): Lineup[] {
 
   const result: Lineup[] = [];
   for (const g of OUTFIELD_GROUPS) {
-    for (const p of lines[g]) {
-      const ownPos = outfieldPositions(p).find(
-        (pos) => positionGroup(pos) === g,
+    const slots = GROUP_SLOTS[g];
+    const used = new Set<Position>();
+    const pending: Player[] = [];
+
+    // Pass 1 (shuffled): let a player keep one of their own positions when it's
+    // still free. Shuffling means when two share a position, which one keeps it
+    // varies per generation instead of always the same player.
+    for (const p of shuffle(lines[g])) {
+      const own = outfieldPositions(p).find(
+        (pos) => positionGroup(pos) === g && !used.has(pos),
       );
-      result.push({ player: p, role: ownPos ?? GROUP_ANCHOR[g] });
+      if (own) {
+        used.add(own);
+        result.push({ player: p, role: own });
+      } else {
+        pending.push(p);
+      }
+    }
+
+    // Pass 2: everyone left (duplicates / pure flexers) takes the next free
+    // center-out slot, so no two players in a line share the same spot. If a
+    // line somehow outgrows its slots, fall back to the anchor.
+    for (const p of pending) {
+      const free = slots.find((s) => !used.has(s));
+      if (free) used.add(free);
+      result.push({ player: p, role: free ?? GROUP_ANCHOR[g] });
     }
   }
   return result;

@@ -13,6 +13,7 @@ import {
   generatedRetaPlayers,
   retaWords,
   playerComments,
+  commentReactions,
   reports,
   playerSignups,
   type Player,
@@ -76,8 +77,38 @@ export async function getPlayerComments(
   return db
     .select()
     .from(playerComments)
-    .where(eq(playerComments.playerId, playerId))
+    .where(
+      and(
+        eq(playerComments.playerId, playerId),
+        eq(playerComments.deleted, false),
+      ),
+    )
     .orderBy(asc(playerComments.createdAt));
+}
+
+/** Reaction counts per comment for a player: `{ [commentId]: { [emoji]: n } }`. */
+export async function getCommentReactions(
+  playerId: number,
+): Promise<Record<number, Record<string, number>>> {
+  const rows = await db
+    .select({
+      commentId: commentReactions.commentId,
+      emoji: commentReactions.emoji,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(commentReactions)
+    .innerJoin(
+      playerComments,
+      eq(commentReactions.commentId, playerComments.id),
+    )
+    .where(eq(playerComments.playerId, playerId))
+    .groupBy(commentReactions.commentId, commentReactions.emoji);
+
+  const out: Record<number, Record<string, number>> = {};
+  for (const r of rows) {
+    (out[r.commentId] ??= {})[r.emoji] = r.count;
+  }
+  return out;
 }
 
 /** Attribute snapshots for a player, oldest first (for charting progress). */

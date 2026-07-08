@@ -26,6 +26,7 @@
     "dayjs": "1.11.21",
     "drizzle-orm": "0.45.2",
     "embla-carousel-react": "8.6.0",
+    "frimousse": "0.3.0",
     "html-to-image": "1.11.13",
     "input-otp": "1.4.2",
     "jotai": "2.20.1",

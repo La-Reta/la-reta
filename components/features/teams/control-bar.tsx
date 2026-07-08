@@ -59,7 +59,6 @@ export function ControlBar({
         </div>
         <Button
           variant="ghost"
-          size="sm"
           onClick={onRegistro}
           className="text-muted-foreground"
         >
@@ -70,12 +69,12 @@ export function ControlBar({
 
       {/* Acciones: selección · vista · matchup */}
       <div className="flex flex-wrap items-center gap-2">
-        <Button variant="outline" size="sm" onClick={onToggleAll}>
+        <Button variant="outline" onClick={onToggleAll}>
           <ListChecksIcon />
           {allSelected ? "Quitar todos" : "Todos"}
         </Button>
         {hasSelection && (
-          <Button variant="outline" size="sm" onClick={onClear}>
+          <Button variant="outline" onClick={onClear}>
             <XIcon />
             Limpiar
           </Button>

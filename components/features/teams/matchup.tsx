@@ -1,8 +1,5 @@
 "use client";
 
-import { MatchupList } from "@/components/features/teams/matchup-list";
-import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
-import { TeamSheet } from "@/components/features/teams/team-sheet";
 import {
   EXPORT_BOARD_WIDTH,
   EXPORT_LIST_WIDTH,
@@ -10,6 +7,9 @@ import {
   TEAM_B,
 } from "@/components/features/teams/constants";
 import type { MatchupView } from "@/components/features/teams/control-bar";
+import { MatchupList } from "@/components/features/teams/matchup-list";
+import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
+import { TeamSheet } from "@/components/features/teams/team-sheet";
 import { useMatchupDownload } from "@/components/features/teams/use-matchup-download";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -48,7 +48,7 @@ export function Matchup({
           <span className="font-display text-muted-foreground text-xs font-semibold tracking-wide uppercase">
             Alineación
           </span>
-          <Button size="sm" variant="default" onClick={download} disabled={busy}>
+          <Button variant="default" onClick={download} disabled={busy}>
             <DownloadIcon />
             {busy ? "Generando…" : "Descargar imagen"}
           </Button>

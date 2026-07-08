@@ -20,7 +20,7 @@ export function ScorerNotFound() {
           Aún no hay goles registrados. Anota goles en un partido para coronar
           al goleador.
         </p>
-        <Button variant="default" size="sm" render={<Link href="/live" />}>
+        <Button variant="default" render={<Link href="/live" />}>
           <RadioIcon />
           Marcador en vivo
         </Button>

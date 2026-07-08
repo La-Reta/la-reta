@@ -12,6 +12,7 @@ import {
   type PositionGroup,
 } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { playerPositions } from "@/lib/format";
 import { selectedIdsAtom } from "@/lib/state/atoms";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
@@ -49,7 +50,11 @@ export function PlayersBrowser({
   const [, setPool] = useAtom(selectedIdsAtom);
 
   const filtered = players.filter((p) => {
-    const matchesGroup = group === "ALL" || positionGroup(p.position) === group;
+    // Match on primary AND secondary position, so a GK/CB shows under both GK
+    // and DEF. filter() yields each player once, so no card is duplicated.
+    const matchesGroup =
+      group === "ALL" ||
+      playerPositions(p).some((pos) => positionGroup(pos) === group);
     const q = query.trim().toLowerCase();
     const matchesQuery =
       !q ||
@@ -133,14 +138,14 @@ export function PlayersBrowser({
           {GROUPS.map((g) => (
             <Button
               key={g}
-              size="sm"
+
               variant={group === g ? "default" : "outline"}
               onClick={() => setGroup(g)}
             >
               {g === "ALL" ? "Todos" : GROUP_LABEL[g]}
             </Button>
           ))}
-          <Button size="sm" variant="secondary" onClick={toggleAllFiltered}>
+          <Button variant="secondary" onClick={toggleAllFiltered}>
             <ListChecksIcon />
             {allFilteredSelected ? "Quitar" : "Seleccionar"}
           </Button>

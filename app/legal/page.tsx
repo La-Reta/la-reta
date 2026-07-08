@@ -44,11 +44,7 @@ export default function LegalPage() {
           <LegalPoint key={page.href} title={page.title}>
             {page.description}
             <span className="mt-3 block">
-              <Button
-                size="sm"
-                variant="outline"
-                render={<Link href={page.href} />}
-              >
+              <Button variant="outline" render={<Link href={page.href} />}>
                 Leer documento
               </Button>
             </span>

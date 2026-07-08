@@ -1,11 +1,9 @@
+import { AdminBackButton } from "@/components/features/admin/admin-back-button";
 import { AdminIdeas } from "@/components/features/admin/admin-ideas";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
-import { Button } from "@/components/ui/button";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
-import { ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
 
 export const metadata = { title: "Ideas · Admin" };
 export const dynamic = "force-dynamic";
@@ -18,10 +16,7 @@ export default async function AdminIdeasPage() {
   return (
     <div className="mx-auto max-w-5xl min-w-0 space-y-4">
       <div className="flex items-center justify-between gap-3">
-        <Button variant="secondary" size="sm" render={<Link href="/admin" />}>
-          <ArrowLeftIcon />
-          Admin
-        </Button>
+        <AdminBackButton />
         <LogoutButton />
       </div>
       <div>

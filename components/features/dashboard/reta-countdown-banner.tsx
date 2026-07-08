@@ -176,7 +176,6 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
           <div className="mb-2 flex flex-wrap gap-2">
             <Button
               variant="secondary"
-              size="sm"
               className="shrink-0"
               render={<Link href="/players/registro" />}
             >
@@ -185,7 +184,6 @@ function Banner({ kickoff, isToday }: { kickoff: Date; isToday: boolean }) {
             </Button>
             <Button
               variant="default"
-              size="sm"
               className="shrink-0"
               render={<Link href={kicked ? "/live" : "/teams"} />}
             >

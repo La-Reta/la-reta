@@ -46,7 +46,6 @@ export async function RepositoryButton() {
       <TooltipTrigger
         render={
           <Button
-            size="sm"
             variant={"secondary"}
             aria-label="Ver repositorio en GitHub"
             render={

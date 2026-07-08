@@ -2,6 +2,7 @@ import {
   MatchScorersChart,
   MatchTeamGoalsChart,
 } from "@/components/features/matches/match-detail-charts";
+import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -11,7 +12,6 @@ import { flagEmoji } from "@/lib/format";
 import { getMatchById, type Scorer } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import {
-  ArrowLeftIcon,
   ClockIcon,
   MedalIcon,
   PencilIcon,
@@ -258,13 +258,9 @@ export default async function MatchDetailPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6 lg:container">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <Button variant="secondary" size="sm" render={<Link href="/matches" />}>
-          <ArrowLeftIcon />
-          Partidos
-        </Button>
+        <MatchesBackButton />
         {admin ? (
           <Button
-            size="sm"
             variant="default"
             render={<Link href={`/matches/${match.id}/edit`} />}
           >

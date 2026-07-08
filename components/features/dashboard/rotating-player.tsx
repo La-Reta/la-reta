@@ -129,7 +129,6 @@ export function RotatingPlayer({
           </p>
           <Button
             variant="default"
-            size="sm"
             className="mt-3"
             render={<Link href={`/players/${player.id}`} />}
           >

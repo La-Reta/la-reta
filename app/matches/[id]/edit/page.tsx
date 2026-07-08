@@ -1,9 +1,7 @@
 import { MatchForm } from "@/components/features/matches/match-form";
-import { Button } from "@/components/ui/button";
+import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { isAdmin } from "@/lib/admin";
 import { getMatchById, getPlayers } from "@/lib/queries";
-import { ArrowLeftIcon } from "lucide-react";
-import Link from "next/link";
 import { notFound, redirect } from "next/navigation";
 
 export const metadata = { title: "Editar partido · Reta Fútbol" };
@@ -32,10 +30,7 @@ export default async function EditMatchPage({
 
   return (
     <div className="mx-auto max-w-3xl space-y-4">
-      <Button variant="secondary" size="sm" render={<Link href="/matches" />}>
-        <ArrowLeftIcon />
-        Partidos
-      </Button>
+      <MatchesBackButton />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Editar partido</h1>
         <p className="text-muted-foreground text-sm">

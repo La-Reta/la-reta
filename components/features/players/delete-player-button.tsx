@@ -1,11 +1,6 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { Trash2Icon } from "lucide-react";
 import { deletePlayer } from "@/app/actions/players";
-import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -17,6 +12,11 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
+import { Button } from "@/components/ui/button";
+import { Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 export function DeletePlayerButton({ id, name }: { id: number; name: string }) {
   const router = useRouter();
@@ -39,7 +39,7 @@ export function DeletePlayerButton({ id, name }: { id: number; name: string }) {
     <AlertDialog>
       <AlertDialogTrigger
         render={
-          <Button variant="destructive" size="sm">
+          <Button variant="destructive">
             <Trash2Icon />
             Eliminar
           </Button>

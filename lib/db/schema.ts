@@ -9,7 +9,9 @@ import {
   text,
   date,
   real,
+  boolean,
   index,
+  uniqueIndex,
 } from "drizzle-orm/pg-core";
 import {
   POSITIONS,
@@ -251,6 +253,9 @@ export const playerComments = pgTable("player_comments", {
   body: varchar("body", { length: 500 }).notNull(),
   // Optional 1-5 star rating; the player's average is derived from these.
   rating: smallint("rating"),
+  // Soft-delete: admins archive instead of deleting, so the record survives
+  // but is hidden. Only rows with deleted = false are shown.
+  deleted: boolean("deleted").notNull().default(false),
   language: varchar("language", { length: 24 }),
   timezone: varchar("timezone", { length: 64 }),
   screen: varchar("screen", { length: 24 }),
@@ -261,6 +266,34 @@ export const playerComments = pgTable("player_comments", {
 
 export type PlayerComment = typeof playerComments.$inferSelect;
 export type NewPlayerComment = typeof playerComments.$inferInsert;
+
+/**
+ * Emoji reactions on a comment. `reactorKey` is an anonymous client id
+ * (localStorage) so one person can toggle their own reaction; the unique index
+ * keeps a person from double-reacting with the same emoji.
+ */
+export const commentReactions = pgTable(
+  "comment_reactions",
+  {
+    id: serial("id").primaryKey(),
+    commentId: integer("comment_id")
+      .notNull()
+      .references(() => playerComments.id, { onDelete: "cascade" }),
+    emoji: varchar("emoji", { length: 16 }).notNull(),
+    reactorKey: varchar("reactor_key", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("comment_reactions_unique").on(
+      t.commentId,
+      t.emoji,
+      t.reactorKey,
+    ),
+  ],
+);
+
+export type CommentReaction = typeof commentReactions.$inferSelect;
+export type NewCommentReaction = typeof commentReactions.$inferInsert;
 
 // ── Legal consent evidence ─────────────────────────────────────────────────
 /** Minimal audit trail for users who accept the public legal documents. */

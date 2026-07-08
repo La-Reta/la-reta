@@ -1,9 +1,6 @@
 "use client";
 
-import {
-  deleteSignup,
-  updateSignupStatus,
-} from "@/app/actions/player-signups";
+import { deleteSignup, updateSignupStatus } from "@/app/actions/player-signups";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
@@ -12,14 +9,13 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import {
+  GROUP_LABEL,
   SIGNUP_STATUSES,
   SIGNUP_STATUS_CLASS,
   SIGNUP_STATUS_LABEL,
-  GROUP_LABEL,
   positionGroup,
 } from "@/lib/constants";
-import { ageFromBirthDate } from "@/lib/dates";
-import { formatCompactDate } from "@/lib/dates";
+import { ageFromBirthDate, formatCompactDate } from "@/lib/dates";
 import type { PlayerSignup } from "@/lib/db/schema";
 import { flagEmoji, playerPositions } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -151,7 +147,6 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
         {/* Acciones */}
         <div className="mt-auto flex items-center gap-2 pt-1">
           <Button
-            size="sm"
             className="flex-1"
             disabled={pending}
             render={<Link href={`/players/new?signup=${signup.id}`} />}

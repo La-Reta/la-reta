@@ -20,6 +20,7 @@ import {
 } from "@/lib/constants";
 import { flagEmoji, playerPositions } from "@/lib/format";
 import {
+  getCommentReactions,
   getPlayerById,
   getPlayerComments,
   getPlayerGoalHistory,
@@ -51,13 +52,15 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
   const numId = Number(id);
-  const [player, history, comments, goalHistory, admin] = await Promise.all([
-    getPlayerById(numId),
-    getPlayerHistory(numId),
-    getPlayerComments(numId),
-    getPlayerGoalHistory(numId),
-    isAdmin(),
-  ]);
+  const [player, history, comments, reactions, goalHistory, admin] =
+    await Promise.all([
+      getPlayerById(numId),
+      getPlayerHistory(numId),
+      getPlayerComments(numId),
+      getCommentReactions(numId),
+      getPlayerGoalHistory(numId),
+      isAdmin(),
+    ]);
   if (!player) notFound();
 
   const group = positionGroup(player.position);
@@ -76,7 +79,7 @@ export default async function PlayerDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <Button variant="secondary" size="sm" render={<Link href="/players" />}>
+      <Button variant="secondary" render={<Link href="/players" />}>
         <ArrowLeftIcon />
         Jugadores
       </Button>
@@ -109,15 +112,12 @@ export default async function PlayerDetailPage({
 
           <div className="flex flex-wrap gap-2">
             {admin ? (
-              <Button
-                size="sm"
-                render={<Link href={`/players/${player.id}/edit`} />}
-              >
+              <Button render={<Link href={`/players/${player.id}/edit`} />}>
                 <PencilIcon />
                 Editar
               </Button>
             ) : null}
-            <SelectForTeamsButton id={player.id} />
+            <SelectForTeamsButton size="default" id={player.id} />
             {admin && <DeletePlayerButton id={player.id} name={player.name} />}
           </div>
 
@@ -235,7 +235,12 @@ export default async function PlayerDetailPage({
               <CardTitle>Reseñas · {comments.length}</CardTitle>
             </CardHeader>
             <CardContent>
-              <PlayerComments playerId={player.id} comments={comments} />
+              <PlayerComments
+                playerId={player.id}
+                comments={comments}
+                reactions={reactions}
+                isAdmin={admin}
+              />
             </CardContent>
           </Card>
         </div>

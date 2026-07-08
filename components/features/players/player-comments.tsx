@@ -1,18 +1,23 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { SendHorizonalIcon, StarIcon } from "lucide-react";
-import { addPlayerComment, type ClientInfo } from "@/app/actions/comments";
+import {
+  addPlayerComment,
+  archivePlayerComment,
+  type ClientInfo,
+} from "@/app/actions/comments";
+import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { formatLongDate } from "@/lib/dates";
 import type { PlayerComment } from "@/lib/db/schema";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { ArchiveIcon, SendHorizonalIcon, StarIcon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
+import { CommentReactions } from "./comment-reactions";
 
 function collectClient(): ClientInfo {
   if (typeof navigator === "undefined") return {};
@@ -101,9 +106,13 @@ function StarInput({
 export function PlayerComments({
   playerId,
   comments,
+  reactions = {},
+  isAdmin = false,
 }: {
   playerId: number;
   comments: PlayerComment[];
+  reactions?: Record<number, Record<string, number>>;
+  isAdmin?: boolean;
 }) {
   const router = useRouter();
   const [body, setBody] = React.useState("");
@@ -111,12 +120,36 @@ export function PlayerComments({
   const [rating, setRating] = React.useState(0);
   const [pending, startTransition] = React.useTransition();
 
+  // Remember the commenter's name across players (client-only).
+  React.useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setAuthor(localStorage.getItem("reta_author") ?? "");
+  }, []);
+
+  function onAuthorChange(name: string) {
+    setAuthor(name);
+    if (name.trim()) localStorage.setItem("reta_author", name.trim());
+    else localStorage.removeItem("reta_author");
+  }
+
   const rated = comments.filter((c) => c.rating != null) as (PlayerComment & {
     rating: number;
   })[];
   const avg = rated.length
     ? rated.reduce((a, c) => a + c.rating, 0) / rated.length
     : 0;
+
+  function onArchive(commentId: number) {
+    startTransition(async () => {
+      const res = await archivePlayerComment(playerId, commentId);
+      if (res.ok) {
+        toast.success("Comentario archivado.");
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
 
   function onSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -156,7 +189,9 @@ export function PlayerComments({
           </p>
         </div>
         <div className="space-y-1">
-          <Stars value={avg} className="[&_svg]:size-5" />
+          {rated.length ? (
+            <Stars value={avg} className="[&_svg]:size-5" />
+          ) : null}
           <p className="text-muted-foreground text-xs">
             {rated.length > 0
               ? `${rated.length} calificación${rated.length === 1 ? "" : "es"}`
@@ -187,10 +222,11 @@ export function PlayerComments({
         <div className="flex items-center gap-2">
           <Input
             value={author}
-            onChange={(e) => setAuthor(e.target.value)}
+            onChange={(e) => onAuthorChange(e.target.value)}
             placeholder="Tu nombre (opcional)"
             maxLength={60}
             className="flex-1"
+            disabled // TODO: we need to figure out how to handle others people names on a message, to avoid problems
           />
           <Button type="submit" disabled={pending}>
             <SendHorizonalIcon />
@@ -218,8 +254,20 @@ export function PlayerComments({
                   <span className="text-sm font-semibold">
                     {c.author ?? "Anónimo"}
                   </span>
-                  <span className="text-muted-foreground text-[11px]">
+                  <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
                     {formatLongDate(c.createdAt)}
+                    {isAdmin && (
+                      <Button
+                        type="button"
+                        onClick={() => onArchive(c.id)}
+                        disabled={pending}
+                        aria-label="Archivar comentario"
+                        title="Archivar (ocultar sin eliminar)"
+                        variant={"destructive"}
+                      >
+                        <ArchiveIcon className="size-3.5" />
+                      </Button>
+                    )}
                   </span>
                 </div>
                 {c.rating != null && (
@@ -228,6 +276,11 @@ export function PlayerComments({
                 <p className="mt-1.5 text-sm leading-relaxed wrap-break-word">
                   {c.body}
                 </p>
+                <CommentReactions
+                  playerId={playerId}
+                  commentId={c.id}
+                  counts={reactions[c.id] ?? {}}
+                />
               </div>
             </li>
           ))}

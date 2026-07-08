@@ -1,9 +1,9 @@
 "use client";
 
+import { Button } from "@/components/ui/button";
+import { selectedIdsAtom } from "@/lib/state/atoms";
 import { useAtom } from "jotai";
 import { CheckIcon, PlusIcon } from "lucide-react";
-import { selectedIdsAtom } from "@/lib/state/atoms";
-import { Button } from "@/components/ui/button";
 
 export function SelectForTeamsButton({
   id,
@@ -27,7 +27,7 @@ export function SelectForTeamsButton({
       }
     >
       {isSelected ? <CheckIcon /> : <PlusIcon />}
-      {isSelected ? "En el pool" : "Añadir a equipos"}
+      {isSelected ? "En la reta" : "Añadir a la reta"}
     </Button>
   );
 }

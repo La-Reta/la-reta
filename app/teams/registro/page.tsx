@@ -9,7 +9,12 @@ import {
 } from "@/components/ui/card";
 import { getGeneratedRetas } from "@/lib/queries";
 import { computeRetaStats, type RetaStats } from "@/lib/reta-stats";
-import { ArrowLeftIcon, RepeatIcon, ShuffleIcon, UsersIcon } from "lucide-react";
+import {
+  ArrowLeftIcon,
+  RepeatIcon,
+  ShuffleIcon,
+  UsersIcon,
+} from "lucide-react";
 import Link from "next/link";
 
 export const metadata = { title: "Registro de retas · Reta Fútbol" };
@@ -31,7 +36,7 @@ export default async function RetaRegistroPage() {
             frecuentes y quién juega más. Alimenta la variedad del generador.
           </p>
         </div>
-        <Button variant="outline" size="sm" render={<Link href="/teams" />}>
+        <Button variant="outline" render={<Link href="/teams" />}>
           <ArrowLeftIcon />
           Armar equipos
         </Button>
@@ -113,7 +118,9 @@ function StatTile({
       </p>
       <p
         className="mt-1 font-mono text-3xl font-black tabular-nums"
-        style={{ color: accent ? "var(--color-amber-500, #f59e0b)" : undefined }}
+        style={{
+          color: accent ? "var(--color-amber-500, #f59e0b)" : undefined,
+        }}
       >
         {value}
       </p>
@@ -209,7 +216,7 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
             key={m.retaId}
             className="ring-foreground/10 flex flex-col gap-2 rounded-lg p-3 ring-1 sm:flex-row sm:items-center"
           >
-            <span className="bg-amber-500/15 text-amber-600 dark:text-amber-400 shrink-0 self-start rounded-sm px-2 py-0.5 font-mono text-xs font-bold">
+            <span className="shrink-0 self-start rounded-sm bg-amber-500/15 px-2 py-0.5 font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
               {m.count}×
             </span>
             <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs">

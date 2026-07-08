@@ -44,12 +44,12 @@ export function FloatingActionBar({
         </span>
         <div className="flex flex-wrap items-center justify-end gap-2">
           {selected.size >= 3 && !allFilteredSelected && (
-            <Button size="sm" variant="secondary" onClick={toggleAllFiltered}>
+            <Button variant="secondary" onClick={toggleAllFiltered}>
               <ListChecksIcon />
               Seleccionar todos
             </Button>
           )}
-          <Button size="sm" variant="secondary" onClick={addToTeams}>
+          <Button variant="secondary" onClick={addToTeams}>
             <ShieldHalfIcon />A equipos
           </Button>
 
@@ -57,7 +57,7 @@ export function FloatingActionBar({
             <AlertDialog>
               <AlertDialogTrigger
                 render={
-                  <Button size="sm" variant="destructive" disabled={pending}>
+                  <Button variant="destructive" disabled={pending}>
                     <Trash2Icon />
                     Eliminar
                   </Button>
@@ -90,9 +90,9 @@ export function FloatingActionBar({
             </AlertDialog>
           )}
 
-          <Button size="sm" variant="secondary" onClick={clear}>
+          <Button variant="secondary" onClick={clear}>
             <XIcon />
-            Limpiar
+            Limpiar selección
           </Button>
         </div>
       </div>

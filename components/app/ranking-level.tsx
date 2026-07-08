@@ -22,7 +22,7 @@ export function RankingLevel({ players }: { players: Player[] }) {
           Ranking de nivel
         </CardTitle>
         <CardAction>
-          <Button variant="default" size="sm" render={<Link href="/players" />}>
+          <Button variant="default" render={<Link href="/players" />}>
             Todos
             <ArrowRightIcon />
           </Button>

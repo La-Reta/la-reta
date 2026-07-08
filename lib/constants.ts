@@ -260,3 +260,9 @@ export const SIGNUP_STATUS_CLASS: Record<SignupStatus, string> = {
   aprobado: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
   rechazado: "bg-muted text-muted-foreground",
 };
+
+/** Emojis offered in the comment reaction picker. */
+export const REACTION_EMOJIS = ["⚽", "🔥", "👏", "😂", "💪", "🐐"] as const;
+
+/** Max distinct emojis per comment (each one can still be reacted infinitely). */
+export const MAX_DISTINCT_REACTIONS = 15;

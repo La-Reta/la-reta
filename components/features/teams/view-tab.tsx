@@ -18,7 +18,6 @@ export function ViewTab({
   return (
     <Button
       type="button"
-      size="sm"
       variant={active ? "default" : "ghost"}
       onClick={onClick}
       aria-pressed={active}
