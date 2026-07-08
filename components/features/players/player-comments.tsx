@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { formatLongDate } from "@/lib/dates";
 import type { PlayerComment } from "@/lib/db/schema";
+import { cleanText } from "@/lib/profanity";
 import { initials } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { ArchiveIcon, SendHorizonalIcon, StarIcon } from "lucide-react";
@@ -278,7 +279,7 @@ export function PlayerComments({
                   <Stars value={c.rating} className="mt-0.5" />
                 )}
                 <p className="mt-1.5 text-sm leading-relaxed wrap-break-word">
-                  {c.body}
+                  {cleanText(c.body)}
                 </p>
                 <CommentReactions
                   playerId={playerId}
