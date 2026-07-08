@@ -6,6 +6,7 @@ import { Commentator } from "@/components/features/dashboard/commentator";
 import { PlayerLegend } from "@/components/features/dashboard/player-legend";
 import { RetaCountdownBanner } from "@/components/features/dashboard/reta-countdown-banner";
 import { RotatingPlayer } from "@/components/features/dashboard/rotating-player";
+import { RotatingScorer } from "@/components/features/dashboard/rotating-scorer";
 import { RotatingWord } from "@/components/features/dashboard/rotating-word";
 import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
@@ -55,10 +56,24 @@ export default async function DashboardPage() {
   };
   for (const p of players) counts[positionGroup(p.position)]++;
 
-  const topScorer = topScorers[0] ?? null;
-  const goleador = topScorer
-    ? (players.find((p) => p.id === topScorer.playerId) ?? null)
-    : null;
+  // Everyone tied for the most goals — the spotlight rotates through them.
+  const maxGoals = topScorers[0]?.goals ?? 0;
+  const tiedScorers = topScorers
+    .filter((s) => s.goals === maxGoals)
+    .map((s) => ({
+      player: players.find((p) => p.id === s.playerId),
+      goals: s.goals,
+      matches: s.matches,
+    }))
+    .filter(
+      (
+        s,
+      ): s is {
+        player: (typeof players)[number];
+        goals: number;
+        matches: number;
+      } => s.player != null,
+    );
 
   return (
     <div className="space-y-6">
@@ -143,15 +158,8 @@ export default async function DashboardPage() {
           statValue={best.overall}
           statLabel="OVR"
         />
-        {goleador && topScorer ? (
-          <Spotlight
-            title="El goleador"
-            subtitle="Máximo anotador de la reta"
-            player={goleador}
-            statValue={topScorer.goals}
-            statLabel="GOLES"
-            note={`en ${topScorer.matches} ${topScorer.matches === 1 ? "partido" : "partidos"}`}
-          />
+        {tiedScorers.length > 0 ? (
+          <RotatingScorer scorers={tiedScorers} />
         ) : (
           <ScorerNotFound />
         )}

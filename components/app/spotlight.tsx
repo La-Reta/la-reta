@@ -1,12 +1,15 @@
 import type { Player } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
 import { ArrowRightIcon } from "lucide-react";
 import Link from "next/link";
+import type * as React from "react";
 import { FifaCard } from "../shared/fifa-card";
 import { Button } from "../ui/button";
 import {
   Card,
   CardContent,
   CardDescription,
+  CardFooter,
   CardHeader,
   CardTitle,
 } from "../ui/card";
@@ -18,6 +21,9 @@ export function Spotlight({
   statValue,
   statLabel,
   note,
+  footer,
+  contentClassName,
+  contentStyle,
 }: {
   title: string;
   subtitle: string;
@@ -25,9 +31,14 @@ export function Spotlight({
   statValue: number;
   statLabel: string;
   note?: string;
+  /** Optional footer (e.g. rotation dots) rendered as a bordered CardFooter. */
+  footer?: React.ReactNode;
+  /** Extra classes/style on the body, so a parent can animate only the content. */
+  contentClassName?: string;
+  contentStyle?: React.CSSProperties;
 }) {
   return (
-    <Card className="h-fit">
+    <Card className={cn("h-fit", footer && "pb-0")}>
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           {title}
@@ -36,7 +47,10 @@ export function Spotlight({
           {subtitle}
         </CardDescription>
       </CardHeader>
-      <CardContent className="flex items-center gap-4">
+      <CardContent
+        className={cn("flex items-center gap-4", contentClassName)}
+        style={contentStyle}
+      >
         <Link
           href={`/players/${player.id}`}
           className="w-28 shrink-0 transition-transform hover:-translate-y-1"
@@ -69,6 +83,15 @@ export function Spotlight({
           </Button>
         </div>
       </CardContent>
+      {footer ? (
+        <CardFooter
+          className="justify-center overflow-hidden border-t px-3 pt-2! pb-3!"
+          role="group"
+          aria-label="Navegar goleadores empatados"
+        >
+          {footer}
+        </CardFooter>
+      ) : null}
     </Card>
   );
 }
