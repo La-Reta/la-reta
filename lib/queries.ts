@@ -206,12 +206,13 @@ export async function getPendingSignupCount(): Promise<number> {
 
 // ── Matches ──────────────────────────────────────────────────────────────
 export type Scorer = {
-  playerId: number;
+  playerId: number | null;
   name: string;
   displayName: string;
   nationality: string;
   team: string | null;
   goals: number;
+  isGuest: boolean;
 };
 export type MatchWithScorers = Match & { scorers: Scorer[] };
 
@@ -226,6 +227,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
     .select({
       matchId: matchGoals.matchId,
       playerId: matchGoals.playerId,
+      guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
       name: players.name,
@@ -233,18 +235,20 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       nationality: players.nationality,
     })
     .from(matchGoals)
-    .innerJoin(players, eq(matchGoals.playerId, players.id));
+    .leftJoin(players, eq(matchGoals.playerId, players.id));
 
   const byMatch = new Map<number, Scorer[]>();
   for (const g of goalRows) {
     const list = byMatch.get(g.matchId) ?? [];
+    const guest = g.playerId == null;
     list.push({
       playerId: g.playerId,
-      name: g.name,
-      displayName: g.displayName,
-      nationality: g.nationality,
+      name: g.name ?? g.guestName ?? "Invitado",
+      displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
+      nationality: g.nationality ?? "mx",
       team: g.team,
       goals: g.goals,
+      isGuest: guest,
     });
     byMatch.set(g.matchId, list);
   }
@@ -269,6 +273,7 @@ export async function getMatchById(
   const goalRows = await db
     .select({
       playerId: matchGoals.playerId,
+      guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
       name: players.name,
@@ -276,12 +281,22 @@ export async function getMatchById(
       nationality: players.nationality,
     })
     .from(matchGoals)
-    .innerJoin(players, eq(matchGoals.playerId, players.id))
+    .leftJoin(players, eq(matchGoals.playerId, players.id))
     .where(eq(matchGoals.matchId, id));
 
   return {
     ...m,
-    scorers: goalRows.sort((a, b) => b.goals - a.goals),
+    scorers: goalRows
+      .map((g) => ({
+        playerId: g.playerId,
+        name: g.name ?? g.guestName ?? "Invitado",
+        displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
+        nationality: g.nationality ?? "mx",
+        team: g.team,
+        goals: g.goals,
+        isGuest: g.playerId == null,
+      }))
+      .sort((a, b) => b.goals - a.goals),
   };
 }
 
@@ -348,20 +363,21 @@ export async function getRecentSplits(limit = 20): Promise<RecentSplit[]> {
   for (const r of retas) byReta.set(r.id, { teamAIds: [], teamBIds: [] });
   for (const row of rows) {
     const split = byReta.get(row.retaId);
-    if (!split) continue;
+    if (!split || row.playerId == null) continue; // guests excluded from variety
     (row.team === "A" ? split.teamAIds : split.teamBIds).push(row.playerId);
   }
   return retas.map((r) => byReta.get(r.id)!);
 }
 
 export type GeneratedRetaPlayerRow = {
-  playerId: number;
+  playerId: number | null;
   team: string;
   role: Position;
   overall: number;
   name: string;
   displayName: string;
   nationality: string;
+  isGuest: boolean;
 };
 export type GeneratedRetaWithPlayers = GeneratedReta & {
   players: GeneratedRetaPlayerRow[];
@@ -382,6 +398,7 @@ export async function getGeneratedRetas(
     .select({
       retaId: generatedRetaPlayers.retaId,
       playerId: generatedRetaPlayers.playerId,
+      guestName: generatedRetaPlayers.guestName,
       team: generatedRetaPlayers.team,
       role: generatedRetaPlayers.role,
       overall: generatedRetaPlayers.overall,
@@ -390,7 +407,7 @@ export async function getGeneratedRetas(
       nationality: players.nationality,
     })
     .from(generatedRetaPlayers)
-    .innerJoin(players, eq(generatedRetaPlayers.playerId, players.id))
+    .leftJoin(players, eq(generatedRetaPlayers.playerId, players.id))
     .where(
       inArray(
         generatedRetaPlayers.retaId,
@@ -401,14 +418,16 @@ export async function getGeneratedRetas(
   const byReta = new Map<number, GeneratedRetaPlayerRow[]>();
   for (const row of rows) {
     const list = byReta.get(row.retaId) ?? [];
+    const guest = row.playerId == null;
     list.push({
       playerId: row.playerId,
       team: row.team,
       role: row.role,
       overall: row.overall,
-      name: row.name,
-      displayName: row.displayName,
-      nationality: row.nationality,
+      name: row.name ?? row.guestName ?? "Invitado",
+      displayName: row.displayName ?? row.guestName ?? row.name ?? "Invitado",
+      nationality: row.nationality ?? "mx",
+      isGuest: guest,
     });
     byReta.set(row.retaId, list);
   }

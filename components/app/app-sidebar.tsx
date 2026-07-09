@@ -199,7 +199,7 @@ const SidebarNavItem = React.memo(function SidebarNavItem({
     <SidebarMenuItem>
       <SidebarMenuButton
         isActive={active}
-        tooltip={showTooltip ? (item.hint ?? item.title) : undefined}
+        tooltip={showTooltip ? item.title : undefined}
         render={<Link href={item.href} />}
         className={cn(
           "h-10 rounded-xl px-3 transition-all group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl",

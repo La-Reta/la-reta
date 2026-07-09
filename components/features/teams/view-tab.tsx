@@ -21,7 +21,7 @@ export function ViewTab({
       variant={active ? "default" : "ghost"}
       onClick={onClick}
       aria-pressed={active}
-      className={cn("h-7", !active && "text-muted-foreground")}
+      className={cn(!active && "text-muted-foreground")}
     >
       {icon}
       {label}

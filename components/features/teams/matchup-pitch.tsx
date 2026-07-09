@@ -3,7 +3,9 @@
 import * as React from "react";
 import { positionGroup, type PositionGroup } from "@/lib/constants";
 import { initials } from "@/lib/format";
+import { isGuest } from "@/lib/guests";
 import type { Lineup } from "@/lib/team-balancer";
+import { cn } from "@/lib/utils";
 
 // x% of the pitch per line, for each side (B mirrored toward the right goal).
 const BANDS_A: Record<PositionGroup, number> = {
@@ -89,7 +91,16 @@ function Token({
           {player.overall}
         </span>
       </div>
-      <span className="max-w-20 truncate rounded bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
+      <span
+        className={cn(
+          "rounded bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase",
+          // Guests keep their full name (no short apodo) so two "hermano de …"
+          // stay distinct: wrap to 2 lines instead of truncating it away.
+          isGuest(player)
+            ? "line-clamp-2 max-w-24 text-center break-words"
+            : "max-w-20 truncate",
+        )}
+      >
         {player.displayName}
       </span>
     </div>

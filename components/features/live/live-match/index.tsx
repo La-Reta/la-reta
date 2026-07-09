@@ -14,15 +14,17 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
+import { isGuest } from "@/lib/guests";
 import {
   currentGeneratedRetaIdAtom,
   EMPTY_LIVE_MATCH,
+  guestsAtom,
   liveMatchAtom,
   teamNameAAtom,
   teamNameBAtom,
 } from "@/lib/state/atoms";
-import { useAtom } from "jotai";
-import { FlagIcon, PlayIcon } from "lucide-react";
+import { useAtom, useAtomValue } from "jotai";
+import { FlagIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -53,6 +55,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const [generatedRetaId, setGeneratedRetaId] = useAtom(
     currentGeneratedRetaIdAtom,
   );
+  const guests = useAtomValue(guestsAtom);
   const hydrated = useHydrated();
   const elapsedSec = useLiveMatchClock(live.active, live.startedAt);
   const [attrId, setAttrId] = React.useState<string | null>(null);
@@ -60,9 +63,16 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const deferredFilter = React.useDeferredValue(filter.trim().toLowerCase());
   const [pending, startTransition] = React.useTransition();
 
+  // Roster + guests (última hora) share the scorer pool. Guests carry negative
+  // ids; they're client-only until the match is finalized with their names.
+  const pool = React.useMemo<LivePlayer[]>(
+    () => [...players, ...guests.map((g) => ({ id: g.id, name: g.name }))],
+    [players, guests],
+  );
+
   const playersById = React.useMemo(
-    () => new Map(players.map((player) => [player.id, player.name])),
-    [players],
+    () => new Map(pool.map((player) => [player.id, player.name])),
+    [pool],
   );
 
   const scoreA = countGoalsFor(live.goals, "A");
@@ -72,11 +82,11 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const scorersB = getScorersSummary(live.goals, "B", playersById);
 
   const filteredPlayers = React.useMemo(() => {
-    if (!deferredFilter) return players;
-    return players.filter((player) =>
+    if (!deferredFilter) return pool;
+    return pool.filter((player) =>
       player.name.toLowerCase().includes(deferredFilter),
     );
-  }, [players, deferredFilter]);
+  }, [pool, deferredFilter]);
 
   const attrGoal = live.goals.find((goal) => goal.id === attrId);
   const attrTeam = attrGoal
@@ -154,6 +164,17 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
       const durationSec = live.startedAt
         ? Math.floor((Date.now() - live.startedAt) / 1000)
         : null;
+      // Guests (negative id) go to the DB as null playerId + their name.
+      const scorers = tallyGoalsByPlayer(live.goals).map((s) =>
+        isGuest({ id: s.playerId })
+          ? {
+              playerId: null,
+              guestName: playersById.get(s.playerId) ?? "Invitado",
+              goals: s.goals,
+              team: s.team,
+            }
+          : { playerId: s.playerId, goals: s.goals, team: s.team },
+      );
       const res = await createMatch({
         playedAt: formatApiDate(live.startedAt ?? Date.now()),
         teamAName: live.teamA,
@@ -164,7 +185,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
         durationSec,
         notes: "",
         generatedRetaId,
-        scorers: tallyGoalsByPlayer(live.goals),
+        scorers,
       });
 
       if (res.ok) {
@@ -287,10 +308,12 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
           <AlertDialogTrigger
             render={
               <Button
-                variant="secondary"
+                variant="destructive"
                 className="sm:w-auto"
                 disabled={pending}
+                size={'lg'}
               >
+                <TrashIcon />
                 Descartar
               </Button>
             }

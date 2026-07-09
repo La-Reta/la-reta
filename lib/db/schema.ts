@@ -164,9 +164,12 @@ export const generatedRetaPlayers = pgTable("generated_reta_players", {
   retaId: integer("reta_id")
     .notNull()
     .references(() => generatedRetas.id, { onDelete: "cascade" }),
-  playerId: integer("player_id")
-    .notNull()
-    .references(() => players.id, { onDelete: "cascade" }),
+  // Null for guest (última hora) players who aren't in the roster.
+  playerId: integer("player_id").references(() => players.id, {
+    onDelete: "cascade",
+  }),
+  // Name for guest players (playerId null). Null for roster players.
+  guestName: varchar("guest_name", { length: 60 }),
   // "A" | "B", same convention as match_goals.team.
   team: varchar("team", { length: 1 }).notNull(),
   role: positionEnum("role").notNull(),
@@ -214,9 +217,12 @@ export const matchGoals = pgTable("match_goals", {
   matchId: integer("match_id")
     .notNull()
     .references(() => matches.id, { onDelete: "cascade" }),
-  playerId: integer("player_id")
-    .notNull()
-    .references(() => players.id, { onDelete: "cascade" }),
+  // Null for guest (última hora) scorers who aren't in the roster.
+  playerId: integer("player_id").references(() => players.id, {
+    onDelete: "cascade",
+  }),
+  // Name for guest scorers (playerId null). Null for roster players.
+  guestName: varchar("guest_name", { length: 60 }),
   // A/B from the match scoreboard. Nullable so existing historical rows remain valid.
   team: varchar("team", { length: 1 }),
   goals: smallint("goals").notNull().default(0),
@@ -250,6 +256,10 @@ export const playerComments = pgTable("player_comments", {
     .notNull()
     .references(() => players.id, { onDelete: "cascade" }),
   author: varchar("author", { length: 60 }),
+  // Foto de perfil del usuario de Clerk al momento de comentar.
+  authorImageUrl: text("author_image_url"),
+  // Clerk userId del autor — para que pueda borrar su propio comentario.
+  authorId: text("author_id"),
   body: varchar("body", { length: 500 }).notNull(),
   // Optional 1-5 star rating; the player's average is derived from these.
   rating: smallint("rating"),

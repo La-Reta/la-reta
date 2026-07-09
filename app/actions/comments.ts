@@ -3,9 +3,21 @@
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import emojiRegex from "emoji-regex";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, playerComments, commentReactions } from "@/lib/db";
 import { MAX_DISTINCT_REACTIONS } from "@/lib/constants";
 import { isAdmin } from "@/lib/admin";
+
+/** Display name for the signed-in Clerk user, or null. */
+function clerkDisplayName(
+  user: Awaited<ReturnType<typeof currentUser>>,
+): string | null {
+  if (!user) return null;
+  const full = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  // Fallback al email (parte local) cuando no hay username ni nombre.
+  const email = user.primaryEmailAddress?.emailAddress?.split("@")[0];
+  return user.username || full || email || null;
+}
 
 /** True when `s` is exactly one emoji (incl. ZWJ/modifier sequences). */
 function isSingleEmoji(s: string): boolean {
@@ -23,7 +35,6 @@ export type ClientInfo = {
 };
 
 export type CommentInput = {
-  author: string;
   body: string;
   rating: number;
   client: ClientInfo;
@@ -35,6 +46,11 @@ export async function addPlayerComment(
   playerId: number,
   input: CommentInput,
 ): Promise<Result> {
+  // Sesión requerida — el autor sale de Clerk, no del cliente (autoritativo).
+  const { userId } = await auth();
+  if (!userId)
+    return { ok: false, error: "Inicia sesión para dejar tu reseña." };
+
   const body = input.body?.trim();
   if (!body) return { ok: false, error: "Escribe un comentario." };
   if (body.length > 500) return { ok: false, error: "Máximo 500 caracteres." };
@@ -42,9 +58,13 @@ export async function addPlayerComment(
   const rating =
     input.rating >= 1 && input.rating <= 5 ? Math.round(input.rating) : null;
 
+  const user = await currentUser();
+
   await db.insert(playerComments).values({
     playerId,
-    author: input.author?.trim() || null,
+    author: clerkDisplayName(user),
+    authorImageUrl: user?.imageUrl ?? null,
+    authorId: userId,
     body: body.slice(0, 500),
     rating,
     language: input.client?.language?.slice(0, 24) || null,
@@ -68,8 +88,7 @@ export async function toggleCommentReaction(
   emoji: string,
   reactorKey: string,
 ): Promise<{ ok: true; reacted: boolean } | { ok: false; error: string }> {
-  if (!isSingleEmoji(emoji))
-    return { ok: false, error: "Emoji no permitido." };
+  if (!isSingleEmoji(emoji)) return { ok: false, error: "Emoji no permitido." };
   if (!reactorKey || reactorKey.length > 64)
     return { ok: false, error: "Reactor inválido." };
 
@@ -113,6 +132,34 @@ export async function toggleCommentReaction(
 
   revalidatePath(`/players/${playerId}`);
   return { ok: true, reacted };
+}
+
+/**
+ * Soft-delete one's OWN comment. Same effect as archive (`deleted = true`) but
+ * gated on the caller being the Clerk author of the comment, not an admin.
+ */
+export async function deleteOwnComment(
+  playerId: number,
+  commentId: number,
+): Promise<Result> {
+  const { userId } = await auth();
+  if (!userId) return { ok: false, error: "No autorizado." };
+
+  const [row] = await db
+    .select({ authorId: playerComments.authorId })
+    .from(playerComments)
+    .where(eq(playerComments.id, commentId))
+    .limit(1);
+  if (!row || row.authorId !== userId)
+    return { ok: false, error: "No autorizado." };
+
+  await db
+    .update(playerComments)
+    .set({ deleted: true })
+    .where(eq(playerComments.id, commentId));
+
+  revalidatePath(`/players/${playerId}`);
+  return { ok: true };
 }
 
 /**

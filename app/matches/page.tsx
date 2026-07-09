@@ -143,9 +143,9 @@ export default async function MatchesPage() {
                       <div className="mt-3 space-y-2 border-t pt-3">
                         {goleadores.length > 0 && (
                           <div className="flex flex-wrap justify-center gap-1.5">
-                            {goleadores.map((s) => (
+                            {goleadores.map((s, gi) => (
                               <span
-                                key={s.playerId}
+                                key={s.playerId ?? `guest-${gi}`}
                                 className="bg-muted inline-flex items-center gap-1 rounded-sm px-1.5 py-0.5 text-[11px]"
                               >
                                 ⚽ {s.displayName}

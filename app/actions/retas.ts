@@ -14,7 +14,8 @@ export type GeneratedRetaInput = {
   ratingB: number;
   diff: number;
   players: {
-    playerId: number;
+    playerId: number | null;
+    guestName?: string;
     team: "A" | "B";
     role: Position;
     overall: number;
@@ -30,15 +31,17 @@ export async function saveGeneratedReta(
   input: GeneratedRetaInput,
 ): Promise<Result> {
   try {
-    const aIds = input.players
-      .filter((p) => p.team === "A")
-      .map((p) => p.playerId);
-    const bIds = input.players
-      .filter((p) => p.team === "B")
-      .map((p) => p.playerId);
-    if (aIds.length + bIds.length < 2) {
+    if (input.players.length < 2) {
       return { ok: false, error: "Se necesitan al menos 2 jugadores." };
     }
+    // Signature fingerprints the split by roster ids; guests (null id) are
+    // occasional, so they're left out of the repetition/variety tracking.
+    const realIds = (team: "A" | "B") =>
+      input.players
+        .filter((p) => p.team === team && p.playerId != null)
+        .map((p) => p.playerId as number);
+    const aIds = realIds("A");
+    const bIds = realIds("B");
 
     const [reta] = await db
       .insert(generatedRetas)
@@ -56,6 +59,7 @@ export async function saveGeneratedReta(
       input.players.map((p) => ({
         retaId: reta.id,
         playerId: p.playerId,
+        guestName: p.guestName ?? null,
         team: p.team,
         role: p.role,
         overall: p.overall,

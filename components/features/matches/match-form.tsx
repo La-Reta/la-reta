@@ -27,7 +27,12 @@ export type EditMatch = {
   balance: number;
   durationSec: number | null;
   notes: string | null;
-  scorers: { playerId: number; goals: number; team?: string | null }[];
+  scorers: {
+    playerId: number | null;
+    guestName?: string | null;
+    goals: number;
+    team?: string | null;
+  }[];
 };
 
 type ScorerRow = { playerId: string; team: string; goals: string };
@@ -89,11 +94,25 @@ export function MatchForm({
   const [balance, setBalance] = React.useState(match?.balance ?? 50);
   const [notes, setNotes] = React.useState(match?.notes ?? "");
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
-    match?.scorers.map((s) => ({
-      playerId: String(s.playerId),
-      team: s.team ?? "",
-      goals: String(s.goals),
-    })) ?? [],
+    match?.scorers
+      .filter((s) => s.playerId != null)
+      .map((s) => ({
+        playerId: String(s.playerId),
+        team: s.team ?? "",
+        goals: String(s.goals),
+      })) ?? [],
+  );
+  // Guest scorers aren't editable via the roster picker; kept as-is and
+  // re-submitted so an edit never deletes their goals.
+  const [guestScorers] = React.useState(
+    () =>
+      match?.scorers
+        .filter((s) => s.playerId == null)
+        .map((s) => ({
+          guestName: s.guestName ?? "Invitado",
+          team: s.team ?? "",
+          goals: s.goals,
+        })) ?? [],
   );
 
   function addScorer() {
@@ -132,13 +151,22 @@ export function MatchForm({
         balance,
         durationSec: match?.durationSec ?? null,
         notes,
-        scorers: scorers
-          .filter((s) => s.playerId)
-          .map((s) => ({
-            playerId: Number(s.playerId),
-            team: parseTeam(s.team),
-            goals: parseNumberInput(s.goals),
+        scorers: [
+          ...scorers
+            .filter((s) => s.playerId)
+            .map((s) => ({
+              playerId: Number(s.playerId),
+              team: parseTeam(s.team),
+              goals: parseNumberInput(s.goals),
+            })),
+          // Preserve guest goals through the edit (roster picker can't hold them).
+          ...guestScorers.map((g) => ({
+            playerId: null,
+            guestName: g.guestName,
+            team: parseTeam(g.team),
+            goals: g.goals,
           })),
+        ],
       };
       const res = isEdit
         ? await updateMatch(match!.id, input)
@@ -353,6 +381,27 @@ export function MatchForm({
             })}
           </div>
         )}
+
+        {guestScorers.length > 0 ? (
+          <div className="text-muted-foreground space-y-1 pt-1 text-xs">
+            <p className="font-medium">
+              Invitados (se conservan, no editables aquí)
+            </p>
+            <div className="flex flex-wrap gap-1.5">
+              {guestScorers.map((g, i) => (
+                <span
+                  key={i}
+                  className="bg-muted rounded-full px-2.5 py-1 font-medium"
+                >
+                  {g.guestName}
+                  {g.team ? ` · ${g.team === "A" ? teamAName : teamBName}` : ""}
+                  {" · "}
+                  {g.goals} gol{g.goals === 1 ? "" : "es"}
+                </span>
+              ))}
+            </div>
+          </div>
+        ) : null}
       </div>
 
       <div className="flex items-center gap-2 lg:justify-end">

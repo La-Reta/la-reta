@@ -4,6 +4,11 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import { MinusIcon, UserIcon, XIcon } from "lucide-react";
 import type { LiveGoal } from "./types";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 
 export function GoalTimeline({
   goals,
@@ -46,7 +51,6 @@ export function GoalTimeline({
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
-            className="rounded-xl"
             onClick={() => onRemoveLast("A")}
             disabled={scoreA === 0}
           >
@@ -55,7 +59,6 @@ export function GoalTimeline({
           </Button>
           <Button
             variant="outline"
-            className="rounded-xl"
             onClick={() => onRemoveLast("B")}
             disabled={scoreB === 0}
           >
@@ -86,21 +89,30 @@ export function GoalTimeline({
                 {goal.team === "A" ? teamA : teamB}
               </span>
 
-              <button
-                type="button"
-                onClick={() => onAssign(goal.id)}
-                className="flex min-w-0 flex-1 items-center gap-2 text-left hover:underline"
-              >
-                <UserIcon className="text-muted-foreground size-3.5 shrink-0" />
-                <span
-                  className={cn(
-                    "truncate text-sm",
-                    goal.playerId == null && "text-muted-foreground",
-                  )}
-                >
-                  {getPlayerName(goal.playerId)}
-                </span>
-              </button>
+              <div className="flex min-w-0 flex-1 items-center gap-2 text-left">
+                <Tooltip>
+                  <TooltipTrigger
+                    render={
+                      <Button
+                        type="button"
+                        onClick={() => onAssign(goal.id)}
+                        variant={"secondary"}
+                      ></Button>
+                    }
+                  >
+                    <UserIcon className="text-muted-foreground size-3.5 shrink-0" />
+                    <span
+                      className={cn(
+                        "truncate text-sm",
+                        goal.playerId == null && "text-muted-foreground",
+                      )}
+                    >
+                      {getPlayerName(goal.playerId)}
+                    </span>
+                  </TooltipTrigger>
+                  <TooltipContent>Asigna el gol a un jugador</TooltipContent>
+                </Tooltip>
+              </div>
 
               <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
                 {formatMinute(goal.at)} · {formatClock(goal.at)}

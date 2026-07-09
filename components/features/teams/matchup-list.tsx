@@ -3,7 +3,6 @@
 import { positionGroup, type PositionGroup } from "@/lib/constants";
 import type { Lineup } from "@/lib/team-balancer";
 import { cn } from "@/lib/utils";
-import { StarIcon } from "lucide-react";
 import * as React from "react";
 
 const ORDER: PositionGroup[] = ["GK", "DEF", "MID", "FWD"];
@@ -84,42 +83,6 @@ function TeamColumn({ lineups, side }: { lineups: Lineup[]; side: "A" | "B" }) {
   );
 }
 
-function Crest({
-  letter,
-  color,
-  count,
-}: {
-  letter: string;
-  color: string;
-  count: number;
-}) {
-  return (
-    <div className="flex flex-col items-center gap-1">
-      <div className="flex gap-0.5">
-        {[0, 1, 2].map((i) => (
-          <StarIcon
-            key={i}
-            className="size-2.5 fill-amber-400 text-amber-400"
-          />
-        ))}
-      </div>
-      <div
-        className="font-display grid size-14 place-items-center rounded-full border-2 text-2xl font-black"
-        style={{
-          borderColor: color,
-          color,
-          background: "rgba(255,255,255,0.06)",
-        }}
-      >
-        {letter}
-      </div>
-      <p className="text-[10px] font-medium text-white/45">
-        {count} convocados
-      </p>
-    </div>
-  );
-}
-
 export const MatchupList = React.forwardRef<
   HTMLDivElement,
   {
@@ -180,38 +143,32 @@ export const MatchupList = React.forwardRef<
           La Reta · Convocatoria
         </p>
 
-        {/* Crests + team names (rating de-emphasized) */}
+        {/* Team names (rating de-emphasized) */}
         <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="flex items-center justify-end gap-3">
-            <div className="min-w-0 text-right">
-              <p
-                className="font-display truncate text-xl leading-tight font-black"
-                style={{ color: TEAM_A }}
-              >
-                {teamAName}
-              </p>
-              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
-                OVR {ratingA}
-              </p>
-            </div>
-            <Crest letter="A" color={TEAM_A} count={teamA.length} />
+          <div className="min-w-0 text-right">
+            <p
+              className="font-display truncate text-xl leading-tight font-black"
+              style={{ color: TEAM_A }}
+            >
+              {teamAName}
+            </p>
+            <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+              OVR {ratingA}
+            </p>
           </div>
           <span className="font-display rounded-md border border-white/25 px-3 py-1 text-sm font-black tracking-widest text-white/80">
             VS
           </span>
-          <div className="flex items-center gap-3">
-            <Crest letter="B" color={TEAM_B} count={teamB.length} />
-            <div className="min-w-0 text-left">
-              <p
-                className="font-display truncate text-xl leading-tight font-black"
-                style={{ color: TEAM_B }}
-              >
-                {teamBName}
-              </p>
-              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
-                OVR {ratingB}
-              </p>
-            </div>
+          <div className="min-w-0 text-left">
+            <p
+              className="font-display truncate text-xl leading-tight font-black"
+              style={{ color: TEAM_B }}
+            >
+              {teamBName}
+            </p>
+            <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+              OVR {ratingB}
+            </p>
           </div>
         </div>
 

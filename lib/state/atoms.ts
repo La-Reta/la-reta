@@ -1,5 +1,13 @@
+import type { Player } from "@/lib/db/schema";
 import { atom } from "jotai";
 import { atomWithStorage } from "jotai/utils";
+
+/**
+ * Guest ("de última hora") players added on the fly for a team generation.
+ * Client-only (never in the DB `players` table), persisted so they survive a
+ * reload mid-reta. Negative ids (see lib/guests.ts) keep them apart from roster.
+ */
+export const guestsAtom = atomWithStorage<Player[]>("reta:guests", []);
 
 /**
  * IDs of players currently picked for the "armar equipos" pool.

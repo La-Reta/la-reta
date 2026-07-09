@@ -1,3 +1,4 @@
+import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
 import { Geist, Geist_Mono, Raleway, Oswald } from "next/font/google";
 import "./globals.css";
@@ -57,7 +58,7 @@ export const metadata: Metadata = {
     "goleadores",
     "fútbol amateur",
   ],
-  authors: [{ name: "La Reta" }, {name: "Luis Alvarez"}],
+  authors: [{ name: "La Reta" }, { name: "Luis Alvarez" }],
   creator: "Luis Alvarez",
   publisher: "La Reta",
   category: "sports",
@@ -111,20 +112,22 @@ export default function RootLayout({
       )}
     >
       <body className="min-h-full">
-        <Providers>
-          <AppShell>{children}</AppShell>
-          <Toaster richColors position="top-center" />
-        </Providers>
-        {cloudflareWebAnalyticsToken ? (
-          <Script
-            src="https://static.cloudflareinsights.com/beacon.min.js"
-            strategy="afterInteractive"
-            data-cf-beacon={JSON.stringify({
-              token: cloudflareWebAnalyticsToken,
-            })}
-          />
-        ) : null}
-        <Analytics />
+        <ClerkProvider>
+          <Providers>
+            <AppShell>{children}</AppShell>
+            <Toaster richColors position="top-center" />
+          </Providers>
+          {cloudflareWebAnalyticsToken ? (
+            <Script
+              src="https://static.cloudflareinsights.com/beacon.min.js"
+              strategy="afterInteractive"
+              data-cf-beacon={JSON.stringify({
+                token: cloudflareWebAnalyticsToken,
+              })}
+            />
+          ) : null}
+          <Analytics />
+        </ClerkProvider>
       </body>
     </html>
   );

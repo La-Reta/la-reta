@@ -10,9 +10,11 @@ import {
 } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { flagEmoji, playerPositions } from "@/lib/format";
+import { isGuest } from "@/lib/guests";
 import { cn } from "@/lib/utils";
 import { CheckIcon } from "lucide-react";
 import * as React from "react";
+import { SelectedCountItem } from "./selected-count-item";
 
 const GROUPS: PositionGroup[] = ["GK", "DEF", "MID", "FWD"];
 
@@ -20,10 +22,12 @@ export function Convocatoria({
   players,
   selected,
   onToggle,
+  selectedCount
 }: {
   players: Player[];
   selected: number[];
-  onToggle: (id: number) => void;
+    onToggle: (id: number) => void;
+  selectedCount: number
 }) {
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
 
@@ -32,9 +36,12 @@ export function Convocatoria({
       <CardHeader className="border-b">
         <CardTitle className="flex items-center justify-between">
           <span>Convocatoria</span>
-          <span className="text-muted-foreground text-xs font-normal">
+          <div className="flex items-center justify-end gap-2 flex-wrap-reverse">
+          <Badge variant={'outline'}>
             Toca para convocar
-          </span>
+          </Badge>
+          <SelectedCountItem count={selectedCount} />
+          </div>
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-5">
@@ -87,6 +94,11 @@ export function Convocatoria({
                         {p.overall}
                       </span>
                       <span className="truncate font-medium">{p.name}</span>
+                      {isGuest(p) ? (
+                        <Badge variant="secondary" className="shrink-0">
+                          invitado
+                        </Badge>
+                      ) : null}
                       <span className="ml-auto shrink-0">
                         {flagEmoji(p.nationality)}
                       </span>

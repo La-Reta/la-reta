@@ -6,12 +6,16 @@ import {
   type MatchupView,
 } from "@/components/features/teams/control-bar";
 import { Convocatoria } from "@/components/features/teams/convocatoria";
+import { GuestManager } from "@/components/features/teams/guest-manager";
 import { Matchup } from "@/components/features/teams/matchup";
 import { TeamNameInputs } from "@/components/features/teams/team-name-inputs";
+import type { Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { isGuest, makeGuestPlayer } from "@/lib/guests";
 import type { RecentSplit } from "@/lib/queries";
 import {
   currentGeneratedRetaIdAtom,
+  guestsAtom,
   selectedIdsAtom,
   teamNameAAtom,
   teamNameBAtom,
@@ -28,7 +32,9 @@ import * as React from "react";
 
 const sideRows = (lineups: Lineup[], team: "A" | "B") =>
   lineups.map((l) => ({
-    playerId: l.player.id,
+    // Guests (negative id) aren't in the roster → null id + their name inline.
+    playerId: isGuest(l.player) ? null : l.player.id,
+    guestName: isGuest(l.player) ? l.player.name : undefined,
     team,
     role: l.role,
     overall: l.player.overall,
@@ -43,6 +49,7 @@ export function TeamBuilder({
 }) {
   const router = useRouter();
   const [selected, setSelected] = useAtom(selectedIdsAtom);
+  const [guests, setGuests] = useAtom(guestsAtom);
   const [result, setResult] = React.useState<BalancedTeams | null>(null);
   const [view, setView] = React.useState<MatchupView>("board");
   const [nameA, setNameA] = useAtom(teamNameAAtom);
@@ -56,9 +63,14 @@ export function TeamBuilder({
   // eslint-disable-next-line react-hooks/set-state-in-effect
   React.useEffect(() => setMounted(true), []);
 
+  // Roster + guests share the pool; guests carry negative ids.
+  const allPlayers = React.useMemo(
+    () => [...players, ...guests],
+    [players, guests],
+  );
   const byId = React.useMemo(
-    () => new Map(players.map((p) => [p.id, p])),
-    [players],
+    () => new Map(allPlayers.map((p) => [p.id, p])),
+    [allPlayers],
   );
   const selectedPlayers = selected
     .map((id) => byId.get(id))
@@ -69,6 +81,23 @@ export function TeamBuilder({
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  function addGuest(input: {
+    name: string;
+    overall: number;
+    position: Position;
+  }) {
+    setResult(null);
+    const guest = makeGuestPlayer(input, guests);
+    setGuests((prev) => [...prev, guest]);
+    setSelected((prev) => [...prev, guest.id]); // auto-convocar
+  }
+
+  function removeGuest(id: number) {
+    setResult(null);
+    setGuests((prev) => prev.filter((g) => g.id !== id));
+    setSelected((prev) => prev.filter((x) => x !== id));
   }
 
   function generate() {
@@ -100,11 +129,12 @@ export function TeamBuilder({
     });
   }
 
-  const allSelected = players.length > 0 && selected.length === players.length;
+  const allSelected =
+    allPlayers.length > 0 && selected.length === allPlayers.length;
 
   function toggleAll() {
     setResult(null);
-    setSelected(allSelected ? [] : players.map((p) => p.id));
+    setSelected(allSelected ? [] : allPlayers.map((p) => p.id));
   }
 
   function clear() {
@@ -123,8 +153,6 @@ export function TeamBuilder({
         allSelected={allSelected}
         hasSelection={selected.length > 0}
         hasResult={result !== null}
-        view={view}
-        onViewChange={setView}
         onToggleAll={toggleAll}
         onClear={clear}
         onGenerate={generate}
@@ -141,7 +169,14 @@ export function TeamBuilder({
       />
 
       {result ? (
-        <Matchup result={result} view={view} nameA={nameA} nameB={nameB} />
+        <Matchup
+          result={result}
+          view={view}
+          nameA={nameA}
+          nameB={nameB}
+          onViewChange={setView}
+          hasResult={result !== null}
+        />
       ) : (
         <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-12 text-center">
           <ScaleIcon className="text-muted-foreground size-8" />
@@ -151,7 +186,14 @@ export function TeamBuilder({
         </div>
       )}
 
-      <Convocatoria players={players} selected={selected} onToggle={toggle} />
+      <GuestManager guests={guests} onAdd={addGuest} onRemove={removeGuest} />
+
+      <Convocatoria
+        players={allPlayers}
+        selected={selected}
+        onToggle={toggle}
+        selectedCount={selectedPlayers.length}
+      />
     </div>
   );
 }

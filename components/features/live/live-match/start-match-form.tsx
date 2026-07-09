@@ -84,7 +84,7 @@ export function StartMatchForm({
 
           <Button
             size="lg"
-            className="w-full sm:w-auto lg:mx-auto lg:flex lg:w-full lg:max-w-xl"
+            className="w-full md:mx-auto lg:flex lg:max-w-xl"
             onClick={onStart}
           >
             <PlayIcon />
