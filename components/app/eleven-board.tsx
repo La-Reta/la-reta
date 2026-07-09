@@ -43,7 +43,7 @@ export function ElevenBoard({
             render={
               <Link
                 href={"/players"}
-                className="font-display ms-2 font-bold tracking-wider uppercase"
+                className="font-display ms-2 uppercase"
               ></Link>
             }
           >
