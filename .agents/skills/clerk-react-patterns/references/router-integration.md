@@ -5,15 +5,15 @@
 Place `ClerkProvider` outside the router but inside `StrictMode`:
 
 ```tsx
-import { StrictMode } from 'react'
-import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
-import { ClerkProvider } from '@clerk/react'
-import App from './App'
+import { StrictMode } from "react";
+import { createRoot } from "react-dom/client";
+import { BrowserRouter } from "react-router-dom";
+import { ClerkProvider } from "@clerk/react";
+import App from "./App";
 
-const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY
+const PUBLISHABLE_KEY = import.meta.env.VITE_CLERK_PUBLISHABLE_KEY;
 
-createRoot(document.getElementById('root')!).render(
+createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <ClerkProvider publishableKey={PUBLISHABLE_KEY}>
       <BrowserRouter>
@@ -21,7 +21,7 @@ createRoot(document.getElementById('root')!).render(
       </BrowserRouter>
     </ClerkProvider>
   </StrictMode>,
-)
+);
 ```
 
 `ClerkProvider` must wrap `BrowserRouter` so hooks work inside route components.
@@ -39,6 +39,7 @@ Configure where users land after sign-in/sign-up:
 ```
 
 Or via environment variables:
+
 ```
 VITE_CLERK_SIGN_IN_URL=/sign-in
 VITE_CLERK_SIGN_UP_URL=/sign-up
@@ -49,18 +50,21 @@ VITE_CLERK_SIGN_UP_FALLBACK_REDIRECT_URL=/dashboard
 ## Using Prebuilt Sign-In Component
 
 ```tsx
-import { SignIn } from '@clerk/react'
+import { SignIn } from "@clerk/react";
 
 export function SignInPage() {
   return (
-    <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '4rem' }}>
+    <div
+      style={{ display: "flex", justifyContent: "center", paddingTop: "4rem" }}
+    >
       <SignIn />
     </div>
-  )
+  );
 }
 ```
 
 Register the route:
+
 ```tsx
 <Route path="/sign-in/*" element={<SignInPage />} />
 <Route path="/sign-up/*" element={<SignUpPage />} />
@@ -71,18 +75,14 @@ The `/*` wildcard is required for Clerk's multi-step flows (email verification, 
 ## useNavigate with Clerk Actions
 
 ```tsx
-import { useClerk } from '@clerk/react'
-import { useNavigate } from 'react-router-dom'
+import { useClerk } from "@clerk/react";
+import { useNavigate } from "react-router-dom";
 
 export function SignOutButton() {
-  const { signOut } = useClerk()
-  const navigate = useNavigate()
+  const { signOut } = useClerk();
+  const navigate = useNavigate();
 
-  return (
-    <button onClick={() => signOut(() => navigate('/'))}>
-      Sign out
-    </button>
-  )
+  return <button onClick={() => signOut(() => navigate("/"))}>Sign out</button>;
 }
 ```
 

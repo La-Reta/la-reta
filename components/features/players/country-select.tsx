@@ -43,7 +43,9 @@ export function CountrySelect({
   );
   const items = React.useMemo(
     () =>
-      [...COUNTRY_CODES].sort((a, b) => nameOf(a).localeCompare(nameOf(b), "es")),
+      [...COUNTRY_CODES].sort((a, b) =>
+        nameOf(a).localeCompare(nameOf(b), "es"),
+      ),
     [nameOf],
   );
 
@@ -61,7 +63,9 @@ export function CountrySelect({
           <ComboboxCollection>
             {(code: string) => (
               <ComboboxItem key={code} value={code}>
-                <span className="text-base leading-none">{flagEmoji(code)}</span>
+                <span className="text-base leading-none">
+                  {flagEmoji(code)}
+                </span>
                 <span className="truncate">{nameOf(code)}</span>
               </ComboboxItem>
             )}

@@ -53,7 +53,7 @@ export function Matchup({
           <span className="font-display text-muted-foreground font-semibold tracking-wide uppercase">
             Alineación
           </span>
-          <div className="flex flex-wrap gap-2 items-center justify-end">
+          <div className="flex flex-wrap items-center justify-end gap-2">
             {/* View switch: changes presentation of the SAME teams, no reshuffle. */}
             {hasResult && (
               <div
@@ -247,7 +247,9 @@ function BalanceMeter({
 function ExportSizeHint() {
   return (
     <div className="flex items-center justify-center lg:hidden">
-      <Badge variant="default"><InfoIcon /> La descarga se genera en tamaño desktop.</Badge>
+      <Badge variant="default">
+        <InfoIcon /> La descarga se genera en tamaño desktop.
+      </Badge>
     </div>
   );
 }

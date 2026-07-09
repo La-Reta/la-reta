@@ -242,11 +242,7 @@ export const REPORT_STATUS_CLASS: Record<ReportStatus, string> = {
 };
 
 // ── Player signups (solicitudes para registrarse como jugador) ───────────────
-export const SIGNUP_STATUSES = [
-  "pendiente",
-  "aprobado",
-  "rechazado",
-] as const;
+export const SIGNUP_STATUSES = ["pendiente", "aprobado", "rechazado"] as const;
 export type SignupStatus = (typeof SIGNUP_STATUSES)[number];
 
 export const SIGNUP_STATUS_LABEL: Record<SignupStatus, string> = {

@@ -40,10 +40,13 @@ async function getRepositoryInfo(): Promise<GitHubRepository | null> {
 // ponytail: counts only the first page (100 branches). Add pagination if the repo ever exceeds that.
 async function getBranchCount(): Promise<number | null> {
   try {
-    const response = await fetch(`${REPOSITORY_API_URL}/branches?per_page=100`, {
-      headers: { Accept: "application/vnd.github+json" },
-      next: { revalidate: 60 * 60 },
-    });
+    const response = await fetch(
+      `${REPOSITORY_API_URL}/branches?per_page=100`,
+      {
+        headers: { Accept: "application/vnd.github+json" },
+        next: { revalidate: 60 * 60 },
+      },
+    );
 
     if (!response.ok) return null;
 

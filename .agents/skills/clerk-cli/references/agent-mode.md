@@ -229,8 +229,15 @@ The deploy report has this shape:
   "domain": "example.com",
   "productionInstanceId": "ins_...",
   "domainStatus": { "dns": "complete", "ssl": "pending", "mail": "complete" },
-  "pendingDnsRecords": [{ "type": "CNAME", "host": "clerk.example.com", "value": "..." }],
-  "oauth": { "complete": true, "configured": ["google"], "pending": [], "unsupported": [] },
+  "pendingDnsRecords": [
+    { "type": "CNAME", "host": "clerk.example.com", "value": "..." }
+  ],
+  "oauth": {
+    "complete": true,
+    "configured": ["google"],
+    "pending": [],
+    "unsupported": []
+  },
   "nextAction": "SSL still provisioning for example.com. Re-run `clerk deploy status` in a few minutes, DNS propagation can take time. Ask the user to visit the Clerk Dashboard domains page, or offer to open it: https://dashboard.clerk.com/apps/app_.../instances/ins_.../domains"
 }
 ```

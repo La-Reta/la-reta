@@ -82,7 +82,10 @@ export async function createPlayerSignup(
       position,
       position2,
       preferredFoot,
-      nationality: (input.nationality?.trim().toLowerCase() || "mx").slice(0, 2),
+      nationality: (input.nationality?.trim().toLowerCase() || "mx").slice(
+        0,
+        2,
+      ),
       photoUrl: input.photoUrl?.trim().slice(0, 500) || null,
       birthDate: input.birthDate?.trim() || null,
       heightCm: smallintOrNull(input.heightCm),

@@ -311,7 +311,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
                 variant="destructive"
                 className="sm:w-auto"
                 disabled={pending}
-                size={'lg'}
+                size={"lg"}
               >
                 <TrashIcon />
                 Descartar

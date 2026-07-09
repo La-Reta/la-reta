@@ -7,11 +7,9 @@ export function SelectedCountItem({ count }: { count: number }) {
         <UsersIcon className="size-4.5" />
       </span>
       <div className="leading-none">
-        <p className="font-mono text-xl font-bold tabular-nums">
-          {count}
-        </p>
+        <p className="font-mono text-xl font-bold tabular-nums">{count}</p>
         <p className="text-muted-foreground text-xs">convocados</p>
       </div>
     </div>
-  )
+  );
 }

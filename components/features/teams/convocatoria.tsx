@@ -22,12 +22,12 @@ export function Convocatoria({
   players,
   selected,
   onToggle,
-  selectedCount
+  selectedCount,
 }: {
   players: Player[];
   selected: number[];
-    onToggle: (id: number) => void;
-  selectedCount: number
+  onToggle: (id: number) => void;
+  selectedCount: number;
 }) {
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
 
@@ -36,11 +36,9 @@ export function Convocatoria({
       <CardHeader className="border-b">
         <CardTitle className="flex items-center justify-between">
           <span>Convocatoria</span>
-          <div className="flex items-center justify-end gap-2 flex-wrap-reverse">
-          <Badge variant={'outline'}>
-            Toca para convocar
-          </Badge>
-          <SelectedCountItem count={selectedCount} />
+          <div className="flex flex-wrap-reverse items-center justify-end gap-2">
+            <Badge variant={"outline"}>Toca para convocar</Badge>
+            <SelectedCountItem count={selectedCount} />
           </div>
         </CardTitle>
       </CardHeader>
