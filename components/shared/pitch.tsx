@@ -37,7 +37,7 @@ export function Pitch({
       aria-label="Cancha de fútbol con las posiciones"
     >
       {/* Grass + mowing stripes */}
-      <rect width={W} height={H} fill="#1f8b4a" />
+      <rect width={W} height={H} className="fill-[#1f8b4a] dark:fill-[#12613a]" />
       {Array.from({ length: 10 }).map((_, i) =>
         i % 2 === 0 ? (
           <rect
