@@ -2,6 +2,7 @@ import { GROUP_COLOR, PositionGroup } from "@/lib/constants";
 import { Player } from "@/lib/db";
 import Link from "next/link";
 import { LineupBoard } from "../features/dashboard/lineup-board";
+import { Button } from "../ui/button";
 import {
   Card,
   CardAction,
@@ -35,15 +36,19 @@ export function ElevenBoard({
         </CardTitle>
         <CardDescription>El mejor por línea · esquema 4-3-3</CardDescription>
         <CardAction>
-          <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase">
+          <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 font-bold tracking-wider uppercase">
             4-3-3
           </span>
-          <Link
-            href={"/players"}
-            className="font-display bg-primary text-background ms-2 rounded-sm px-2 py-1 text-xs font-bold tracking-wider uppercase"
+          <Button
+            render={
+              <Link
+                href={"/players"}
+                className="font-display ms-2 font-bold tracking-wider uppercase"
+              ></Link>
+            }
           >
             Ver todos los jugadores
-          </Link>
+          </Button>
         </CardAction>
       </CardHeader>
       <CardContent className="p-0">
