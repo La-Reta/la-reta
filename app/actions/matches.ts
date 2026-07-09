@@ -20,31 +20,49 @@ export type MatchInput = {
   durationSec?: number | null;
   // Which generated lineup this match came from (set from the live flow).
   generatedRetaId?: number | null;
-  scorers: { playerId: number; goals: number; team?: MatchTeam | null }[];
+  scorers: {
+    playerId: number | null;
+    guestName?: string;
+    goals: number;
+    team?: MatchTeam | null;
+  }[];
 };
 
 const clamp = (n: number, max: number) =>
   Math.max(0, Math.min(max, Math.round(Number(n)) || 0));
 
-/** Collapses scorer rows to one row per player (summing goals). */
+/** Collapses scorer rows to one row per player/guest (summing goals). */
 function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
   const tally = new Map<
     string,
-    { playerId: number; team: MatchTeam | null; goals: number }
+    {
+      playerId: number | null;
+      guestName: string | null;
+      team: MatchTeam | null;
+      goals: number;
+    }
   >();
   for (const s of scorers ?? []) {
-    if (!s.playerId) continue;
+    const guestName = s.playerId == null ? s.guestName?.trim() || null : null;
+    // Skip rows that identify neither a roster player nor a named guest.
+    if (s.playerId == null && !guestName) continue;
     const team = s.team === "A" || s.team === "B" ? s.team : null;
-    const key = `${s.playerId}:${team ?? "unknown"}`;
-    const current = tally.get(key) ?? { playerId: s.playerId, team, goals: 0 };
+    const key = `${s.playerId ?? `guest:${guestName}`}:${team ?? "unknown"}`;
+    const current = tally.get(key) ?? {
+      playerId: s.playerId ?? null,
+      guestName,
+      team,
+      goals: 0,
+    };
     tally.set(key, {
       ...current,
       goals: current.goals + clamp(s.goals, 50),
     });
   }
-  return [...tally.values()].map(({ playerId, team, goals }) => ({
+  return [...tally.values()].map(({ playerId, guestName, team, goals }) => ({
     matchId,
     playerId,
+    guestName,
     team,
     goals,
   }));

@@ -15,18 +15,23 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import type { BalancedTeams } from "@/lib/team-balancer";
 import { cn } from "@/lib/utils";
-import { DownloadIcon } from "lucide-react";
+import { DownloadIcon, InfoIcon, LayoutGridIcon, ListIcon } from "lucide-react";
+import { ViewTab } from "./view-tab";
 
 export function Matchup({
   result,
   view,
   nameA,
   nameB,
+  hasResult,
+  onViewChange,
 }: {
   result: BalancedTeams;
   view: MatchupView;
   nameA: string;
   nameB: string;
+  hasResult: boolean;
+  onViewChange: (view: MatchupView) => void;
 }) {
   const { ratingA, ratingB, diff, teamA, teamB } = result;
   const { pitchRef, exportPitchRef, listRef, exportListRef, busy, download } =
@@ -45,13 +50,36 @@ export function Matchup({
       {/* Alineación: tablero o lista */}
       <div className="bg-card space-y-3 px-4 py-4">
         <div className="flex items-center justify-between">
-          <span className="font-display text-muted-foreground text-xs font-semibold tracking-wide uppercase">
+          <span className="font-display text-muted-foreground font-semibold tracking-wide uppercase">
             Alineación
           </span>
-          <Button variant="default" onClick={download} disabled={busy}>
-            <DownloadIcon />
-            {busy ? "Generando…" : "Descargar imagen"}
-          </Button>
+          <div className="flex flex-wrap gap-2 items-center justify-end">
+            {/* View switch: changes presentation of the SAME teams, no reshuffle. */}
+            {hasResult && (
+              <div
+                className="bg-muted inline-flex rounded-md p-0.5"
+                role="group"
+                aria-label="Vista"
+              >
+                <ViewTab
+                  active={view === "board"}
+                  onClick={() => onViewChange("board")}
+                  icon={<LayoutGridIcon className="size-3.5" />}
+                  label="Tablero"
+                />
+                <ViewTab
+                  active={view === "list"}
+                  onClick={() => onViewChange("list")}
+                  icon={<ListIcon className="size-3.5" />}
+                  label="Lista"
+                />
+              </div>
+            )}
+            <Button variant="default" onClick={download} disabled={busy}>
+              <DownloadIcon />
+              {busy ? "Generando…" : "Descargar imagen"}
+            </Button>
+          </div>
         </div>
 
         {view === "list" ? (
@@ -219,7 +247,7 @@ function BalanceMeter({
 function ExportSizeHint() {
   return (
     <div className="flex items-center justify-center lg:hidden">
-      <Badge variant="outline">La descarga se genera en tamaño desktop.</Badge>
+      <Badge variant="default"><InfoIcon /> La descarga se genera en tamaño desktop.</Badge>
     </div>
   );
 }

@@ -182,18 +182,30 @@ function TeamRosterCard({
         <div className="space-y-2 p-3">
           {scorers
             .sort((a, b) => b.goals - a.goals)
-            .map((scorer) => (
-              <div key={`${title}-${scorer.playerId}`} className="space-y-2">
+            .map((scorer, idx) => (
+              <div
+                key={`${title}-${scorer.playerId ?? `guest-${idx}`}`}
+                className="space-y-2"
+              >
                 <div className="flex items-center gap-2">
                   <span className="text-lg">
                     {flagEmoji(scorer.nationality)}
                   </span>
-                  <Link
-                    href={`/players/${scorer.playerId}`}
-                    className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium transition-colors"
-                  >
-                    {scorer.name}
-                  </Link>
+                  {scorer.isGuest ? (
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {scorer.name}{" "}
+                      <span className="text-muted-foreground text-xs font-normal">
+                        · invitado
+                      </span>
+                    </span>
+                  ) : (
+                    <Link
+                      href={`/players/${scorer.playerId}`}
+                      className="hover:text-primary min-w-0 flex-1 truncate text-sm font-medium transition-colors"
+                    >
+                      {scorer.name}
+                    </Link>
+                  )}
                   <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
                     {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
                   </Badge>

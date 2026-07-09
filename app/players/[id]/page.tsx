@@ -1,5 +1,8 @@
 import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
-import { PlayerComments } from "@/components/features/players/player-comments";
+import {
+  CommentsCount,
+  PlayerComments,
+} from "@/components/features/players/player-comments";
 import { PlayerGoalHistory } from "@/components/features/players/player-goal-history";
 import { PlayerHistory } from "@/components/features/players/player-history";
 import { PlayerRadar } from "@/components/features/players/player-radar";
@@ -232,7 +235,13 @@ export default async function PlayerDetailPage({
           {/* Comentarios */}
           <Card>
             <CardHeader className="border-b">
-              <CardTitle>Reseñas · {comments.length}</CardTitle>
+              <CardTitle>
+                Reseñas ·{" "}
+                <CommentsCount
+                  playerId={player.id}
+                  initialData={{ comments, reactions }}
+                />
+              </CardTitle>
             </CardHeader>
             <CardContent>
               <PlayerComments

@@ -52,6 +52,7 @@ export default async function EditMatchPage({
           notes: match.notes,
           scorers: match.scorers.map((s) => ({
             playerId: s.playerId,
+            guestName: s.isGuest ? s.name : undefined,
             team: s.team,
             goals: s.goals,
           })),

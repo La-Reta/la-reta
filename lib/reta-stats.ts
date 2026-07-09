@@ -50,9 +50,7 @@ function dayKey(createdAt: Date | string): string {
  * repetition of splits, most frequent same-team duos, most convened players and
  * generations over time. Pure — no DB, so it's cheap to unit-check.
  */
-export function computeRetaStats(
-  retas: GeneratedRetaWithPlayers[],
-): RetaStats {
+export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
   const total = retas.length;
 
   const sigCount = new Map<string, number>();
@@ -68,8 +66,13 @@ export function computeRetaStats(
     const day = dayKey(reta.createdAt);
     perDayMap.set(day, (perDayMap.get(day) ?? 0) + 1);
 
-    const sideA = reta.players.filter((p) => p.team === "A");
-    const sideB = reta.players.filter((p) => p.team === "B");
+    // Guests (occasional, no stable id) don't count toward duos / play-counts.
+    const sideA = reta.players
+      .filter((p) => p.team === "A" && !p.isGuest)
+      .map((p) => ({ playerId: p.playerId as number, name: p.name }));
+    const sideB = reta.players
+      .filter((p) => p.team === "B" && !p.isGuest)
+      .map((p) => ({ playerId: p.playerId as number, name: p.name }));
     for (const p of [...sideA, ...sideB]) {
       const cur = players.get(p.playerId) ?? {
         playerId: p.playerId,
