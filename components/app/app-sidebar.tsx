@@ -20,6 +20,7 @@ import { atom, useAtomValue } from "jotai";
 import {
   ChevronRightIcon,
   CircleDotIcon,
+  FileUserIcon,
   LayoutDashboardIcon,
   LifeBuoyIcon,
   LightbulbIcon,
@@ -171,6 +172,12 @@ const ADMIN_ITEMS: NavItem[] = [
     href: "/admin/ideas",
     icon: LightbulbIcon,
     hint: "Bandeja de ideas",
+  },
+  {
+    title: "Registros",
+    href: "/admin/registros",
+    icon: FileUserIcon,
+    hint: "Bandeja de registros",
   },
 ];
 

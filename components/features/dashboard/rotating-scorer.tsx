@@ -21,11 +21,10 @@ export function RotatingScorer({
 }) {
   const [index, setIndex] = React.useState(0);
   const [visible, setVisible] = React.useState(true);
-  const [paused, setPaused] = React.useState(false);
   const multiple = scorers.length > 1;
 
   React.useEffect(() => {
-    if (!multiple || paused) return;
+    if (!multiple) return;
     const reduce =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     let swap: ReturnType<typeof setTimeout>;
@@ -44,7 +43,7 @@ export function RotatingScorer({
       clearInterval(tick);
       clearTimeout(swap);
     };
-  }, [multiple, paused, scorers.length, intervalMs]);
+  }, [multiple, scorers.length, intervalMs]);
 
   function goTo(i: number) {
     setVisible(false);
@@ -89,12 +88,7 @@ export function RotatingScorer({
   ) : undefined;
 
   return (
-    <div
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-    >
+    <div>
       <Spotlight
         title="El goleador"
         subtitle={

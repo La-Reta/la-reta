@@ -27,10 +27,9 @@ export function RotatingPlayer({
 }) {
   const [index, setIndex] = React.useState(0);
   const [visible, setVisible] = React.useState(true);
-  const [paused, setPaused] = React.useState(false);
 
   React.useEffect(() => {
-    if (players.length <= 1 || paused) return;
+    if (players.length <= 1) return;
     const reduce =
       window.matchMedia?.("(prefers-reduced-motion: reduce)").matches ?? false;
     let swap: ReturnType<typeof setTimeout>;
@@ -49,7 +48,7 @@ export function RotatingPlayer({
       clearInterval(tick);
       clearTimeout(swap);
     };
-  }, [players.length, intervalMs, paused]);
+  }, [players.length, intervalMs]);
 
   function goTo(i: number) {
     setVisible(false);
@@ -66,14 +65,7 @@ export function RotatingPlayer({
   const activeSlot = index % 12;
 
   return (
-    <Card
-      className="pb-0"
-      aria-label="Conoce a los jugadores"
-      onMouseEnter={() => setPaused(true)}
-      onMouseLeave={() => setPaused(false)}
-      onFocusCapture={() => setPaused(true)}
-      onBlurCapture={() => setPaused(false)}
-    >
+    <Card className="pb-0" aria-label="Conoce a los jugadores">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           Conoce a los jugadores

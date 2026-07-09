@@ -225,8 +225,19 @@ export function MatchForm({
       <div>
         <div className="mb-1.5 flex items-center justify-between">
           <Label className="text-xs">¿Qué tan balanceado estuvo?</Label>
-          <span className="text-xs font-medium">
-            <span className="font-mono font-bold tabular-nums">{balance}</span>
+          <span className="flex items-center gap-1 text-xs font-medium">
+            <Input
+              type="number"
+              min={0}
+              max={100}
+              value={balance}
+              onChange={(e) =>
+                setBalance(
+                  Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                )
+              }
+              className="h-6 w-14 px-1.5 py-0 text-center font-mono font-bold tabular-nums"
+            />
             /100 · {balanceLabel(balance)}
           </span>
         </div>
