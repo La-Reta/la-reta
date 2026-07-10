@@ -61,7 +61,7 @@ export function LegalShell({
   children: React.ReactNode;
 }) {
   return (
-    <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6">
+    <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 xl:container">
       <section className="border-border/70 bg-card relative overflow-hidden rounded-3xl border p-6 shadow-xs sm:p-8">
         <div
           aria-hidden="true"

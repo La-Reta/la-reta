@@ -48,13 +48,13 @@ export function StartMatchForm({
 
         <CardContent className="space-y-5 pt-6">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/6 p-1 dark:bg-sky-500/10">
+            <div className="rounded-4xl border border-sky-500/20 bg-sky-500/6 p-1 dark:bg-sky-500/10">
               <Input
                 value={teamA}
                 onChange={(e) => onTeamAChange(e.target.value)}
                 placeholder="Equipo A"
                 aria-label="Equipo A"
-                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 rounded-xl border-0 shadow-none ring-1 ring-sky-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-sky-500/35"
+                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 border-0 shadow-none ring-1 ring-sky-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-sky-500/35"
               />
             </div>
 
@@ -62,8 +62,7 @@ export function StartMatchForm({
               <Button
                 type="button"
                 variant="outline"
-                size="icon"
-                className="border-foreground/10 bg-background/70 size-11 rounded-full shadow-sm"
+                size="icon-lg"
                 onClick={onSwapTeams}
                 aria-label="Intercambiar equipos"
               >
@@ -71,20 +70,20 @@ export function StartMatchForm({
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/6 p-1 dark:bg-rose-500/10">
+            <div className="rounded-4xl border border-rose-500/20 bg-rose-500/6 p-1 dark:bg-rose-500/10">
               <Input
                 value={teamB}
                 onChange={(e) => onTeamBChange(e.target.value)}
                 placeholder="Equipo B"
                 aria-label="Equipo B"
-                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 rounded-xl border-0 shadow-none ring-1 ring-rose-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-rose-500/35"
+                className="bg-background/80 placeholder:text-muted-foreground/80 h-11 border-0 shadow-none ring-1 ring-rose-500/15 ring-inset focus-visible:ring-2 focus-visible:ring-rose-500/35"
               />
             </div>
           </div>
 
           <Button
             size="lg"
-            className="w-full md:mx-auto lg:flex lg:max-w-xl"
+            className="mx-auto flex w-full max-w-xl"
             onClick={onStart}
           >
             <PlayIcon />

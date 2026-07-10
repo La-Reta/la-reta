@@ -5,7 +5,7 @@ import {
   StarIcon,
 } from "lucide-react";
 import Link from "next/link";
-import { Button } from "../ui/button";
+import { buttonVariants } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 const REPOSITORY_URL = "https://github.com/mrluisfer/la-reta";
@@ -64,16 +64,12 @@ export async function RepositoryButton() {
 
   return (
     <Tooltip>
+      {/* Trigger = Link directo (2 niveles). Evita la composición triple
+          Trigger→Button→Link que rompía el tooltip; el estilo va por buttonVariants. */}
       <TooltipTrigger
-        render={
-          <Button
-            variant={"secondary"}
-            aria-label="Ver repositorio en GitHub"
-            render={
-              <Link href={REPOSITORY_URL} target="_blank" rel="noreferrer" />
-            }
-          />
-        }
+        aria-label="Ver repositorio en GitHub"
+        className={buttonVariants({ variant: "secondary", size: "icon" })}
+        render={<Link href={REPOSITORY_URL} target="_blank" rel="noreferrer" />}
       >
         <GitBranchIcon />
       </TooltipTrigger>

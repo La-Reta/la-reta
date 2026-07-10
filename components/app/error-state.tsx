@@ -61,11 +61,11 @@ export function ErrorState({
 
             <EmptyContent>
               <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-center">
-                <Button variant="secondary" render={<Link href="/matches" />}>
+                <Button variant="default" render={<Link href="/matches" />}>
                   <ArrowLeftIcon />
                   Partidos
                 </Button>
-                <Button variant="default" render={<Link href="/" />}>
+                <Button variant="secondary" render={<Link href="/" />}>
                   <HomeIcon />
                   Inicio
                 </Button>

@@ -50,7 +50,7 @@ export function TeamSheet({
               >
                 {role}
               </Badge>
-              <span className="truncate font-medium">{player.name}</span>
+              <span className="min-w-0 truncate font-medium">{player.name}</span>
               {flexed && (
                 <span className="text-muted-foreground shrink-0 text-[10px]">
                   ({playerPositions(player).join("/")})

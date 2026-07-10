@@ -4,10 +4,23 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { POSITION_NAME, POSITIONS, type Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { UserPlusIcon, XIcon } from "lucide-react";
 import * as React from "react";
+
+// value + label, así el trigger del Select muestra la posición completa.
+const POSITION_ITEMS = POSITIONS.map((p) => ({
+  value: p,
+  label: `${p} · ${POSITION_NAME[p]}`,
+}));
 
 /**
  * Add last-minute ("de última hora") guest players for this generation only.
@@ -82,18 +95,24 @@ export function GuestManager({
             <Label htmlFor="guest-position" className="text-xs">
               Posición
             </Label>
-            <select
-              id="guest-position"
+            <Select
+              items={POSITION_ITEMS}
               value={position}
-              onChange={(e) => setPosition(e.target.value as Position)}
-              className="border-input h-9 rounded-md border bg-transparent px-2 text-sm shadow-xs outline-none"
+              onValueChange={(v) => setPosition(v as Position)}
             >
-              {POSITIONS.map((p) => (
-                <option key={p} value={p}>
-                  {p} · {POSITION_NAME[p]}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger id="guest-position" className="min-w-44">
+                <SelectValue />
+              </SelectTrigger>
+              {/* alignItemWithTrigger=false + w-auto: dropdown normal debajo del
+                  trigger y ancho por contenido, para no cortar los labels largos. */}
+              <SelectContent alignItemWithTrigger={false} className="w-auto min-w-52">
+                {POSITION_ITEMS.map((it) => (
+                  <SelectItem key={it.value} value={it.value}>
+                    {it.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <Button type="submit" disabled={!name.trim()}>

@@ -57,7 +57,7 @@ export function Matchup({
             {/* View switch: changes presentation of the SAME teams, no reshuffle. */}
             {hasResult && (
               <div
-                className="bg-muted inline-flex rounded-md p-0.5"
+                className="bg-muted inline-flex rounded-4xl p-0.5"
                 role="group"
                 aria-label="Vista"
               >

@@ -15,6 +15,7 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
 import { isGuest } from "@/lib/guests";
+import { cn } from "@/lib/utils";
 import {
   currentGeneratedRetaIdAtom,
   EMPTY_LIVE_MATCH,
@@ -240,11 +241,12 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
           return (
             <Button
               key={team}
-              className={
+              className={cn(
+                "h-24 flex-col gap-1 rounded-4xl text-white shadow-sm transition-transform active:scale-[0.99]",
                 team === "A"
-                  ? "h-24 flex-col gap-1 rounded-2xl bg-sky-600 text-white shadow-sm transition-transform hover:bg-sky-700 active:scale-[0.99] dark:bg-sky-500 dark:hover:bg-sky-400"
-                  : "h-24 flex-col gap-1 rounded-2xl bg-rose-600 text-white shadow-sm transition-transform hover:bg-rose-700 active:scale-[0.99] dark:bg-rose-500 dark:hover:bg-rose-400"
-              }
+                  ? "bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
+                  : "bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400",
+              )}
               onClick={() => addGoal(team)}
               aria-label={`Gol de ${name}`}
             >

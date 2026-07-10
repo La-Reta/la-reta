@@ -10,9 +10,11 @@ export async function AppShell({ children }: { children: React.ReactNode }) {
   return (
     <SidebarProvider>
       <AppSidebar admin={admin} />
-      <SidebarInset>
+      {/* min-w-0: deja que el inset encoja junto al sidebar acoplado; sin esto,
+          contenido ancho fuerza scroll horizontal en tablet. */}
+      <SidebarInset className="min-w-0">
         <AppSidebarHeader />
-        <main className="flex-1 p-4 md:p-6">
+        <main className="min-w-0 flex-1 p-4 md:p-6">
           <LegalConsentGate>{children}</LegalConsentGate>
         </main>
       </SidebarInset>

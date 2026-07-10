@@ -185,7 +185,7 @@ export function PlayersBrowser({
                 <Link
                   href={`/players/${player.id}`}
                   className={cn(
-                    "block rounded-[1.4rem] transition-transform duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none",
+                    "block rounded-4xl transition-transform duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none",
                     isSel &&
                       "ring-primary ring-offset-background ring-2 ring-offset-2",
                   )}

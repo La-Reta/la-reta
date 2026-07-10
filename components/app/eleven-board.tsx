@@ -36,17 +36,10 @@ export function ElevenBoard({
         </CardTitle>
         <CardDescription>El mejor por línea · esquema 4-3-3</CardDescription>
         <CardAction>
-          <span className="font-display bg-foreground text-background rounded-sm px-2 py-1 font-bold tracking-wider uppercase">
+          <span className="font-display bg-foreground text-background rounded-4xl px-2 py-1 font-bold tracking-wider uppercase">
             4-3-3
           </span>
-          <Button
-            render={
-              <Link
-                href={"/players"}
-                className="font-display ms-2 uppercase"
-              ></Link>
-            }
-          >
+          <Button render={<Link href={"/players"} className="ms-2"></Link>}>
             Ver todos los jugadores
           </Button>
         </CardAction>

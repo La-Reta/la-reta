@@ -7,7 +7,7 @@ export const metadata: Metadata = { title: "Reportar · Reta Fútbol" };
 
 export default function ReportsPage() {
   return (
-    <div className="mx-auto max-w-3xl min-w-0 space-y-6">
+    <div className="mx-auto max-w-3xl min-w-0 space-y-6 xl:container">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Reportar o pedir ayuda

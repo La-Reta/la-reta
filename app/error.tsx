@@ -33,7 +33,7 @@ export default function Error({
         )
       }
       actions={
-        <Button onClick={() => unstable_retry()}>
+        <Button variant={"destructive"} onClick={() => unstable_retry()}>
           <RefreshCwIcon />
           Reintentar
         </Button>

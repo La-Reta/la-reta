@@ -20,7 +20,7 @@ export default async function IdeasPage() {
   );
 
   return (
-    <div className="mx-auto max-w-5xl min-w-0 space-y-6">
+    <div className="mx-auto max-w-5xl min-w-0 space-y-6 xl:container">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Ideas de la reta</h1>
         <p className="text-muted-foreground text-sm">

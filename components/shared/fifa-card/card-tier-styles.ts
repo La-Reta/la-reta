@@ -21,7 +21,7 @@ export const DARK_HALO = "[text-shadow:0_1px_3px_rgba(0,0,0,0.38)]";
 
 export const SIZE_STYLES = {
   sm: {
-    shell: "rounded-[1.45rem]",
+    shell: "rounded-4xl",
     top: "px-3 pt-3",
     bottom: "px-3 pb-3",
     overall: "text-[2rem]",
@@ -37,7 +37,7 @@ export const SIZE_STYLES = {
     bottomFade: "h-[36%]",
   },
   md: {
-    shell: "rounded-[1.55rem]",
+    shell: "rounded-4xl",
     top: "px-4 pt-4",
     bottom: "px-4 pb-4",
     overall: "text-[2.25rem]",
@@ -53,7 +53,7 @@ export const SIZE_STYLES = {
     bottomFade: "h-[38%]",
   },
   lg: {
-    shell: "rounded-[1.65rem]",
+    shell: "rounded-4xl",
     top: "px-4 pt-4",
     bottom: "px-4 pb-4",
     overall: "text-[2.55rem]",

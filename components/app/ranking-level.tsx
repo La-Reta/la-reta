@@ -34,7 +34,7 @@ export function RankingLevel({ players }: { players: Player[] }) {
             <li key={p.id}>
               <Link
                 href={`/players/${p.id}`}
-                className="hover:bg-muted/60 flex items-center gap-3 border-b px-4 py-2 text-sm last:border-b-0"
+                className="hover:bg-muted/60 flex items-center gap-3 rounded-4xl border-b px-4 py-2 text-sm last:border-b-0"
               >
                 <span
                   className="font-display w-5 text-center text-base font-bold tabular-nums"

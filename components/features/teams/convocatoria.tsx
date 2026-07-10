@@ -72,7 +72,7 @@ export function Convocatoria({
                       type="button"
                       onClick={() => onToggle(p.id)}
                       className={cn(
-                        "flex items-center gap-2 rounded-md border px-2.5 py-2 text-left text-xs transition-colors",
+                        "flex items-center gap-2 rounded-4xl border px-2.5 py-2 text-left text-xs transition-colors",
                         isSel
                           ? "border-primary bg-primary/10"
                           : "border-border hover:bg-muted",
@@ -91,7 +91,9 @@ export function Convocatoria({
                       <span className="w-9 shrink-0 font-mono font-bold tabular-nums">
                         {p.overall}
                       </span>
-                      <span className="truncate font-medium">{p.name}</span>
+                      <span className="min-w-0 truncate font-medium">
+                        {p.name}
+                      </span>
                       {isGuest(p) ? (
                         <Badge variant="secondary" className="shrink-0">
                           invitado

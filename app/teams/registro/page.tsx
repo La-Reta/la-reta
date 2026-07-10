@@ -112,23 +112,25 @@ function StatTile({
   accent?: boolean;
 }) {
   return (
-    <div className="bg-card ring-foreground/10 rounded-lg p-4 ring-1">
-      <p className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase">
-        {icon}
-        {label}
-      </p>
-      <p
-        className="mt-1 font-mono text-3xl font-black tabular-nums"
-        style={{
-          color: accent ? "var(--color-amber-500, #f59e0b)" : undefined,
-        }}
-      >
-        {value}
-      </p>
-      {sub ? (
-        <p className="text-muted-foreground mt-0.5 text-[11px]">{sub}</p>
-      ) : null}
-    </div>
+    <Card size="sm">
+      <CardContent>
+        <p className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase">
+          {icon}
+          {label}
+        </p>
+        <p
+          className="mt-1 font-mono text-3xl font-black tabular-nums"
+          style={{
+            color: accent ? "var(--color-amber-500, #f59e0b)" : undefined,
+          }}
+        >
+          {value}
+        </p>
+        {sub ? (
+          <p className="text-muted-foreground mt-0.5 text-[11px]">{sub}</p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 

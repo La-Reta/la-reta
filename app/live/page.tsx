@@ -17,7 +17,7 @@ export default async function LivePage() {
     .sort((a, b) => a.name.localeCompare(b.name));
 
   return (
-    <div className="container space-y-6">
+    <div className="container space-y-6 lg:mx-auto">
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Marcador en vivo</h1>
         <p className="text-muted-foreground text-sm">
