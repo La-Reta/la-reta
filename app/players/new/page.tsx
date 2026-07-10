@@ -23,10 +23,12 @@ export default async function NewPlayerPage({
 
   // Admins can prefill from a pending signup request.
   let prefill: PlayerFormPrefill | undefined;
+  let matchedSignupId: number | undefined;
   const signupId = Number(signup);
   if (admin && Number.isFinite(signupId) && signupId > 0) {
     const s = await getPlayerSignupById(signupId);
     if (s) {
+      matchedSignupId = signupId;
       prefill = {
         name: s.name,
         displayName: s.displayName ?? "",
@@ -52,7 +54,11 @@ export default async function NewPlayerPage({
             : "Define sus datos y atributos. El overall se calcula según la posición."}
         </p>
       </div>
-      <PlayerForm canManage={admin || Boolean(userId)} prefill={prefill} />
+      <PlayerForm
+        canManage={admin || Boolean(userId)}
+        prefill={prefill}
+        signupId={matchedSignupId}
+      />
     </div>
   );
 }

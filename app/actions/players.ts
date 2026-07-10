@@ -3,7 +3,7 @@
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
 import { auth, currentUser } from "@clerk/nextjs/server";
-import { db, players, playerStatHistory } from "@/lib/db";
+import { db, players, playerStatHistory, playerSignups } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { computeOverall } from "@/lib/ratings";
 import { ageFromBirthDate } from "@/lib/dates";
@@ -124,7 +124,10 @@ function clerkDisplayName(
   return (user.username || full || email || null)?.slice(0, 60) ?? null;
 }
 
-export async function createPlayer(input: PlayerInput): Promise<ActionResult> {
+export async function createPlayer(
+  input: PlayerInput,
+  signupId?: number,
+): Promise<ActionResult> {
   try {
     // Alta permitida a admins (cookie PIN) o a cualquier usuario con sesión Clerk.
     const { userId } = await auth();
@@ -148,6 +151,15 @@ export async function createPlayer(input: PlayerInput): Promise<ActionResult> {
     await db
       .insert(playerStatHistory)
       .values({ playerId: row.id, ...snapshotOf(values) });
+    // Si el alta vino de una solicitud, márcala como registrada para sacarla
+    // del pendiente/aprobado en /admin/registros.
+    if (signupId && Number.isFinite(signupId)) {
+      await db
+        .update(playerSignups)
+        .set({ status: "registrado", updatedAt: new Date() })
+        .where(eq(playerSignups.id, signupId));
+      revalidatePath("/admin/registros");
+    }
     revalidatePath("/");
     revalidatePath("/players");
     revalidatePath("/teams");

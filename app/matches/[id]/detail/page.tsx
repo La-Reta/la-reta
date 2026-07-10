@@ -3,6 +3,7 @@ import {
   MatchTeamGoalsChart,
 } from "@/components/features/matches/match-detail-charts";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
+import { MatchPhoto } from "@/components/features/matches/match-photo";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -316,6 +317,12 @@ export default async function MatchDetailPage({
           </p>
         ) : null}
       </section>
+
+      <MatchPhoto
+        matchId={match.id}
+        photoUrl={match.photoUrl}
+        admin={admin}
+      />
 
       <section className="grid gap-3 sm:grid-cols-3">
         <StatTile

@@ -201,6 +201,8 @@ export const matches = pgTable("matches", {
   balance: smallint("balance").notNull().default(50),
   // Duration in seconds (set by the live scoreboard; null for manual entries).
   durationSec: integer("duration_sec"),
+  // Foto del partido (grupal, etc.) subida a Vercel Blob. Null si no hay.
+  photoUrl: varchar("photo_url", { length: 500 }),
   notes: text("notes"),
   // Which generated lineup this match came from (null for manual entries).
   generatedRetaId: integer("generated_reta_id").references(

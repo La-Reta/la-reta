@@ -146,17 +146,22 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
 
         {/* Acciones */}
         <div className="mt-auto flex items-center gap-2 pt-1">
-          <Button
-            className="flex-1"
-            disabled={pending}
-            render={<Link href={`/players/new?signup=${signup.id}`} />}
-          >
-            <UserRoundPlusIcon />
-            Registrar
-          </Button>
+          {signup.status !== "registrado" && (
+            <Button
+              className="flex-1"
+              disabled={pending}
+              render={<Link href={`/players/new?signup=${signup.id}`} />}
+            >
+              <UserRoundPlusIcon />
+              Registrar
+            </Button>
+          )}
           <NativeSelect
             aria-label="Estado"
-            className="h-9 w-auto text-xs"
+            className={cn(
+              "h-9 text-xs",
+              signup.status === "registrado" ? "flex-1" : "w-auto",
+            )}
             value={signup.status}
             disabled={pending}
             onChange={(e) => changeStatus(e.target.value)}
@@ -169,8 +174,7 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
           </NativeSelect>
           <Button
             size="icon"
-            variant="ghost"
-            className="text-muted-foreground hover:text-destructive shrink-0"
+            variant="destructive"
             disabled={pending}
             onClick={remove}
             aria-label="Eliminar solicitud"

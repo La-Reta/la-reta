@@ -124,6 +124,25 @@ export async function updateMatch(
   }
 }
 
+/** Set (or clear with null) the match photo. Admin-only, como la edición. */
+export async function setMatchPhoto(
+  id: number,
+  photoUrl: string | null,
+): Promise<Result> {
+  try {
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    await db
+      .update(matches)
+      .set({ photoUrl: photoUrl?.trim() || null })
+      .where(eq(matches.id, id));
+    revalidatePath(`/matches/${id}/detail`);
+    revalidatePath("/matches");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
 export async function deleteMatch(id: number): Promise<Result> {
   try {
     if (!(await isAdmin())) return { ok: false, error: "No autorizado." };

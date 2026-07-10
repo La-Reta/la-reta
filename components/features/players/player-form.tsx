@@ -5,6 +5,7 @@ import {
   updatePlayer,
   type PlayerInput,
 } from "@/app/actions/players";
+import { uploadImage } from "@/app/actions/uploads";
 import { CountrySelect } from "@/components/features/players/country-select";
 import { FifaCard } from "@/components/shared/fifa-card";
 import {
@@ -103,10 +104,13 @@ export function PlayerForm({
   player,
   canManage,
   prefill,
+  signupId,
 }: {
   player?: Player;
   canManage: boolean;
   prefill?: Partial<FormState>;
+  // Cuando el alta viene de una solicitud, la marcamos como registrada al crear.
+  signupId?: number;
 }) {
   const router = useRouter();
   const isEdit = Boolean(player);
@@ -114,9 +118,27 @@ export function PlayerForm({
     initialState(player, prefill),
   );
   const [pending, startTransition] = React.useTransition();
+  const [uploading, setUploading] = React.useState(false);
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
+  }
+
+  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    e.target.value = ""; // permite re-subir el mismo archivo
+    if (!file) return;
+    setUploading(true);
+    const data = new FormData();
+    data.set("file", file);
+    const res = await uploadImage(data);
+    setUploading(false);
+    if (res.ok) {
+      set("photoUrl", res.url);
+      toast.success("Imagen subida");
+    } else {
+      toast.error(res.error);
+    }
   }
 
   const stats = {
@@ -171,7 +193,7 @@ export function PlayerForm({
       };
       const res = isEdit
         ? await updatePlayer(player!.id, input)
-        : await createPlayer(input);
+        : await createPlayer(input, signupId);
       if (res.ok) {
         toast.success(isEdit ? "Jugador actualizado" : "Jugador creado");
         router.push(`/players/${res.id}`);
@@ -251,12 +273,23 @@ export function PlayerForm({
                 onChange={(code) => set("nationality", code)}
               />
             </FormField>
-            <FormField label="URL de foto (opcional)" className="sm:col-span-2">
-              <Input
-                value={form.photoUrl}
-                onChange={(e) => set("photoUrl", e.target.value)}
-                placeholder="https://..."
-              />
+            <FormField label="Foto (opcional)" className="sm:col-span-2">
+              <div className="space-y-2">
+                <Input
+                  type="file"
+                  accept="image/*"
+                  onChange={onPickPhoto}
+                  disabled={uploading}
+                />
+                <Input
+                  value={form.photoUrl}
+                  onChange={(e) => set("photoUrl", e.target.value)}
+                  placeholder={
+                    uploading ? "Subiendo…" : "…o pega una URL: https://..."
+                  }
+                  disabled={uploading}
+                />
+              </div>
             </FormField>
           </div>
         </FormSection>
