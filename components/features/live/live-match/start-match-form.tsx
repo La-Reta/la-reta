@@ -48,7 +48,7 @@ export function StartMatchForm({
 
         <CardContent className="space-y-5 pt-6">
           <div className="grid gap-3 sm:grid-cols-[1fr_auto_1fr] sm:items-center">
-            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/6 p-3 dark:bg-sky-500/10">
+            <div className="rounded-2xl border border-sky-500/20 bg-sky-500/6 p-1 dark:bg-sky-500/10">
               <Input
                 value={teamA}
                 onChange={(e) => onTeamAChange(e.target.value)}
@@ -71,7 +71,7 @@ export function StartMatchForm({
               </Button>
             </div>
 
-            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/6 p-3 dark:bg-rose-500/10">
+            <div className="rounded-2xl border border-rose-500/20 bg-rose-500/6 p-1 dark:bg-rose-500/10">
               <Input
                 value={teamB}
                 onChange={(e) => onTeamBChange(e.target.value)}

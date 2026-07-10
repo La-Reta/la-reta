@@ -1,6 +1,6 @@
 import { ClerkProvider } from "@clerk/nextjs";
 import type { Metadata } from "next";
-import { Geist, Geist_Mono, Raleway, Oswald } from "next/font/google";
+import { Geist, Geist_Mono, Raleway, Oswald, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
 import { Providers } from "@/components/app/providers";
@@ -8,12 +8,12 @@ import { AppShell } from "@/components/app/app-shell";
 import { Toaster } from "@/components/ui/sonner";
 import Script from "next/script";
 import { Analytics } from "@vercel/analytics/next";
-import { SpeedInsights } from "@vercel/speed-insights/next"
+import { SpeedInsights } from "@vercel/speed-insights/next";
 
 const cloudflareWebAnalyticsToken =
   process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 
-const raleway = Raleway({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 // Condensed display face for matchday/scoreboard headings.
 const oswald = Oswald({
@@ -108,28 +108,30 @@ export default function RootLayout({
         geistSans.variable,
         geistMono.variable,
         "font-sans",
-        raleway.variable,
+        inter.variable,
         oswald.variable,
       )}
     >
       <body className="min-h-full">
-        <ClerkProvider>
-          <Providers>
-            <AppShell>{children}</AppShell>
-            <Toaster richColors position="top-center" />
-          </Providers>
-          {cloudflareWebAnalyticsToken ? (
-            <Script
-              src="https://static.cloudflareinsights.com/beacon.min.js"
-              strategy="afterInteractive"
-              data-cf-beacon={JSON.stringify({
-                token: cloudflareWebAnalyticsToken,
-              })}
-            />
-          ) : null}
-          <Analytics />
-          <SpeedInsights />
-        </ClerkProvider>
+        <div className="root">
+          <ClerkProvider>
+            <Providers>
+              <AppShell>{children}</AppShell>
+              <Toaster richColors position="top-center" />
+            </Providers>
+            {cloudflareWebAnalyticsToken ? (
+              <Script
+                src="https://static.cloudflareinsights.com/beacon.min.js"
+                strategy="afterInteractive"
+                data-cf-beacon={JSON.stringify({
+                  token: cloudflareWebAnalyticsToken,
+                })}
+              />
+            ) : null}
+            <Analytics />
+            <SpeedInsights />
+          </ClerkProvider>
+        </div>
       </body>
     </html>
   );

@@ -61,34 +61,34 @@ export function ChouchaLegend() {
       showCloseButton={false}
       className="overflow-hidden p-0 sm:max-w-3xl lg:max-w-4xl 2xl:max-w-5xl"
     >
-      {/* Floating close: solid + centered-over-video on mobile (the ghost X
-          gets lost on the black video), plain top-right ghost from sm+. */}
+      {/* Floating close: solid over the black video while stacked (mobile +
+          tablet), plain top-right ghost once side-by-side from lg+. */}
       <DialogClose
         render={
           <Button
             variant="secondary"
             size="icon-sm"
             aria-label="Cerrar"
-            className="absolute top-3 right-3 z-10 rounded-full shadow-md sm:bg-transparent sm:shadow-none"
+            className="absolute top-3 right-3 z-10 rounded-full shadow-md lg:bg-transparent lg:shadow-none"
           />
         }
       >
         <XIcon />
       </DialogClose>
 
-      {/* Height is capped to the viewport so the dialog always fits. On mobile
-          it's a scrollable column; from sm+ a fixed row height drives the video
-          and info panel side by side. */}
-      <div className="flex max-h-[85dvh] flex-col sm:h-[34rem] sm:max-h-[90dvh] sm:flex-row lg:h-[40rem] 2xl:h-[46rem]">
-        {/* ── Video (drives the height on sm+) ──────────────────────── */}
+      {/* Height is capped to the viewport so the dialog always fits. Mobile and
+          tablet use a scrollable column (no room for video + info side by side);
+          from lg+ a fixed row height drives the video and info panel together. */}
+      <div className="flex max-h-[85dvh] flex-col lg:h-[40rem] lg:max-h-[90dvh] lg:flex-row 2xl:h-[46rem]">
+        {/* Video (drives the height on lg+) */}
         <div className="relative shrink-0 bg-black">
           <LegendVideo
             src="/choucha-video.webm"
-            className="mx-auto h-56 w-auto object-contain sm:h-full"
+            className="mx-auto h-56 w-auto object-contain lg:h-full"
           />
         </div>
 
-        {/* ── Info (min-h-0 lets it scroll inside the flex parent) ──── */}
+        {/* Info (min-h-0 lets it scroll inside the flex parent) */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 sm:p-6">
           <span className="font-display inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-amber-500 uppercase ring-1 ring-amber-400/30 dark:text-amber-300">
             <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />

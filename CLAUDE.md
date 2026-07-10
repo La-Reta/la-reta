@@ -6,6 +6,8 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 **Before writing any Next.js code, read the relevant guide in `node_modules/next/dist/docs/`** (per AGENTS.md above — this is Next 16.2.9 and APIs differ from training data). Real deltas noted in those docs: `unstable_instant` for instant navigation, `refresh()` from `next/cache`.
 
+**Before writing/customizing Base UI (`@base-ui/react`) code, consult `docs/base-ui-llms.txt`** — an index of the official docs (`base-ui.com/react/**.md`). Find the relevant component/handbook page and `WebFetch` its `.md` URL before coding; the `render` prop, `nativeButton`, and slot composition differ from memory.
+
 **Skills:** This session ships Vercel (`vercel:*`) and Neon (`neon`, `neon-postgres`) skills. Prefer them over memorized APIs for anything touching Vercel deploys/env or Neon Postgres.
 
 ## Commands

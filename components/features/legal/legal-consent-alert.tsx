@@ -81,7 +81,7 @@ function LegalConsentDrawer() {
   const [pending, startTransition] = React.useTransition();
 
   return (
-    <Drawer open dismissible={false} direction="bottom">
+    <Drawer open disablePointerDismissal>
       <DrawerContent className="bg-card/95 mx-auto max-w-5xl border-x shadow-2xl backdrop-blur-xl">
         <div className="grid gap-4 px-4 pb-4 sm:px-6 lg:grid-cols-[1fr_auto] lg:items-end">
           <DrawerHeader className="px-0 text-left sm:text-left">
