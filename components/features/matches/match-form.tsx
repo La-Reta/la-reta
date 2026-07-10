@@ -93,6 +93,11 @@ export function MatchForm({
   const [scoreB, setScoreB] = React.useState(String(match?.scoreB ?? 0));
   const [balance, setBalance] = React.useState(match?.balance ?? 50);
   const [notes, setNotes] = React.useState(match?.notes ?? "");
+  // Se edita en minutos; en la BD viven segundos. Re-guardar una duración del
+  // marcador en vivo la redondea al minuto (drift < 60s, aceptable).
+  const [durationMin, setDurationMin] = React.useState(
+    match?.durationSec != null ? String(Math.round(match.durationSec / 60)) : "",
+  );
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
     match?.scorers
       .filter((s) => s.playerId != null)
@@ -149,7 +154,9 @@ export function MatchForm({
         scoreA: parseNumberInput(scoreA),
         scoreB: parseNumberInput(scoreB),
         balance,
-        durationSec: match?.durationSec ?? null,
+        durationSec: durationMin.trim()
+          ? Math.round(parseNumberInput(durationMin) * 60) || null
+          : null,
         notes,
         scorers: [
           ...scorers
@@ -230,13 +237,24 @@ export function MatchForm({
         </div>
       </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
+      <div className="grid gap-4 sm:grid-cols-3">
         <div>
           <Label className="mb-1.5 block text-xs">Fecha</Label>
           <Input
             type="date"
             value={playedAt || (!isEdit ? today : "")}
             onChange={(e) => setPlayedAt(e.target.value)}
+          />
+        </div>
+        <div>
+          <Label className="mb-1.5 block text-xs">Duración (min)</Label>
+          <Input
+            type="number"
+            min={0}
+            inputMode="numeric"
+            value={durationMin}
+            onChange={(e) => setDurationMin(e.target.value)}
+            placeholder="Ej. 60"
           />
         </div>
         <div>

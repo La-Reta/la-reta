@@ -134,11 +134,10 @@ export function PlayersBrowser({
             className="pl-8"
           />
         </div>
-        <div className="flex flex-wrap items-center gap-1">
+        <div className="flex flex-wrap items-center gap-1 justify-end">
           {GROUPS.map((g) => (
             <Button
               key={g}
-
               variant={group === g ? "default" : "outline"}
               onClick={() => setGroup(g)}
             >

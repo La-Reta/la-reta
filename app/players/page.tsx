@@ -39,12 +39,14 @@ export default async function PlayersPage() {
           )}
           <Button variant="outline" render={<Link href="/players/registro" />}>
             <UserRoundPlusIcon />
-            Registrarme
+            Registrar nuevo jugador
           </Button>
-          <Button render={<Link href="/players/new" />}>
-            <UserPlusIcon />
-            Nuevo
-          </Button>
+          {admin && (
+            <Button render={<Link href="/players/new" />}>
+              <UserPlusIcon />
+              Nuevo
+            </Button>
+          )}
         </div>
       </div>
       <PlayersBrowser players={players} isAdmin={admin} />

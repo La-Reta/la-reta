@@ -4,6 +4,7 @@ import {
 } from "@/components/features/players/player-form";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerSignupById } from "@/lib/queries";
+import { auth } from "@clerk/nextjs/server";
 import { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Nuevo jugador · Reta Fútbol" };
@@ -14,7 +15,11 @@ export default async function NewPlayerPage({
 }: {
   searchParams: Promise<{ signup?: string }>;
 }) {
-  const [{ signup }, admin] = await Promise.all([searchParams, isAdmin()]);
+  const [{ signup }, admin, { userId }] = await Promise.all([
+    searchParams,
+    isAdmin(),
+    auth(),
+  ]);
 
   // Admins can prefill from a pending signup request.
   let prefill: PlayerFormPrefill | undefined;
@@ -47,7 +52,7 @@ export default async function NewPlayerPage({
             : "Define sus datos y atributos. El overall se calcula según la posición."}
         </p>
       </div>
-      <PlayerForm admin={admin} prefill={prefill} />
+      <PlayerForm canManage={admin || Boolean(userId)} prefill={prefill} />
     </div>
   );
 }

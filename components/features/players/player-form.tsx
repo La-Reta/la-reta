@@ -34,6 +34,7 @@ import {
 import { ageFromBirthDate } from "@/lib/dates";
 import type { Player } from "@/lib/db/schema";
 import { computeOverall } from "@/lib/ratings";
+import { SignInButton } from "@clerk/nextjs";
 import { ChevronLeftIcon, InfoIcon } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
@@ -100,11 +101,11 @@ function initialState(
 
 export function PlayerForm({
   player,
-  admin,
+  canManage,
   prefill,
 }: {
   player?: Player;
-  admin: boolean;
+  canManage: boolean;
   prefill?: Partial<FormState>;
 }) {
   const router = useRouter();
@@ -149,6 +150,8 @@ export function PlayerForm({
     weightKg: Number.isFinite(weightKg) ? weightKg : (player?.weightKg ?? 75),
     ...stats,
     overall,
+    createdById: player?.createdById ?? null,
+    createdByName: player?.createdByName ?? null,
     createdAt: player?.createdAt ?? new Date(),
     updatedAt: player?.updatedAt ?? new Date(),
   };
@@ -324,7 +327,7 @@ export function PlayerForm({
         </FormSection>
 
         <div className="flex items-center justify-between gap-2">
-          {admin ? (
+          {canManage ? (
             <>
               <Button
                 type="button"
@@ -346,11 +349,15 @@ export function PlayerForm({
           ) : (
             <Alert variant={"default"}>
               <InfoIcon />
-              <AlertTitle>Acceso de administrador</AlertTitle>
+              <AlertTitle>Necesitas una sesión</AlertTitle>
               <AlertDescription>
-                Para crear un jugador debes ser administrador
+                Inicia sesión o entra como administrador para{" "}
+                {isEdit ? "editar" : "crear"} jugadores.
               </AlertDescription>
-              <AlertAction>
+              <AlertAction className="flex gap-2">
+                <SignInButton mode="modal">
+                  <Button variant="outline">Iniciar sesión</Button>
+                </SignInButton>
                 <Button render={<Link href={"/admin"} />}>
                   Acceder a Admin
                 </Button>

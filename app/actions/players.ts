@@ -2,6 +2,7 @@
 
 import { eq, inArray } from "drizzle-orm";
 import { revalidatePath } from "next/cache";
+import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, players, playerStatHistory } from "@/lib/db";
 import { isAdmin } from "@/lib/admin";
 import { computeOverall } from "@/lib/ratings";
@@ -113,12 +114,35 @@ function normalize(input: PlayerInput) {
   };
 }
 
+/** Display name for the signed-in Clerk user, or null. */
+function clerkDisplayName(
+  user: Awaited<ReturnType<typeof currentUser>>,
+): string | null {
+  if (!user) return null;
+  const full = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  const email = user.primaryEmailAddress?.emailAddress?.split("@")[0];
+  return (user.username || full || email || null)?.slice(0, 60) ?? null;
+}
+
 export async function createPlayer(input: PlayerInput): Promise<ActionResult> {
   try {
+    // Alta permitida a admins (cookie PIN) o a cualquier usuario con sesión Clerk.
+    const { userId } = await auth();
+    if (!userId && !(await isAdmin()))
+      return {
+        ok: false,
+        error: "Inicia sesión o entra como admin para crear un jugador.",
+      };
+
     const values = normalize(input);
+    const creator = userId ? await currentUser() : null;
     const [row] = await db
       .insert(players)
-      .values(values)
+      .values({
+        ...values,
+        createdById: userId ?? null,
+        createdByName: clerkDisplayName(creator),
+      })
       .returning({ id: players.id });
     // Record the initial snapshot so the history starts from day one.
     await db

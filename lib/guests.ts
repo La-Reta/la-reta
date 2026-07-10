@@ -39,6 +39,8 @@ export function makeGuestPlayer(
     defending: ovr,
     physical: ovr,
     overall: ovr,
+    createdById: null,
+    createdByName: null,
     createdAt: now,
     updatedAt: now,
   };

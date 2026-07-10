@@ -29,7 +29,7 @@ export default async function EditPlayerPage({
           Ajusta los datos y atributos del jugador.
         </p>
       </div>
-      <PlayerForm player={player} admin={admin} />
+      <PlayerForm player={player} canManage={admin} />
     </div>
   );
 }

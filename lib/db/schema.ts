@@ -65,6 +65,11 @@ export const players = pgTable("players", {
   // Stored overall (position-weighted), recomputed on every write
   overall: smallint("overall").notNull().default(50),
 
+  // Quién dio de alta el registro (usuario de Clerk). Null para altas de admin
+  // sin sesión de Clerk o para los jugadores existentes.
+  createdById: text("created_by_id"),
+  createdByName: varchar("created_by_name", { length: 60 }),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });
