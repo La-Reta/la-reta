@@ -29,19 +29,27 @@ a live scoreboard, and a balanced-team generator — all in one dashboard.
   open reviews with star ratings and emoji reactions.
 - **Balanced team generator** — splits selected players into even sides, spreads
   positions sensibly (it's 7-a-side, so exact spots stay loose), and shuffles for
-  variety between generations.
+  variety between generations. Add last-minute **guests** on the fly.
 - **Live scoreboard** (`/live`) — track goals in real time and save the match.
-- **Community touches** — a rotating "La Reta ____" banner, ideas board, and
-  player sign-up requests.
-- **Admin area** (`/admin`) — PIN-gated management of players, matches, and
-  moderation (archive comments without deleting them).
+- **"Casacas" wheel** (`/casacas`) — a spin-the-wheel that randomly picks who
+  washes the bibs each reta, never repeating the last two.
+- **Photos** — upload a match photo (poster-style header) and player pictures,
+  stored on Vercel Blob.
+- **Community touches** — a rotating "La Reta ____" banner, ideas board,
+  reports/help inbox, and player sign-up requests.
+- **Accounts** — sign in with [Clerk](https://clerk.com); comments and some
+  actions require a session.
+- **Admin area** (`/admin`) — PIN-gated management of players, matches, ideas,
+  reports, sign-ups, and moderation (archive comments without deleting them).
 
 ## 🧱 Stack
 
 - **[Next.js 16](https://nextjs.org)** — App Router, Server Components & Server Actions
 - **[shadcn/ui](https://ui.shadcn.com) + [Base UI](https://base-ui.com)** · **[Tailwind CSS v4](https://tailwindcss.com)**
 - **[Drizzle ORM](https://orm.drizzle.team)** + **[Neon](https://neon.tech)** (serverless Postgres)
-- **[Jotai](https://jotai.org)** for the team-builder state (persisted to `localStorage`)
+- **[Clerk](https://clerk.com)** for authentication
+- **[Vercel Blob](https://vercel.com/docs/vercel-blob)** for image uploads (public store)
+- **[Jotai](https://jotai.org)** for team-builder / live / casacas state (persisted to `localStorage`)
 - **[TanStack Query](https://tanstack.com/query)** (players gallery only)
 - **[Recharts](https://recharts.org)** for the attribute radar
 
@@ -51,6 +59,9 @@ a live scoreboard, and a balanced-team generator — all in one dashboard.
 
 - **Node.js 20+** (22 recommended)
 - A free **[Neon](https://neon.tech)** Postgres database
+- _Optional:_ a **[Clerk](https://clerk.com)** app (accounts/sign-in) and a
+  **public [Vercel Blob](https://vercel.com/docs/vercel-blob)** store (image
+  uploads) — the app runs without them, those features just stay off.
 
 ### Setup
 
@@ -78,6 +89,9 @@ Copy `.env.example` to `.env.local` and fill in:
 | Variable                                     | Required | Description                                                                         |
 | -------------------------------------------- | :------: | ----------------------------------------------------------------------------------- |
 | `DATABASE_URL`                               |    ✅    | Neon Postgres connection string (the pooled URL works for both app and migrations). |
+| `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY`          |          | Clerk publishable key (needed for sign-in / accounts).                              |
+| `CLERK_SECRET_KEY`                           |          | Clerk secret key.                                                                   |
+| `BLOB_READ_WRITE_TOKEN`                      |          | Vercel Blob token for image uploads. The store must be **public**.                 |
 | `ADMIN_PIN`                                  |          | PIN for the admin area (`/admin`). Defaults to `reta2026`.                          |
 | `LIVE_PIN`                                   |          | PIN for the live scoreboard (`/live`). Defaults to `gol2026`.                       |
 | `NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN` |          | Cloudflare Web Analytics beacon token.                                              |
@@ -106,20 +120,27 @@ Copy `.env.example` to `.env.local` and fill in:
 ```bash
 app/
   page.tsx              Dashboard (KPIs, spotlights, distribution)
-  players/              Gallery, detail, create & edit
-  teams/                Balanced-team builder
+  players/              Gallery, detail, create, edit & sign-up
+  teams/                Balanced-team builder (+ guests, generation registry)
   live/                 Live scoreboard
+  casacas/              Spin-the-wheel for who washes the bibs
+  matches/              Match history + detail
+  ideas/ reportes/ palabras/ legal/   Community & info views
+  sign-in/ sign-up/     Clerk auth pages
   admin/                PIN-gated admin area
+  api/                  Route handlers (players, blob upload)
   actions/*.ts          Server Actions (one file per domain)
 components/
   ui/                   shadcn/ui primitives
   app/                  Shell, sidebar, providers
   features/<domain>/    Feature components
-  shared/               FIFA card, pitch, etc.
+  shared/               FIFA card, pitch, page-header, section-heading
 lib/
   db/                   Drizzle schema, Neon client, seed
   ratings.ts            Position-weighted overall + card tier
   team-balancer.ts      Even-teams algorithm
+  casacas.ts            Wheel eligibility + landing math (has a self-check)
+  guests.ts             Last-minute guest players (negative ids)
   constants.ts          Positions, groups, attributes
 ```
 
