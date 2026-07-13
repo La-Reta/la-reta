@@ -9,6 +9,7 @@ import { isAdmin } from "@/lib/admin";
 import { getIdeas, getPendingSignupCount, getReports } from "@/lib/queries";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
+import { PageHeader } from "@/components/shared/page-header";
 import { Metadata } from "next";
 
 export const metadata: Metadata = { title: "Admin · Reta Fútbol" };
@@ -29,15 +30,11 @@ export default async function AdminPage() {
 
   return (
     <div className="mx-auto max-w-3xl space-y-6">
-      <div className="flex items-center justify-between">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Administración</h1>
-          <p className="text-muted-foreground text-sm">
-            Gestiona la reta. Tienes acceso de admin.
-          </p>
-        </div>
-        <LogoutButton />
-      </div>
+      <PageHeader
+        title="Administración"
+        description="Gestiona la reta. Tienes acceso de admin."
+        actions={<LogoutButton />}
+      />
 
       <div className="grid gap-3">
         <AdminLink

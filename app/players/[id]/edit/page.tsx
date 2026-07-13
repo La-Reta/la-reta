@@ -1,4 +1,5 @@
 import { PlayerForm } from "@/components/features/players/player-form";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerById } from "@/lib/queries";
 import { notFound, redirect } from "next/navigation";
@@ -21,14 +22,10 @@ export default async function EditPlayerPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Editar · {player.name}
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Ajusta los datos y atributos del jugador.
-        </p>
-      </div>
+      <PageHeader
+        title={`Editar · ${player.name}`}
+        description="Ajusta los datos y atributos del jugador."
+      />
       <PlayerForm player={player} canManage={admin} />
     </div>
   );

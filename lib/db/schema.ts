@@ -425,3 +425,26 @@ export const playerSignups = pgTable("player_signups", {
 
 export type PlayerSignup = typeof playerSignups.$inferSelect;
 export type NewPlayerSignup = typeof playerSignups.$inferInsert;
+
+// ── Casacas (turno de lavar) ────────────────────────────────────────────────
+/**
+ * Append-only record of who was randomly assigned to wash the bibs ("casacas")
+ * for a reta. Newest rows are the most recent turns; the wheel excludes the last
+ * couple of winners so nobody washes two retas in a row. `spunBy*` is who ran the
+ * wheel (Clerk user, or null for a PIN-only admin) for a light audit trail.
+ */
+export const casacaAssignments = pgTable("casaca_assignments", {
+  id: serial("id").primaryKey(),
+  // Null for guest ("de última hora") winners who aren't in the roster.
+  playerId: integer("player_id").references(() => players.id, {
+    onDelete: "cascade",
+  }),
+  // Name for guest winners (playerId null). Null for roster players.
+  guestName: varchar("guest_name", { length: 60 }),
+  spunById: text("spun_by_id"),
+  spunByName: varchar("spun_by_name", { length: 60 }),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
+});
+
+export type CasacaAssignment = typeof casacaAssignments.$inferSelect;
+export type NewCasacaAssignment = typeof casacaAssignments.$inferInsert;

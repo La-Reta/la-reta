@@ -2,6 +2,7 @@ import { AdminBackButton } from "@/components/features/admin/admin-back-button";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { AdminReports } from "@/components/features/admin/admin-reports";
 import { LogoutButton } from "@/components/features/admin/logout-button";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getReports } from "@/lib/queries";
 import { Metadata } from "next";
@@ -20,12 +21,10 @@ export default async function AdminReportsPage() {
         <AdminBackButton />
         <LogoutButton />
       </div>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Revisar reportes</h1>
-        <p className="text-muted-foreground text-sm">
-          Lista privada de ayuda, denuncias, errores y solicitudes sensibles.
-        </p>
-      </div>
+      <PageHeader
+        title="Revisar reportes"
+        description="Lista privada de ayuda, denuncias, errores y solicitudes sensibles."
+      />
       <AdminReports reports={reports} />
     </div>
   );

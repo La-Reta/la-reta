@@ -16,7 +16,7 @@ import {
 export function RankingLevel({ players }: { players: Player[] }) {
   const ranking = players.slice(0, 6);
   return (
-    <Card className="h-fit">
+    <Card className="h-fit" size="sm">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           Ranking de nivel

@@ -2,6 +2,7 @@ import { AdminBackButton } from "@/components/features/admin/admin-back-button";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
 import { AdminSignups } from "@/components/features/players/admin-signups";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerSignups } from "@/lib/queries";
 import { Metadata } from "next";
@@ -21,18 +22,18 @@ export default async function AdminSignupsPage() {
         <AdminBackButton />
         <LogoutButton />
       </div>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Solicitudes de jugadores
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Personas en espera de darse de alta.
-          {pending > 0
-            ? ` ${pending} pendiente${pending === 1 ? "" : "s"}.`
-            : ""}{" "}
-          Revisa su info y regístralos como es debido.
-        </p>
-      </div>
+      <PageHeader
+        title="Solicitudes de jugadores"
+        description={
+          <>
+            Personas en espera de darse de alta.
+            {pending > 0
+              ? ` ${pending} pendiente${pending === 1 ? "" : "s"}.`
+              : ""}{" "}
+            Revisa su info y regístralos como es debido.
+          </>
+        }
+      />
       <AdminSignups signups={signups} />
     </div>
   );

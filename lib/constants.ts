@@ -260,7 +260,7 @@ export const SIGNUP_STATUS_LABEL: Record<SignupStatus, string> = {
 export const SIGNUP_STATUS_CLASS: Record<SignupStatus, string> = {
   pendiente: "bg-amber-500/15 text-amber-600 dark:text-amber-400",
   aprobado: "bg-emerald-500/15 text-emerald-600 dark:text-emerald-400",
-  registrado: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
+  registrado: "bg-green-500/15 text-green-600 dark:text-green-400",
   rechazado: "bg-muted text-muted-foreground",
 };
 

@@ -3,7 +3,7 @@ import {
   MatchTeamGoalsChart,
 } from "@/components/features/matches/match-detail-charts";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
-import { MatchPhoto } from "@/components/features/matches/match-photo";
+import { MatchHero } from "@/components/features/matches/match-hero";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -24,6 +24,7 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
+import { SectionHeading } from "@/components/shared/section-heading";
 
 export const metadata: Metadata = { title: "Detalle de partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -47,16 +48,6 @@ function balanceLabel(value: number) {
   if (value >= 40) return "Competido";
   if (value >= 20) return "Disparejo";
   return "Paliza";
-}
-
-function matchResult(
-  scoreA: number,
-  scoreB: number,
-  teamA: string,
-  teamB: string,
-) {
-  if (scoreA === scoreB) return "Empate";
-  return scoreA > scoreB ? `Ganó ${teamA}` : `Ganó ${teamB}`;
 }
 
 function matchPace(totalGoals: number, durationSec: number | null) {
@@ -84,23 +75,25 @@ function StatTile({
   tone?: keyof typeof STAT_TONES;
 }) {
   return (
-    <div className="bg-card rounded-lg border p-3">
-      <div className="text-muted-foreground flex items-center gap-2 text-[10px] font-semibold uppercase">
-        <span
-          className={cn(
-            "flex size-6 items-center justify-center rounded-md [&_svg]:size-3.5",
-            STAT_TONES[tone],
-          )}
-        >
-          {icon}
-        </span>
-        {label}
-      </div>
-      <p className="mt-2 text-2xl font-black tabular-nums">{value}</p>
-      {detail ? (
-        <p className="text-muted-foreground mt-1 text-xs">{detail}</p>
-      ) : null}
-    </div>
+    <Card size="sm">
+      <CardContent className="space-y-2">
+        <div className="text-muted-foreground flex items-center gap-2 text-[10px] font-semibold uppercase">
+          <span
+            className={cn(
+              "flex size-6 items-center justify-center rounded-md [&_svg]:size-3.5",
+              STAT_TONES[tone],
+            )}
+          >
+            {icon}
+          </span>
+          {label}
+        </div>
+        <p className="text-2xl font-black tabular-nums">{value}</p>
+        {detail ? (
+          <p className="text-muted-foreground text-xs">{detail}</p>
+        ) : null}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -120,7 +113,7 @@ function TeamFigureCard({
   );
 
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-3">
           <CardTitle>{teamName}</CardTitle>
@@ -284,45 +277,23 @@ export default async function MatchDetailPage({
         ) : null}
       </div>
 
-      <section className="bg-card rounded-lg border p-4 shadow-xs">
-        <div className="flex flex-wrap items-center justify-between gap-3">
-          <div className="space-y-1">
-            <Badge variant="default" className="uppercase">
-              {formatShortDateOnly(match.playedAt)}
-            </Badge>
-            <h1 className="text-2xl font-black tracking-tight">
-              {match.teamAName}
-              <span className="text-muted-foreground mx-2 font-normal">vs</span>
-              {match.teamBName}
-            </h1>
-            <p className="text-muted-foreground text-sm">
-              {matchResult(
-                match.scoreA,
-                match.scoreB,
-                match.teamAName,
-                match.teamBName,
-              )}
-            </p>
-          </div>
-          <div className="font-mono text-5xl font-black tabular-nums sm:text-6xl">
-            {match.scoreA}
-            <span className="text-muted-foreground mx-2">-</span>
-            {match.scoreB}
-          </div>
-        </div>
-
-        {match.notes ? (
-          <p className="text-muted-foreground bg-muted/40 mt-4 rounded-lg p-3 text-sm italic lg:w-fit">
-            {match.notes}
-          </p>
-        ) : null}
-      </section>
-
-      <MatchPhoto
+      <MatchHero
         matchId={match.id}
+        teamAName={match.teamAName}
+        teamBName={match.teamBName}
+        scoreA={match.scoreA}
+        scoreB={match.scoreB}
+        dateLabel={formatShortDateOnly(match.playedAt)}
+        winner={winner}
         photoUrl={match.photoUrl}
         admin={admin}
       />
+
+      {match.notes ? (
+        <p className="text-muted-foreground text-center text-sm">
+          {match.notes}
+        </p>
+      ) : null}
 
       <section className="grid gap-3 sm:grid-cols-3">
         <StatTile
@@ -350,6 +321,7 @@ export default async function MatchDetailPage({
         />
       </section>
 
+      <SectionHeading title="Los goleadores" />
       <section className="grid gap-6 lg:grid-cols-2">
         <TeamFigureCard
           teamName={match.teamAName}
@@ -384,46 +356,42 @@ export default async function MatchDetailPage({
       </section>
 
       <section className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Equipos y goles</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-3">
-            {match.scorers.length === 0 ? (
-              <p className="text-muted-foreground py-8 text-center text-sm">
-                No se registraron jugadores ni goleadores para este partido.
-              </p>
-            ) : (
-              <div
-                className={cn(
-                  "grid grid-cols-1",
-                  unassignedScorers.length > 0
-                    ? "lg:grid-cols-3"
-                    : "lg:grid-cols-2",
-                  "gap-3",
-                )}
-              >
+        <div className="space-y-3">
+          <SectionHeading title="Equipos y goles" />
+          {match.scorers.length === 0 ? (
+            <p className="text-muted-foreground py-8 text-center text-sm">
+              No se registraron jugadores ni goleadores para este partido.
+            </p>
+          ) : (
+            <div
+              className={cn(
+                "grid grid-cols-1",
+                unassignedScorers.length > 0
+                  ? "lg:grid-cols-3"
+                  : "lg:grid-cols-2",
+                "gap-3",
+              )}
+            >
+              <TeamRosterCard
+                title={match.teamAName}
+                scorers={teamAScorers}
+                maxGoals={maxScorerGoals}
+              />
+              <TeamRosterCard
+                title={match.teamBName}
+                scorers={teamBScorers}
+                maxGoals={maxScorerGoals}
+              />
+              {unassignedScorers.length > 0 ? (
                 <TeamRosterCard
-                  title={match.teamAName}
-                  scorers={teamAScorers}
+                  title="Sin equipo asignado"
+                  scorers={unassignedScorers}
                   maxGoals={maxScorerGoals}
                 />
-                <TeamRosterCard
-                  title={match.teamBName}
-                  scorers={teamBScorers}
-                  maxGoals={maxScorerGoals}
-                />
-                {unassignedScorers.length > 0 ? (
-                  <TeamRosterCard
-                    title="Sin equipo asignado"
-                    scorers={unassignedScorers}
-                    maxGoals={maxScorerGoals}
-                  />
-                ) : null}
-              </div>
-            )}
-          </CardContent>
-        </Card>
+              ) : null}
+            </div>
+          )}
+        </div>
 
         <Card>
           <CardHeader className="border-b">

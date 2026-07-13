@@ -50,7 +50,7 @@ export function MatchesChart({
     : 0;
 
   return (
-    <Card className={cn("h-fit", className)}>
+    <Card className={cn("h-fit", className)} size="sm">
       <CardHeader className="border-b">
         <CardTitle className="text-base">Goles por partido</CardTitle>
         <CardDescription>

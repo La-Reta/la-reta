@@ -22,7 +22,9 @@ export default function UploaderDemoPage() {
 
       {url ? (
         <section className="space-y-2">
-          <h2 className="text-sm font-medium">Imagen almacenada (next/image)</h2>
+          <h2 className="text-sm font-medium">
+            Imagen almacenada (next/image)
+          </h2>
           <Image
             src={url}
             alt="Imagen subida"

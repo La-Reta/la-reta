@@ -2,6 +2,7 @@ import {
   PlayerForm,
   type PlayerFormPrefill,
 } from "@/components/features/players/player-form";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getPlayerSignupById } from "@/lib/queries";
 import { auth } from "@clerk/nextjs/server";
@@ -46,14 +47,14 @@ export default async function NewPlayerPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Nuevo jugador</h1>
-        <p className="text-muted-foreground text-sm">
-          {prefill
+      <PageHeader
+        title="Nuevo jugador"
+        description={
+          prefill
             ? "Datos precargados desde la solicitud. Ajusta los atributos y guarda."
-            : "Define sus datos y atributos. El overall se calcula según la posición."}
-        </p>
-      </div>
+            : "Define sus datos y atributos. El overall se calcula según la posición."
+        }
+      />
       <PlayerForm
         canManage={admin || Boolean(userId)}
         prefill={prefill}

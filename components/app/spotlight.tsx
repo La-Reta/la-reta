@@ -40,7 +40,7 @@ export function Spotlight({
   contentStyle?: React.CSSProperties;
 }) {
   return (
-    <Card className={cn(footer && "pb-0")}>
+    <Card className={cn(footer && "pb-0")} size="sm">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           {title}

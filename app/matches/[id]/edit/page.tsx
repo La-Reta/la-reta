@@ -1,5 +1,6 @@
 import { MatchForm } from "@/components/features/matches/match-form";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getMatchById, getPlayers } from "@/lib/queries";
 import { Metadata } from "next";
@@ -32,12 +33,10 @@ export default async function EditMatchPage({
   return (
     <div className="mx-auto max-w-3xl space-y-4">
       <MatchesBackButton />
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Editar partido</h1>
-        <p className="text-muted-foreground text-sm">
-          Ajusta el marcador, el balance y los goleadores.
-        </p>
-      </div>
+      <PageHeader
+        title="Editar partido"
+        description="Ajusta el marcador, el balance y los goleadores."
+      />
       <MatchForm
         players={formPlayers}
         match={{

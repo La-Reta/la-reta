@@ -9,6 +9,13 @@ import { Convocatoria } from "@/components/features/teams/convocatoria";
 import { GuestManager } from "@/components/features/teams/guest-manager";
 import { Matchup } from "@/components/features/teams/matchup";
 import { TeamNameInputs } from "@/components/features/teams/team-name-inputs";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import type { Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { isGuest, makeGuestPlayer } from "@/lib/guests";
@@ -178,12 +185,17 @@ export function TeamBuilder({
           hasResult={result !== null}
         />
       ) : (
-        <div className="flex flex-col items-center gap-2 rounded-lg border border-dashed py-12 text-center">
-          <ScaleIcon className="text-muted-foreground size-8" />
-          <p className="text-muted-foreground text-sm">
-            Convoca al menos 2 jugadores y genera dos equipos parejos.
-          </p>
-        </div>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <ScaleIcon />
+            </EmptyMedia>
+            <EmptyTitle>Aún no hay equipos</EmptyTitle>
+            <EmptyDescription>
+              Convoca al menos 2 jugadores y genera dos equipos parejos.
+            </EmptyDescription>
+          </EmptyHeader>
+        </Empty>
       )}
 
       <GuestManager guests={guests} onAdd={addGuest} onRemove={removeGuest} />

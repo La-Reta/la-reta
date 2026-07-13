@@ -1,7 +1,9 @@
 "use client";
 
 import { createMatch, updateMatch } from "@/app/actions/matches";
+import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -96,7 +98,9 @@ export function MatchForm({
   // Se edita en minutos; en la BD viven segundos. Re-guardar una duración del
   // marcador en vivo la redondea al minuto (drift < 60s, aceptable).
   const [durationMin, setDurationMin] = React.useState(
-    match?.durationSec != null ? String(Math.round(match.durationSec / 60)) : "",
+    match?.durationSec != null
+      ? String(Math.round(match.durationSec / 60))
+      : "",
   );
   const [scorers, setScorers] = React.useState<ScorerRow[]>(
     match?.scorers
@@ -198,252 +202,258 @@ export function MatchForm({
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1"
-    >
-      {/* Marcador */}
-      <div className="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_auto_1fr]">
-        <div>
-          <Label className="mb-1.5 block text-xs">Equipo local</Label>
-          <Input
-            value={teamAName}
-            onChange={(e) => setTeamAName(e.target.value)}
-          />
-        </div>
-        <div className="col-span-2 flex items-end justify-center gap-2 sm:col-span-1">
-          <Input
-            type="number"
-            min={0}
-            value={scoreA}
-            onChange={(e) => setScoreA(e.target.value)}
-            className="w-16 text-center text-lg font-bold"
-          />
-          <span className="text-muted-foreground pb-2">–</span>
-          <Input
-            type="number"
-            min={0}
-            value={scoreB}
-            onChange={(e) => setScoreB(e.target.value)}
-            className="w-16 text-center text-lg font-bold"
-          />
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">Equipo visitante</Label>
-          <Input
-            value={teamBName}
-            onChange={(e) => setTeamBName(e.target.value)}
-          />
-        </div>
-      </div>
+    <form onSubmit={onSubmit}>
+      <Card>
+        <CardContent className="space-y-4">
+          {/* Marcador */}
+          <div className="grid grid-cols-2 gap-4 sm:grid-cols-[1fr_auto_1fr]">
+            <div>
+              <Label className="mb-1.5 block text-xs">Equipo local</Label>
+              <Input
+                value={teamAName}
+                onChange={(e) => setTeamAName(e.target.value)}
+              />
+            </div>
+            <div className="col-span-2 flex items-end justify-center gap-2 sm:col-span-1">
+              <Input
+                type="number"
+                min={0}
+                value={scoreA}
+                onChange={(e) => setScoreA(e.target.value)}
+                className="w-16 text-center text-lg font-bold"
+              />
+              <span className="text-muted-foreground pb-2">–</span>
+              <Input
+                type="number"
+                min={0}
+                value={scoreB}
+                onChange={(e) => setScoreB(e.target.value)}
+                className="w-16 text-center text-lg font-bold"
+              />
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs">Equipo visitante</Label>
+              <Input
+                value={teamBName}
+                onChange={(e) => setTeamBName(e.target.value)}
+              />
+            </div>
+          </div>
 
-      <div className="grid gap-4 sm:grid-cols-3">
-        <div>
-          <Label className="mb-1.5 block text-xs">Fecha</Label>
-          <Input
-            type="date"
-            value={playedAt || (!isEdit ? today : "")}
-            onChange={(e) => setPlayedAt(e.target.value)}
-          />
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">Duración (min)</Label>
-          <Input
-            type="number"
-            min={0}
-            inputMode="numeric"
-            value={durationMin}
-            onChange={(e) => setDurationMin(e.target.value)}
-            placeholder="Ej. 60"
-          />
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">Notas (opcional)</Label>
-          <Input
-            value={notes}
-            onChange={(e) => setNotes(e.target.value)}
-            placeholder="Partidazo, lluvia, etc."
-          />
-        </div>
-      </div>
+          <div className="grid gap-4 sm:grid-cols-3">
+            <div>
+              <Label className="mb-1.5 block text-xs">Fecha</Label>
+              <Input
+                type="date"
+                value={playedAt || (!isEdit ? today : "")}
+                onChange={(e) => setPlayedAt(e.target.value)}
+              />
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs">Duración (min)</Label>
+              <Input
+                type="number"
+                min={0}
+                inputMode="numeric"
+                value={durationMin}
+                onChange={(e) => setDurationMin(e.target.value)}
+                placeholder="Ej. 60"
+              />
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs">Notas (opcional)</Label>
+              <Input
+                value={notes}
+                onChange={(e) => setNotes(e.target.value)}
+                placeholder="Partidazo, lluvia, etc."
+              />
+            </div>
+          </div>
 
-      {/* Balance */}
-      <div>
-        <div className="mb-1.5 flex items-center justify-between">
-          <Label className="text-xs">¿Qué tan balanceado estuvo?</Label>
-          <span className="flex items-center gap-1 text-xs font-medium">
-            <Input
-              type="number"
+          {/* Balance */}
+          <div>
+            <div className="mb-1.5 flex items-center justify-between">
+              <Label className="text-xs">¿Qué tan balanceado estuvo?</Label>
+              <span className="flex items-center gap-1 text-xs font-medium">
+                <Input
+                  type="number"
+                  min={0}
+                  max={100}
+                  value={balance}
+                  onChange={(e) =>
+                    setBalance(
+                      Math.max(0, Math.min(100, Number(e.target.value) || 0)),
+                    )
+                  }
+                  className="h-6 w-14 px-1.5 py-0 text-center font-mono font-bold tabular-nums"
+                />
+                /100 · {balanceLabel(balance)}
+              </span>
+            </div>
+            <Slider
               min={0}
               max={100}
               value={balance}
-              onChange={(e) =>
-                setBalance(
-                  Math.max(0, Math.min(100, Number(e.target.value) || 0)),
-                )
+              onValueChange={(v) =>
+                setBalance(Array.isArray(v) ? v[0] : (v as number))
               }
-              className="h-6 w-14 px-1.5 py-0 text-center font-mono font-bold tabular-nums"
             />
-            /100 · {balanceLabel(balance)}
-          </span>
-        </div>
-        <Slider
-          min={0}
-          max={100}
-          value={balance}
-          onValueChange={(v) =>
-            setBalance(Array.isArray(v) ? v[0] : (v as number))
-          }
-        />
-      </div>
+          </div>
 
-      {/* Participantes */}
-      <div className="space-y-2">
-        <div className="flex items-center justify-between">
-          <Label className="text-xs">
-            Jugadores (goles y asistencia)
-            {scorers.length > 0 ? (
-              <span className="text-muted-foreground ml-1 font-normal">
-                · {scorers.length}
-              </span>
-            ) : null}
-          </Label>
-          <Button
-            type="button"
-            variant="outline"
-            onClick={addScorer}
-            disabled={!admin}
-          >
-            <PlusIcon />
-            Añadir
-          </Button>
-        </div>
-        {scorers.length === 0 ? (
-          <p className="text-muted-foreground text-xs">
-            Agrega a quienes jugaron y asígnalos a un equipo. Deja los goles en
-            0 para registrar solo su asistencia.
-          </p>
-        ) : (
-          <div className="space-y-1.5">
-            <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
-              <span className="text-center">#</span>
-              <span>Jugador</span>
-              <span>Equipo</span>
-              <span className="text-center">Goles</span>
-              <span className="sr-only">Quitar</span>
-            </div>
-            {scorers.map((row, i) => {
-              // Hide players already chosen in other rows; keep this row's pick.
-              const available = players.filter(
-                (p) =>
-                  String(p.id) === row.playerId ||
-                  !takenPlayerIds.has(String(p.id)),
-              );
-              return (
-                <div
-                  key={i}
-                  className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_auto]"
-                >
-                  <span className="text-muted-foreground text-center text-xs font-medium tabular-nums">
-                    {i + 1}
+          {/* Participantes */}
+          <div className="space-y-2">
+            <div className="flex items-center justify-between">
+              <Label className="text-xs">
+                Jugadores (goles y asistencia)
+                {scorers.length > 0 ? (
+                  <span className="text-muted-foreground ml-1 font-normal">
+                    · {scorers.length}
                   </span>
-                  <NativeSelect
-                    className="w-full"
-                    value={row.playerId}
-                    onChange={(e) =>
-                      updateScorer(i, { playerId: e.target.value })
-                    }
-                  >
-                    <NativeSelectOption value="">
-                      — jugador —
-                    </NativeSelectOption>
-                    {available.map((p) => (
-                      <NativeSelectOption key={p.id} value={String(p.id)}>
-                        {p.name}
-                      </NativeSelectOption>
-                    ))}
-                  </NativeSelect>
-                  <NativeSelect
-                    className="w-full"
-                    value={row.team}
-                    onChange={(e) => updateScorer(i, { team: e.target.value })}
-                    aria-label="Equipo"
-                  >
-                    <NativeSelectOption value="">Sin equipo</NativeSelectOption>
-                    <NativeSelectOption value="A">
-                      {teamAName}
-                    </NativeSelectOption>
-                    <NativeSelectOption value="B">
-                      {teamBName}
-                    </NativeSelectOption>
-                  </NativeSelect>
-                  <Input
-                    type="number"
-                    min={0}
-                    value={row.goals}
-                    onChange={(e) => updateScorer(i, { goals: e.target.value })}
-                    className="w-full text-center"
-                    aria-label="Goles"
-                  />
-                  <Button
-                    type="button"
-                    variant="destructive"
-                    size="icon"
-                    onClick={() => removeScorer(i)}
-                    aria-label="Quitar"
-                  >
-                    <XIcon />
-                  </Button>
-                </div>
-              );
-            })}
-          </div>
-        )}
-
-        {guestScorers.length > 0 ? (
-          <div className="text-muted-foreground space-y-1 pt-1 text-xs">
-            <p className="font-medium">
-              Invitados (se conservan, no editables aquí)
-            </p>
-            <div className="flex flex-wrap gap-1.5">
-              {guestScorers.map((g, i) => (
-                <span
-                  key={i}
-                  className="bg-muted rounded-full px-2.5 py-1 font-medium"
-                >
-                  {g.guestName}
-                  {g.team ? ` · ${g.team === "A" ? teamAName : teamBName}` : ""}
-                  {" · "}
-                  {g.goals} gol{g.goals === 1 ? "" : "es"}
-                </span>
-              ))}
+                ) : null}
+              </Label>
+              <Button
+                type="button"
+                variant="outline"
+                onClick={addScorer}
+                disabled={!admin}
+              >
+                <PlusIcon />
+                Añadir
+              </Button>
             </div>
-          </div>
-        ) : null}
-      </div>
+            {scorers.length === 0 ? (
+              <p className="text-muted-foreground text-xs">
+                Agrega a quienes jugaron y asígnalos a un equipo. Deja los goles
+                en 0 para registrar solo su asistencia.
+              </p>
+            ) : (
+              <div className="space-y-1.5">
+                <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                  <span className="text-center">#</span>
+                  <span>Jugador</span>
+                  <span>Equipo</span>
+                  <span className="text-center">Goles</span>
+                  <span className="sr-only">Quitar</span>
+                </div>
+                {scorers.map((row, i) => {
+                  // Hide players already chosen in other rows; keep this row's pick.
+                  const available = players.filter(
+                    (p) =>
+                      String(p.id) === row.playerId ||
+                      !takenPlayerIds.has(String(p.id)),
+                  );
+                  return (
+                    <div
+                      key={i}
+                      className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_auto]"
+                    >
+                      <span className="text-muted-foreground text-center text-xs font-medium tabular-nums">
+                        {i + 1}
+                      </span>
+                      <NativeSelect
+                        className="w-full"
+                        value={row.playerId}
+                        onChange={(e) =>
+                          updateScorer(i, { playerId: e.target.value })
+                        }
+                      >
+                        <NativeSelectOption value="">
+                          — jugador —
+                        </NativeSelectOption>
+                        {available.map((p) => (
+                          <NativeSelectOption key={p.id} value={String(p.id)}>
+                            {p.name}
+                          </NativeSelectOption>
+                        ))}
+                      </NativeSelect>
+                      <NativeSelect
+                        className="w-full"
+                        value={row.team}
+                        onChange={(e) =>
+                          updateScorer(i, { team: e.target.value })
+                        }
+                        aria-label="Equipo"
+                      >
+                        <NativeSelectOption value="">
+                          Sin equipo
+                        </NativeSelectOption>
+                        <NativeSelectOption value="A">
+                          {teamAName}
+                        </NativeSelectOption>
+                        <NativeSelectOption value="B">
+                          {teamBName}
+                        </NativeSelectOption>
+                      </NativeSelect>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={row.goals}
+                        onChange={(e) =>
+                          updateScorer(i, { goals: e.target.value })
+                        }
+                        className="w-full text-center"
+                        aria-label="Goles"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removeScorer(i)}
+                        aria-label="Quitar"
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
 
-      <div className="flex items-center gap-2 lg:justify-end">
-        {admin && (
-          <Button type="submit" disabled={pending}>
-            {isEdit ? <SaveIcon /> : <TrophyIcon />}
-            {pending
-              ? "Guardando…"
-              : isEdit
-                ? "Guardar cambios"
-                : "Registrar partido"}
-          </Button>
-        )}
-        {isEdit && (
-          <Button
-            type="button"
-            variant="secondary"
-            onClick={() => router.back()}
-            disabled={pending}
-          >
-            Cancelar
-          </Button>
-        )}
-      </div>
+            {guestScorers.length > 0 ? (
+              <div className="text-muted-foreground space-y-1 pt-1 text-xs">
+                <p className="font-medium">
+                  Invitados (se conservan, no editables aquí)
+                </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {guestScorers.map((g, i) => (
+                    <Badge key={i} variant="secondary">
+                      {g.guestName}
+                      {g.team
+                        ? ` · ${g.team === "A" ? teamAName : teamBName}`
+                        : ""}
+                      {" · "}
+                      {g.goals} gol{g.goals === 1 ? "" : "es"}
+                    </Badge>
+                  ))}
+                </div>
+              </div>
+            ) : null}
+          </div>
+
+          <div className="flex items-center gap-2 lg:justify-end">
+            {admin && (
+              <Button type="submit" disabled={pending}>
+                {isEdit ? <SaveIcon /> : <TrophyIcon />}
+                {pending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar cambios"
+                    : "Registrar partido"}
+              </Button>
+            )}
+            {isEdit && (
+              <Button
+                type="button"
+                variant="secondary"
+                onClick={() => router.back()}
+                disabled={pending}
+              >
+                Cancelar
+              </Button>
+            )}
+          </div>
+        </CardContent>
+      </Card>
     </form>
   );
 }

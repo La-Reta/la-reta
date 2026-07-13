@@ -1,4 +1,5 @@
 import { ReportForm } from "@/components/features/reports/report-form";
+import { PageHeader } from "@/components/shared/page-header";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { ShieldAlertIcon } from "lucide-react";
 import { Metadata } from "next";
@@ -8,17 +9,12 @@ export const metadata: Metadata = { title: "Reportar · Reta Fútbol" };
 export default function ReportsPage() {
   return (
     <div className="mx-auto max-w-3xl min-w-0 space-y-6 xl:container">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">
-          Reportar o pedir ayuda
-        </h1>
-        <p className="text-muted-foreground text-sm">
-          Usa este espacio para avisar problemas, errores, dudas sensibles o
-          solicitudes relacionadas con privacidad, imagen o datos.
-        </p>
-      </div>
+      <PageHeader
+        title="Reportar o pedir ayuda"
+        description="Usa este espacio para avisar problemas, errores, dudas sensibles o solicitudes relacionadas con privacidad, imagen o datos."
+      />
 
-      <Alert className="bg-card">
+      <Alert>
         <ShieldAlertIcon />
         <AlertTitle>Canal privado de revisión</AlertTitle>
         <AlertDescription>

@@ -16,6 +16,7 @@ import {
   commentReactions,
   reports,
   playerSignups,
+  casacaAssignments,
   type Player,
   type StatHistory,
   type Idea,
@@ -439,6 +440,47 @@ export async function getGeneratedRetas(
 /** All contributed words, newest first (for the /palabras wall). */
 export async function getRetaWords(): Promise<RetaWord[]> {
   return db.select().from(retaWords).orderBy(desc(retaWords.createdAt));
+}
+
+// ── Casacas ──────────────────────────────────────────────────────────────────
+export type CasacaAssignmentRow = {
+  id: number;
+  playerId: number | null;
+  displayName: string;
+  photoUrl: string | null;
+  isGuest: boolean;
+  spunByName: string | null;
+  createdAt: Date;
+};
+
+/** Casaca-washing turns, newest first (roster join or guest name). */
+export async function getCasacaAssignments(
+  limit = 24,
+): Promise<CasacaAssignmentRow[]> {
+  const rows = await db
+    .select({
+      id: casacaAssignments.id,
+      playerId: casacaAssignments.playerId,
+      guestName: casacaAssignments.guestName,
+      rosterName: players.displayName,
+      photoUrl: players.photoUrl,
+      spunByName: casacaAssignments.spunByName,
+      createdAt: casacaAssignments.createdAt,
+    })
+    .from(casacaAssignments)
+    .leftJoin(players, eq(casacaAssignments.playerId, players.id))
+    .orderBy(desc(casacaAssignments.createdAt))
+    .limit(limit);
+  const images = playerImageMap();
+  return rows.map((r) => ({
+    id: r.id,
+    playerId: r.playerId,
+    displayName: r.rosterName ?? r.guestName ?? "Invitado",
+    photoUrl: r.playerId ? (images.get(r.playerId) ?? r.photoUrl) : null,
+    isGuest: r.playerId == null,
+    spunByName: r.spunByName,
+    createdAt: r.createdAt,
+  }));
 }
 
 /** Words for the rotating banner: base list + contributions, de-duplicated. */

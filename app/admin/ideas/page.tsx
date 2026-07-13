@@ -2,6 +2,7 @@ import { AdminBackButton } from "@/components/features/admin/admin-back-button";
 import { AdminIdeas } from "@/components/features/admin/admin-ideas";
 import { AdminLogin } from "@/components/features/admin/admin-login";
 import { LogoutButton } from "@/components/features/admin/logout-button";
+import { PageHeader } from "@/components/shared/page-header";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
 import { Metadata } from "next";
@@ -20,12 +21,10 @@ export default async function AdminIdeasPage() {
         <AdminBackButton />
         <LogoutButton />
       </div>
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Revisar ideas</h1>
-        <p className="text-muted-foreground text-sm">
-          Asigna estado, prioridad y tiempo a cada propuesta.
-        </p>
-      </div>
+      <PageHeader
+        title="Revisar ideas"
+        description="Asigna estado, prioridad y tiempo a cada propuesta."
+      />
       <AdminIdeas ideas={ideas} />
     </div>
   );

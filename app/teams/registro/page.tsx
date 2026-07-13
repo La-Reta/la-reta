@@ -1,4 +1,5 @@
 import { GenerationsChart } from "@/components/features/teams/registro/generations-chart";
+import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -27,21 +28,16 @@ export default async function RetaRegistroPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div className="flex flex-wrap items-end justify-between gap-3">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">
-            Registro de retas
-          </h1>
-          <p className="text-muted-foreground text-sm">
-            Cómo se han armado los equipos: repetición de splits, duplas
-            frecuentes y quién juega más. Alimenta la variedad del generador.
-          </p>
-        </div>
-        <Button variant="outline" render={<Link href="/teams" />}>
-          <ArrowLeftIcon />
-          Armar equipos
-        </Button>
-      </div>
+      <PageHeader
+        title="Registro de retas"
+        description="Cómo se han armado los equipos: repetición de splits, duplas frecuentes y quién juega más. Alimenta la variedad del generador."
+        actions={
+          <Button variant="outline" render={<Link href="/teams" />}>
+            <ArrowLeftIcon />
+            Armar equipos
+          </Button>
+        }
+      />
 
       {stats.total === 0 ? (
         <EmptyState />
@@ -72,7 +68,7 @@ export default async function RetaRegistroPage() {
             />
           </div>
 
-          <Card>
+          <Card size="sm">
             <CardHeader className="border-b">
               <CardTitle className="text-base">Generaciones por día</CardTitle>
               <CardDescription>
@@ -136,7 +132,7 @@ function StatTile({
 
 function TopPairs({ stats }: { stats: RetaStats }) {
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader className="border-b">
         <CardTitle className="text-base">Duplas más frecuentes</CardTitle>
         <CardDescription>
@@ -175,13 +171,13 @@ function TopPairs({ stats }: { stats: RetaStats }) {
 function TopPlayers({ stats }: { stats: RetaStats }) {
   const max = stats.topPlayers[0]?.count ?? 1;
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader className="border-b">
         <CardTitle className="text-base">Más convocados</CardTitle>
         <CardDescription>Apariciones en equipos generados</CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
-        <ul className="space-y-2.5">
+        <ul className="space-y-3">
           {stats.topPlayers.map((p) => (
             <li key={p.playerId} className="space-y-1">
               <div className="flex items-center justify-between gap-2 text-sm">
@@ -206,7 +202,7 @@ function TopPlayers({ stats }: { stats: RetaStats }) {
 
 function RepeatedMatchups({ stats }: { stats: RetaStats }) {
   return (
-    <Card>
+    <Card size="sm">
       <CardHeader className="border-b">
         <CardTitle className="text-base">Splits repetidos</CardTitle>
         <CardDescription>

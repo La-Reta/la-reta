@@ -1,0 +1,105 @@
+"use client";
+
+import { Wheel } from "@/components/features/casacas/wheel";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import type { CasacaWheel } from "@/hooks/use-casaca-wheel";
+import { RefreshCwIcon, ShirtIcon, UserPlusIcon } from "lucide-react";
+
+/** Status line under the spin button: why you can't spin, or who's resting. */
+function WheelStatus({
+  wheel,
+}: {
+  wheel: Pick<CasacaWheel, "canManage" | "pool" | "restingPlayers">;
+}) {
+  if (!wheel.canManage) {
+    return (
+      <p className="text-muted-foreground text-center text-sm">
+        Inicia sesión o entra como admin para girar.
+      </p>
+    );
+  }
+  if (wheel.pool.length < 2) {
+    return (
+      <p className="text-muted-foreground text-center text-sm">
+        Necesitas al menos 2 jugadores.
+      </p>
+    );
+  }
+  if (wheel.restingPlayers.length > 0) {
+    return (
+      <div className="flex flex-wrap items-center justify-center gap-1.5 text-sm">
+        <span className="text-muted-foreground">Descansan:</span>
+        {wheel.restingPlayers.map((p) => (
+          <Badge key={p.id} variant="secondary">
+            {p.displayName}
+          </Badge>
+        ))}
+      </div>
+    );
+  }
+  return null;
+}
+
+export function WheelPanel({ wheel }: { wheel: CasacaWheel }) {
+  return (
+    <Card className="overflow-hidden">
+      <CardHeader>
+        <CardTitle className="flex items-center gap-2">
+          <ShirtIcon className="text-primary size-5" />
+          Ruleta de casacas
+        </CardTitle>
+        <CardDescription>
+          {wheel.pool.length} jugadores en juego.
+          {wheel.selectedCount === 0
+            ? " Mostrando todo el roster (no hay selección en Armar equipos)."
+            : " Desde la selección de Armar equipos."}
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex flex-col items-center gap-6">
+        <Wheel
+          segments={wheel.segments}
+          rotation={wheel.rotation}
+          spinning={wheel.spinning}
+          dimIndexes={wheel.dimIndexes}
+          onSpinEnd={wheel.onSpinEnd}
+        />
+
+        <Button
+          size="lg"
+          className="w-full max-w-xs"
+          disabled={!wheel.canSpin}
+          onClick={wheel.spin}
+        >
+          <RefreshCwIcon />
+          {wheel.spinning ? "Girando…" : "Girar la ruleta"}
+        </Button>
+
+        <WheelStatus wheel={wheel} />
+
+        {wheel.guestPlayers.length > 0 ? (
+          <div className="w-full border-t pt-4">
+            <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase">
+              <UserPlusIcon className="size-3.5" />
+              Invitados desde Armar equipos
+            </div>
+            <div className="flex flex-wrap gap-1.5">
+              {wheel.guestPlayers.map((g) => (
+                <Badge key={g.id} variant="default">
+                  {g.displayName}
+                </Badge>
+              ))}
+            </div>
+          </div>
+        ) : null}
+      </CardContent>
+    </Card>
+  );
+}

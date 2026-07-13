@@ -1,6 +1,8 @@
 "use client";
 
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
 
 export function TeamNameInputs({
   nameA,
@@ -16,29 +18,39 @@ export function TeamNameInputs({
   return (
     // Nombres opcionales — se reflejan en tablero y lista, y se guardan en
     // localStorage (atoms) para la próxima vez.
-    <div className="bg-card ring-foreground/10 grid gap-3 rounded-lg p-3 ring-1 sm:grid-cols-2">
-      <label className="space-y-1">
-        <span className="text-muted-foreground text-xs font-medium">
-          Nombre Equipo A
-        </span>
-        <Input
-          value={nameA}
-          onChange={(e) => onNameAChange(e.target.value)}
-          placeholder="Equipo A"
-          maxLength={24}
-        />
-      </label>
-      <label className="space-y-1">
-        <span className="text-muted-foreground text-xs font-medium">
-          Nombre Equipo B
-        </span>
-        <Input
-          value={nameB}
-          onChange={(e) => onNameBChange(e.target.value)}
-          placeholder="Equipo B"
-          maxLength={24}
-        />
-      </label>
-    </div>
+    <Card size="sm">
+      <CardContent className="grid gap-3 sm:grid-cols-2">
+        <div className="space-y-1.5">
+          <Label
+            htmlFor="team-name-a"
+            className="text-muted-foreground text-xs font-medium"
+          >
+            Nombre Equipo A
+          </Label>
+          <Input
+            id="team-name-a"
+            value={nameA}
+            onChange={(e) => onNameAChange(e.target.value)}
+            placeholder="Equipo A"
+            maxLength={24}
+          />
+        </div>
+        <div className="space-y-1.5">
+          <Label
+            htmlFor="team-name-b"
+            className="text-muted-foreground text-xs font-medium"
+          >
+            Nombre Equipo B
+          </Label>
+          <Input
+            id="team-name-b"
+            value={nameB}
+            onChange={(e) => onNameBChange(e.target.value)}
+            placeholder="Equipo B"
+            maxLength={24}
+          />
+        </div>
+      </CardContent>
+    </Card>
   );
 }

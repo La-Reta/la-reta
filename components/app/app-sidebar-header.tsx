@@ -11,7 +11,7 @@ export function AppSidebarHeader() {
   return (
     <header className="bg-background/80 sticky top-0 z-20 flex h-12 shrink-0 items-center gap-2 border-b px-3 backdrop-blur">
       <SidebarTrigger />
-      <Separator orientation="vertical" className="!h-full" />
+      <Separator orientation="vertical" className="h-full" />
       <Button render={<Link href={"/"}></Link>} variant={"ghost"}>
         <SidebarTitle />
       </Button>

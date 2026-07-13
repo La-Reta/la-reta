@@ -1,6 +1,7 @@
 "use client";
 
 import { createReport } from "@/app/actions/reports";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -147,10 +148,12 @@ export function ReportForm() {
             </div>
           </div>
 
-          <div className="bg-muted/40 text-muted-foreground rounded-lg border p-3 text-xs leading-relaxed">
-            Al enviar, guardaremos información técnica básica del navegador.
-            Esto ayuda a investigar errores, abuso o solicitudes sensibles.
-          </div>
+          <Alert>
+            <AlertDescription className="text-sm">
+              Al enviar, guardaremos información técnica básica del navegador.
+              Esto ayuda a investigar errores, abuso o solicitudes sensibles.
+            </AlertDescription>
+          </Alert>
 
           <Button type="submit" disabled={pending} className="w-full sm:w-fit">
             <SendIcon />

@@ -1,4 +1,5 @@
 import { PlayersBrowser } from "@/components/features/players/players-browser";
+import { PageHeader } from "@/components/shared/page-header";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { isAdmin } from "@/lib/admin";
@@ -20,35 +21,39 @@ export default async function PlayersPage() {
 
   return (
     <div className="space-y-6 xl:container xl:mx-auto">
-      <div className="flex flex-wrap items-center justify-between gap-4">
-        <div>
-          <h1 className="text-2xl font-bold tracking-tight">Jugadores</h1>
-          <p className="text-muted-foreground text-sm">
-            La plantilla completa de la reta, en cartas estilo FIFA.
-          </p>
-        </div>
-        <div className="flex flex-wrap items-center gap-2">
-          {admin && (
-            <Button variant="outline" render={<Link href="/admin/registros" />}>
-              <ClipboardListIcon />
-              Solicitudes
-              {pendingSignups > 0 ? (
-                <Badge variant="secondary">{pendingSignups}</Badge>
-              ) : null}
+      <PageHeader
+        title="Jugadores"
+        description="La plantilla completa de la reta, en cartas estilo FIFA."
+        actions={
+          <>
+            {admin && (
+              <Button
+                variant="outline"
+                render={<Link href="/admin/registros" />}
+              >
+                <ClipboardListIcon />
+                Solicitudes
+                {pendingSignups > 0 ? (
+                  <Badge variant="secondary">{pendingSignups}</Badge>
+                ) : null}
+              </Button>
+            )}
+            <Button
+              variant="outline"
+              render={<Link href="/players/registro" />}
+            >
+              <UserRoundPlusIcon />
+              Registrar nuevo jugador
             </Button>
-          )}
-          <Button variant="outline" render={<Link href="/players/registro" />}>
-            <UserRoundPlusIcon />
-            Registrar nuevo jugador
-          </Button>
-          {admin && (
-            <Button render={<Link href="/players/new" />}>
-              <UserPlusIcon />
-              Nuevo
-            </Button>
-          )}
-        </div>
-      </div>
+            {admin && (
+              <Button render={<Link href="/players/new" />}>
+                <UserPlusIcon />
+                Nuevo
+              </Button>
+            )}
+          </>
+        }
+      />
       <PlayersBrowser players={players} isAdmin={admin} />
     </div>
   );

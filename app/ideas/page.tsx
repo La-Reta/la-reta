@@ -1,9 +1,12 @@
 import { IdeaForm } from "@/components/features/ideas/idea-form";
 import { IdeasView } from "@/components/features/ideas/ideas-view";
+import { PageHeader } from "@/components/shared/page-header";
+import { SectionHeading } from "@/components/shared/section-heading";
+import { Card, CardContent } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
-import { cn } from "@/lib/utils";
 import { Metadata } from "next";
+import type { ReactNode } from "react";
 
 export const metadata: Metadata = { title: "Ideas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -21,40 +24,35 @@ export default async function IdeasPage() {
 
   return (
     <div className="mx-auto max-w-5xl min-w-0 space-y-6 xl:container">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Ideas de la reta</h1>
-        <p className="text-muted-foreground text-sm">
-          ¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la
-          revisa y le asigna prioridad.
-        </p>
-      </div>
+      <PageHeader
+        title="Ideas de la reta"
+        description="¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la revisa y le asigna prioridad."
+      />
 
       <IdeaForm />
 
       {ideas.length === 0 ? (
-        <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
+        <EmptyNote>
           Aún no hay ideas. ¡Sé el primero en proponer algo!
-        </p>
+        </EmptyNote>
       ) : (
         <div className="space-y-6">
           {/* Pendientes — siempre a la vista */}
           <section className="space-y-3">
-            <GroupHeading title="Pendientes" count={pending.length} />
+            <SectionHeading title="Pendientes" count={pending.length} />
             {pending.length > 0 ? (
               <IdeasView ideas={pending} admin={admin} />
             ) : (
-              <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-6 text-center text-sm ring-1">
-                No hay ideas pendientes. ¡Todo al día! 🎉
-              </p>
+              <EmptyNote>No hay ideas pendientes. ¡Todo al día! 🎉</EmptyNote>
             )}
           </section>
 
           {done.length > 0 && (
             <section className="space-y-3">
-              <GroupHeading
+              <SectionHeading
                 title="Hechas"
                 count={done.length}
-                toneClassName="bg-emerald-500"
+                tone="emerald"
               />
               <IdeasView ideas={done} admin={admin} />
             </section>
@@ -62,10 +60,10 @@ export default async function IdeasPage() {
 
           {discarded.length > 0 && (
             <section className="space-y-3">
-              <GroupHeading
+              <SectionHeading
                 title="Descartadas"
                 count={discarded.length}
-                toneClassName="bg-muted-foreground"
+                tone="muted"
               />
               <IdeasView ideas={discarded} admin={admin} />
             </section>
@@ -76,24 +74,12 @@ export default async function IdeasPage() {
   );
 }
 
-function GroupHeading({
-  title,
-  count,
-  toneClassName,
-}: {
-  title: string;
-  count: number;
-  toneClassName?: string;
-}) {
+function EmptyNote({ children }: { children: ReactNode }) {
   return (
-    <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase">
-      <span
-        className={cn("h-4 w-1 rounded-full", toneClassName ?? "bg-primary")}
-      />
-      {title}
-      <span className="text-muted-foreground/70 font-normal normal-case">
-        · {count}
-      </span>
-    </h2>
+    <Card size="sm">
+      <CardContent className="py-6 text-center">
+        <p className="text-muted-foreground text-sm">{children}</p>
+      </CardContent>
+    </Card>
   );
 }

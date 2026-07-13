@@ -59,7 +59,7 @@ export function WordForm() {
   return (
     <form
       onSubmit={onSubmit}
-      className="ring-foreground/10 overflow-hidden rounded-lg bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] p-6 text-white ring-1 md:p-8"
+      className="ring-foreground/10 overflow-hidden rounded-4xl bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] p-6 text-white ring-1 md:p-8"
     >
       <p className="font-display text-center text-xs font-semibold tracking-[0.25em] text-emerald-300/80 uppercase">
         Completa la frase

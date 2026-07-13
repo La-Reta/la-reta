@@ -2,6 +2,7 @@
 
 import { createIdea } from "@/app/actions/ideas";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -62,59 +63,62 @@ export function IdeaForm() {
   }
 
   return (
-    <form
-      onSubmit={onSubmit}
-      className="bg-card ring-foreground/10 space-y-4 rounded-lg p-4 ring-1"
-    >
-      <div className="grid gap-4 sm:grid-cols-2">
-        <div className="sm:col-span-2">
-          <Label className="mb-1.5 block text-xs">Título</Label>
-          <Input
-            value={form.title}
-            onChange={(e) => set("title", e.target.value)}
-            placeholder="Ej. Llevar conos para marcar la portería"
-            maxLength={140}
-            required
-          />
-        </div>
-        <div className="sm:col-span-2">
-          <Label className="mb-1.5 block text-xs">Descripción</Label>
-          <Textarea
-            value={form.description}
-            onChange={(e) => set("description", e.target.value)}
-            placeholder="Cuéntanos el detalle: qué propones y por qué ayudaría a la reta."
-            rows={4}
-            required
-          />
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">Categoría</Label>
-          <NativeSelect
-            className="w-full"
-            value={form.category}
-            onChange={(e) => set("category", e.target.value)}
-          >
-            {IDEA_CATEGORIES.map((c) => (
-              <NativeSelectOption key={c} value={c}>
-                {IDEA_CATEGORY_LABEL[c]}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
-        </div>
-        <div>
-          <Label className="mb-1.5 block text-xs">Tu nombre (opcional)</Label>
-          <Input
-            value={form.author}
-            onChange={(e) => set("author", e.target.value)}
-            placeholder="Anónimo"
-            maxLength={60}
-          />
-        </div>
-      </div>
-      <Button type="submit" disabled={pending}>
-        <LightbulbIcon />
-        {pending ? "Enviando…" : "Enviar idea"}
-      </Button>
+    <form onSubmit={onSubmit}>
+      <Card>
+        <CardContent className="space-y-4">
+          <div className="grid gap-4 sm:grid-cols-2">
+            <div className="sm:col-span-2">
+              <Label className="mb-1.5 block text-xs">Título</Label>
+              <Input
+                value={form.title}
+                onChange={(e) => set("title", e.target.value)}
+                placeholder="Ej. Llevar conos para marcar la portería"
+                maxLength={140}
+                required
+              />
+            </div>
+            <div className="sm:col-span-2">
+              <Label className="mb-1.5 block text-xs">Descripción</Label>
+              <Textarea
+                value={form.description}
+                onChange={(e) => set("description", e.target.value)}
+                placeholder="Cuéntanos el detalle: qué propones y por qué ayudaría a la reta."
+                rows={4}
+                required
+              />
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs">Categoría</Label>
+              <NativeSelect
+                className="w-full"
+                value={form.category}
+                onChange={(e) => set("category", e.target.value)}
+              >
+                {IDEA_CATEGORIES.map((c) => (
+                  <NativeSelectOption key={c} value={c}>
+                    {IDEA_CATEGORY_LABEL[c]}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+            <div>
+              <Label className="mb-1.5 block text-xs">
+                Tu nombre (opcional)
+              </Label>
+              <Input
+                value={form.author}
+                onChange={(e) => set("author", e.target.value)}
+                placeholder="Anónimo"
+                maxLength={60}
+              />
+            </div>
+          </div>
+          <Button type="submit" disabled={pending}>
+            <LightbulbIcon />
+            {pending ? "Enviando…" : "Enviar idea"}
+          </Button>
+        </CardContent>
+      </Card>
     </form>
   );
 }

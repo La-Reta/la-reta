@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { getPlayers } from "@/lib/queries";
+import { PageHeader } from "@/components/shared/page-header";
 import { Pitch } from "@/components/shared/pitch";
 import { PositionHotspots } from "@/components/features/positions/position-hotspots";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -36,13 +37,10 @@ export default async function PositionsPage() {
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
-      <div>
-        <h1 className="text-2xl font-bold tracking-tight">Posiciones</h1>
-        <p className="text-muted-foreground text-sm">
-          Dónde juega cada posición en la cancha. El número indica cuántos
-          jugadores tienes para cada una.
-        </p>
-      </div>
+      <PageHeader
+        title="Posiciones"
+        description="Dónde juega cada posición en la cancha. El número indica cuántos jugadores tienes para cada una."
+      />
 
       <Card>
         <CardContent className="space-y-4">

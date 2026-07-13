@@ -65,7 +65,7 @@ export function RotatingPlayer({
   const activeSlot = index % 12;
 
   return (
-    <Card className="pb-0" aria-label="Conoce a los jugadores">
+    <Card className="pb-0" aria-label="Conoce a los jugadores" size="sm">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           Conoce a los jugadores
