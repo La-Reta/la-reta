@@ -54,21 +54,59 @@ function Token({
   x,
   y,
   color,
+  onSwap,
 }: {
   p: Placed;
   x: number;
   y: number;
   color: string;
+  onSwap?: (fromId: number, toId: number) => void;
 }) {
   const player = p.lineup.player;
+  const draggable = Boolean(onSwap);
+  const [over, setOver] = React.useState(false);
   return (
     <div
-      className="absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1"
+      className={cn(
+        "absolute flex -translate-x-1/2 -translate-y-1/2 flex-col items-center gap-1",
+        draggable && "cursor-grab active:cursor-grabbing",
+      )}
       style={{ left: `${x}%`, top: `${y}%` }}
+      draggable={draggable}
+      onDragStart={
+        draggable
+          ? (e) => {
+              e.dataTransfer.setData("text/plain", String(player.id));
+              e.dataTransfer.effectAllowed = "move";
+            }
+          : undefined
+      }
+      onDragOver={
+        draggable
+          ? (e) => {
+              e.preventDefault();
+              setOver(true);
+            }
+          : undefined
+      }
+      onDragLeave={draggable ? () => setOver(false) : undefined}
+      onDrop={
+        draggable
+          ? (e) => {
+              e.preventDefault();
+              setOver(false);
+              const fromId = Number(e.dataTransfer.getData("text/plain"));
+              if (fromId && fromId !== player.id) onSwap!(fromId, player.id);
+            }
+          : undefined
+      }
     >
       <div className="relative">
         <div
-          className="size-11 overflow-hidden rounded-full border-2 bg-neutral-900"
+          className={cn(
+            "size-11 overflow-hidden rounded-full border-2 bg-neutral-900 transition-shadow",
+            over && "ring-2 ring-white ring-offset-1 ring-offset-black/40",
+          )}
           style={{ borderColor: color }}
         >
           {player.photoUrl ? (
@@ -116,8 +154,13 @@ export const MatchupPitch = React.forwardRef<
     ratingB: number;
     nameA?: string;
     nameB?: string;
+    /** When set, tokens become draggable and dropping one on another swaps them. */
+    onSwap?: (fromId: number, toId: number) => void;
   }
->(function MatchupPitch({ teamA, teamB, ratingA, ratingB, nameA, nameB }, ref) {
+>(function MatchupPitch(
+  { teamA, teamB, ratingA, ratingB, nameA, nameB, onSwap },
+  ref,
+) {
   const a = place(teamA, "A");
   const b = place(teamB, "B");
   const teamAName = nameA?.trim() || "Equipo A";
@@ -173,10 +216,24 @@ export const MatchupPitch = React.forwardRef<
 
       {/* Players */}
       {a.map((p) => (
-        <Token key={p.lineup.player.id} p={p} x={p.x} y={p.y} color="#0ea5e9" />
+        <Token
+          key={p.lineup.player.id}
+          p={p}
+          x={p.x}
+          y={p.y}
+          color="#0ea5e9"
+          onSwap={onSwap}
+        />
       ))}
       {b.map((p) => (
-        <Token key={p.lineup.player.id} p={p} x={p.x} y={p.y} color="#f43f5e" />
+        <Token
+          key={p.lineup.player.id}
+          p={p}
+          x={p.x}
+          y={p.y}
+          color="#f43f5e"
+          onSwap={onSwap}
+        />
       ))}
 
       <span className="font-display absolute right-3 bottom-1.5 text-[10px] tracking-wider text-white/40 uppercase">

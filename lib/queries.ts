@@ -213,6 +213,7 @@ export type Scorer = {
   nationality: string;
   team: string | null;
   goals: number;
+  assists: number;
   isGuest: boolean;
 };
 export type MatchWithScorers = Match & { scorers: Scorer[] };
@@ -231,6 +232,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
+      assists: matchGoals.assists,
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
@@ -249,6 +251,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       nationality: g.nationality ?? "mx",
       team: g.team,
       goals: g.goals,
+      assists: g.assists,
       isGuest: guest,
     });
     byMatch.set(g.matchId, list);
@@ -277,6 +280,7 @@ export async function getMatchById(
       guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
+      assists: matchGoals.assists,
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
@@ -295,6 +299,7 @@ export async function getMatchById(
         nationality: g.nationality ?? "mx",
         team: g.team,
         goals: g.goals,
+        assists: g.assists,
         isGuest: g.playerId == null,
       }))
       .sort((a, b) => b.goals - a.goals),
@@ -302,33 +307,79 @@ export async function getMatchById(
 }
 
 export type TopScorer = {
-  playerId: number;
+  /** Stable list key: `p:<id>` for roster players, `g:<name>` for guests. */
+  key: string;
+  playerId: number | null;
   name: string;
   displayName: string;
   nationality: string;
   goals: number;
+  assists: number;
+  /** Goles + asistencias — el ordenamiento de la tabla combinada. */
+  contributions: number;
   matches: number;
+  isGuest: boolean;
 };
 
-/** Goal tally per player across all matches, top scorers first. */
+/**
+ * Goal + assist tally across all matches — roster players AND guests — ordered by
+ * G+A (contributions), then goals. Grouping by (playerId, guestName) keeps each
+ * roster player their own group and each guest aggregated by name, so their goals
+ * and assists aren't lost even though guests have no player profile.
+ *
+ * ponytail: guests group by their exact (trimmed) name; a different spelling or
+ * casing won't merge. Add name normalization/an index on guest_name if guest
+ * stats ever need to be authoritative.
+ */
 export async function getTopScorers(): Promise<TopScorer[]> {
   const totalGoals = sql<number>`sum(${matchGoals.goals})`;
-  return db
+  const totalAssists = sql<number>`sum(${matchGoals.assists})`;
+  const contributions = sql<number>`sum(${matchGoals.goals} + ${matchGoals.assists})`;
+  const rows = await db
     .select({
-      playerId: players.id,
+      playerId: matchGoals.playerId,
+      guestName: matchGoals.guestName,
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
       goals: totalGoals.mapWith(Number),
+      assists: totalAssists.mapWith(Number),
+      contributions: contributions.mapWith(Number),
       matches: sql<number>`count(distinct ${matchGoals.matchId})`.mapWith(
         Number,
       ),
     })
     .from(matchGoals)
-    .innerJoin(players, eq(matchGoals.playerId, players.id))
-    .groupBy(players.id, players.name, players.displayName, players.nationality)
-    .having(sql`sum(${matchGoals.goals}) > 0`)
-    .orderBy(desc(totalGoals));
+    .leftJoin(players, eq(matchGoals.playerId, players.id))
+    .groupBy(
+      matchGoals.playerId,
+      matchGoals.guestName,
+      players.name,
+      players.displayName,
+      players.nationality,
+    )
+    // Aparece quien haya aportado algo (gol o asistencia).
+    .having(sql`sum(${matchGoals.goals} + ${matchGoals.assists}) > 0`)
+    .orderBy(desc(contributions), desc(totalGoals));
+
+  return rows
+    .filter((r) => r.playerId != null || Boolean(r.guestName))
+    .map((r) => {
+      const isGuest = r.playerId == null;
+      const guestName = r.guestName ?? "Invitado";
+      return {
+        key: isGuest ? `g:${guestName}` : `p:${r.playerId}`,
+        playerId: r.playerId,
+        name: isGuest ? guestName : (r.name ?? "—"),
+        displayName: isGuest ? guestName : (r.displayName ?? guestName),
+        nationality: isGuest ? "" : (r.nationality ?? "mx"),
+        goals: r.goals,
+        assists: r.assists,
+        contributions: r.contributions,
+        matches: r.matches,
+        isGuest,
+      };
+    });
 }
 
 // ── Generated retas ──────────────────────────────────────────────────────────

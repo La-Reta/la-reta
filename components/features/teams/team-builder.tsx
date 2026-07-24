@@ -29,6 +29,7 @@ import {
 } from "@/lib/state/atoms";
 import {
   balanceTeamsVaried,
+  swapPlayers,
   type BalancedTeams,
   type Lineup,
 } from "@/lib/team-balancer";
@@ -99,6 +100,18 @@ export function TeamBuilder({
     const guest = makeGuestPlayer(input, guests);
     setGuests((prev) => [...prev, guest]);
     setSelected((prev) => [...prev, guest.id]); // auto-convocar
+  }
+
+  function editGuest(
+    id: number,
+    input: { name: string; overall: number; position: Position },
+  ) {
+    setResult(null);
+    // Rebuild the guest (recomputing stats from overall) but keep its id so it
+    // stays selected and its board/live references don't break.
+    setGuests((prev) =>
+      prev.map((g) => (g.id === id ? { ...makeGuestPlayer(input, prev), id } : g)),
+    );
   }
 
   function removeGuest(id: number) {
@@ -183,6 +196,11 @@ export function TeamBuilder({
           nameB={nameB}
           onViewChange={setView}
           hasResult={result !== null}
+          // ponytail: swap edita solo el tablero en memoria; la reta ya guardada
+          // en DB (y el flujo /live) no se re-persiste. Añadir re-save si importa.
+          onSwap={(fromId, toId) =>
+            setResult((r) => (r ? swapPlayers(r, fromId, toId) : r))
+          }
         />
       ) : (
         <Empty className="border">
@@ -198,7 +216,12 @@ export function TeamBuilder({
         </Empty>
       )}
 
-      <GuestManager guests={guests} onAdd={addGuest} onRemove={removeGuest} />
+      <GuestManager
+        guests={guests}
+        onAdd={addGuest}
+        onEdit={editGuest}
+        onRemove={removeGuest}
+      />
 
       <Convocatoria
         players={allPlayers}

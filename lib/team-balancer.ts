@@ -239,6 +239,37 @@ export function balanceTeamsVaried(
   return best ?? balanceTeams(selected);
 }
 
+/**
+ * Swap two players between their slots by id, keeping each slot's `role` (so the
+ * board layout stays put and only the occupants trade places). Ratings are
+ * recomputed — a cross-team swap shifts them, a same-team swap leaves them
+ * unchanged. No-op if the ids match or either isn't found. Returns a new object
+ * (fresh Lineup copies) so React state updates cleanly.
+ */
+export function swapPlayers(
+  teams: BalancedTeams,
+  fromId: number,
+  toId: number,
+): BalancedTeams {
+  if (fromId === toId) return teams;
+  const teamA = teams.teamA.map((l) => ({ ...l }));
+  const teamB = teams.teamB.map((l) => ({ ...l }));
+  const from = [...teamA, ...teamB].find((l) => l.player.id === fromId);
+  const to = [...teamA, ...teamB].find((l) => l.player.id === toId);
+  if (!from || !to) return teams;
+  [from.player, to.player] = [to.player, from.player];
+
+  const ratingA = average(teamA);
+  const ratingB = average(teamB);
+  return {
+    teamA,
+    teamB,
+    ratingA,
+    ratingB,
+    diff: Math.round(Math.abs(ratingA - ratingB) * 10) / 10,
+  };
+}
+
 export function balanceTeams(selected: Player[]): BalancedTeams {
   const gkA: Lineup[] = [];
   const gkB: Lineup[] = [];
@@ -291,3 +322,37 @@ export function balanceTeams(selected: Player[]): BalancedTeams {
     diff: Math.round(Math.abs(ratingA - ratingB) * 10) / 10,
   };
 }
+
+// ── self-check (npx tsx lib/team-balancer.ts) ────────────────────────────────
+export function demo() {
+  const assert = (c: boolean, m: string) => {
+    if (!c) throw new Error("team-balancer demo failed: " + m);
+  };
+  const L = (id: number, overall: number, role: Position): Lineup => ({
+    player: { id, overall } as unknown as Player,
+    role,
+  });
+  const teams: BalancedTeams = {
+    teamA: [L(1, 40, "GK"), L(2, 50, "CB")],
+    teamB: [L(3, 60, "GK"), L(4, 80, "ST")],
+    ratingA: 45,
+    ratingB: 70,
+    diff: 25,
+  };
+
+  // Cross-team swap: occupant trades, role stays, ratings recomputed.
+  const s = swapPlayers(teams, 2, 4);
+  assert(s.teamA[1].player.id === 4 && s.teamA[1].role === "CB", "occupant swaps, role kept");
+  assert(s.teamB[1].player.id === 2 && s.teamB[1].role === "ST", "other side mirrored");
+  assert(s.ratingA === 60 && s.ratingB === 55, "ratings recomputed");
+  assert(teams.teamA[1].player.id === 2, "original not mutated");
+  // Same-team swap leaves ratings untouched.
+  const same = swapPlayers(teams, 1, 2);
+  assert(same.ratingA === 45, "same-team swap keeps rating");
+  // No-ops.
+  assert(swapPlayers(teams, 2, 2) === teams, "same id is no-op");
+  assert(swapPlayers(teams, 2, 999) === teams, "missing id is no-op");
+  return "ok";
+}
+
+if (process.argv[1]?.endsWith("team-balancer.ts")) console.log(demo());

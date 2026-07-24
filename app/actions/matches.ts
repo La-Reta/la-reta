@@ -24,6 +24,7 @@ export type MatchInput = {
     playerId: number | null;
     guestName?: string;
     goals: number;
+    assists?: number;
     team?: MatchTeam | null;
   }[];
 };
@@ -31,7 +32,7 @@ export type MatchInput = {
 const clamp = (n: number, max: number) =>
   Math.max(0, Math.min(max, Math.round(Number(n)) || 0));
 
-/** Collapses scorer rows to one row per player/guest (summing goals). */
+/** Collapses scorer rows to one row per player/guest (summing goals + assists). */
 function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
   const tally = new Map<
     string,
@@ -40,6 +41,7 @@ function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
       guestName: string | null;
       team: MatchTeam | null;
       goals: number;
+      assists: number;
     }
   >();
   for (const s of scorers ?? []) {
@@ -53,19 +55,24 @@ function scorerRows(matchId: number, scorers: MatchInput["scorers"]) {
       guestName,
       team,
       goals: 0,
+      assists: 0,
     };
     tally.set(key, {
       ...current,
       goals: current.goals + clamp(s.goals, 50),
+      assists: current.assists + clamp(s.assists ?? 0, 50),
     });
   }
-  return [...tally.values()].map(({ playerId, guestName, team, goals }) => ({
-    matchId,
-    playerId,
-    guestName,
-    team,
-    goals,
-  }));
+  return [...tally.values()].map(
+    ({ playerId, guestName, team, goals, assists }) => ({
+      matchId,
+      playerId,
+      guestName,
+      team,
+      goals,
+      assists,
+    }),
+  );
 }
 
 function matchValues(input: MatchInput) {

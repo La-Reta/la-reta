@@ -1,7 +1,4 @@
-import {
-  MatchScorersChart,
-  MatchTeamGoalsChart,
-} from "@/components/features/matches/match-detail-charts";
+import { MatchScorersChart } from "@/components/features/matches/match-detail-charts";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { MatchHero } from "@/components/features/matches/match-hero";
 import { Badge } from "@/components/ui/badge";
@@ -9,7 +6,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import { formatShortDateOnly } from "@/lib/dates";
-import { flagEmoji } from "@/lib/format";
 import { getMatchById, type Scorer } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import {
@@ -19,6 +15,8 @@ import {
   ScaleIcon,
   ShieldIcon,
   TargetIcon,
+  TrophyIcon,
+  UsersIcon,
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -36,6 +34,12 @@ const STAT_TONES = {
   amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
   sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+} as const;
+
+// Team-colored text (sky = A, rose = B) to tie figures/shares to a side.
+const TEAM_TEXT = {
+  A: "text-sky-600 dark:text-sky-400",
+  B: "text-rose-600 dark:text-rose-400",
 } as const;
 
 function balanceTone(value: number) {
@@ -101,23 +105,46 @@ function TeamFigureCard({
   teamName,
   score,
   scorers,
+  tone,
+  cleanSheet,
 }: {
   teamName: string;
   score: number;
   scorers: Scorer[];
+  tone: "A" | "B";
+  cleanSheet: boolean;
 }) {
   const figure = topScorer(scorers);
   const registeredGoals = scorers.reduce(
     (sum, scorer) => sum + scorer.goals,
     0,
   );
+  const totalAssists = scorers.reduce((sum, s) => sum + s.assists, 0);
+  const guestGoals = scorers
+    .filter((s) => s.isGuest)
+    .reduce((sum, s) => sum + s.goals, 0);
 
   return (
     <Card size="sm">
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle>{teamName}</CardTitle>
-          <Badge variant="secondary">{score} goles</Badge>
+          <CardTitle className="flex items-center gap-2">
+            <span
+              className={cn("size-2 rounded-full", ROSTER_TONE[tone === "A" ? "sky" : "rose"])}
+            />
+            {teamName}
+          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            {cleanSheet ? (
+              <Badge className="border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <ShieldIcon />
+                Valla invicta
+              </Badge>
+            ) : null}
+            <Badge variant="secondary" className="tabular-nums">
+              {score} goles
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -148,49 +175,81 @@ function TeamFigureCard({
             {registeredGoals}/{score}
           </span>
         </div>
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span>Asistencias</span>
+          <span className="font-mono font-bold tabular-nums">
+            {totalAssists}
+          </span>
+        </div>
+        {guestGoals > 0 ? (
+          <div className="text-muted-foreground flex items-center justify-between text-xs">
+            <span>Goles de invitados</span>
+            <span className="font-mono font-bold tabular-nums">
+              {guestGoals}
+            </span>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
 }
 
+// Team accent for the roster bars/dot; unassigned falls back to primary.
+const ROSTER_TONE = {
+  sky: "bg-sky-500",
+  rose: "bg-rose-500",
+  muted: "bg-primary",
+} as const;
+
 function TeamRosterCard({
   title,
   scorers,
   maxGoals,
+  tone = "muted",
 }: {
   title: string;
   scorers: Scorer[];
   maxGoals: number;
+  tone?: keyof typeof ROSTER_TONE;
 }) {
+  // Sorted by goals so the numbered rank reflects the scoring order.
+  const ranked = [...scorers].sort((a, b) => b.goals - a.goals);
+
   return (
-    <div className="rounded-lg border">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <p className="text-sm font-semibold">{title}</p>
-        <Badge variant="outline">{scorers.length} jugadores</Badge>
-      </div>
-      {scorers.length === 0 ? (
-        <p className="text-muted-foreground p-3 text-xs">
-          Sin jugadores asignados.
-        </p>
-      ) : (
-        <div className="space-y-2 p-3">
-          {scorers
-            .sort((a, b) => b.goals - a.goals)
-            .map((scorer, idx) => (
-              <div
+    <Card size="sm" className="overflow-hidden">
+      <CardHeader className="border-b">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <span className={cn("size-2 rounded-full", ROSTER_TONE[tone])} />
+            {title}
+          </CardTitle>
+          <Badge variant="secondary">{scorers.length} jugadores</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-3">
+        {ranked.length === 0 ? (
+          <p className="text-muted-foreground py-2 text-xs">
+            Sin jugadores asignados.
+          </p>
+        ) : (
+          <ul className="space-y-2.5">
+            {ranked.map((scorer, idx) => (
+              <li
                 key={`${title}-${scorer.playerId ?? `guest-${idx}`}`}
-                className="space-y-2"
+                className="space-y-1.5"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">
-                    {flagEmoji(scorer.nationality)}
+                <div className="flex items-center gap-2.5">
+                  <span className="text-muted-foreground w-4 shrink-0 text-center font-mono text-xs font-semibold tabular-nums">
+                    {idx + 1}
                   </span>
                   {scorer.isGuest ? (
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                      {scorer.name}{" "}
-                      <span className="text-muted-foreground text-xs font-normal">
-                        · invitado
+                    <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">
+                        {scorer.name}
                       </span>
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        invitado
+                      </Badge>
                     </span>
                   ) : (
                     <Link
@@ -200,13 +259,20 @@ function TeamRosterCard({
                       {scorer.name}
                     </Link>
                   )}
-                  <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
-                    {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
-                  </Badge>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
+                      {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
+                    </Badge>
+                    {scorer.assists > 0 ? (
+                      <Badge variant="outline" className="text-[10px]">
+                        {scorer.assists} asis.
+                      </Badge>
+                    ) : null}
+                  </span>
                 </div>
-                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                <div className="bg-muted ml-[1.625rem] h-1.5 overflow-hidden rounded-full">
                   <div
-                    className="bg-primary h-full rounded-full"
+                    className={cn("h-full rounded-full", ROSTER_TONE[tone])}
                     style={{
                       width:
                         scorer.goals > 0
@@ -215,11 +281,12 @@ function TeamRosterCard({
                     }}
                   />
                 </div>
-              </div>
+              </li>
             ))}
-        </div>
-      )}
-    </div>
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -250,17 +317,22 @@ export default async function MatchDetailPage({
   );
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
-  const teamChartData = [
-    { team: match.teamAName, goals: match.scoreA },
-    { team: match.teamBName, goals: match.scoreB },
-  ];
-  const scorerChartData = match.scorers
-    .filter((scorer) => scorer.goals > 0)
-    .slice(0, 6)
-    .map((scorer) => ({
-      player: scorer.displayName,
-      goals: scorer.goals,
-    }));
+
+  // Derived, data-driven highlights.
+  const scored = match.scorers
+    .filter((s) => s.goals > 0)
+    .sort((a, b) => b.goals - a.goals);
+  const mvp = scored[0] ?? null;
+  const mvpTeam = mvp?.team === "A" || mvp?.team === "B" ? mvp.team : null;
+  const guestGoals = match.scorers
+    .filter((s) => s.isGuest)
+    .reduce((n, s) => n + s.goals, 0);
+  const aShare = totalGoals ? Math.round((match.scoreA / totalGoals) * 100) : 50;
+
+  const scorerChartData = scored.slice(0, 6).map((scorer) => ({
+    player: scorer.displayName,
+    goals: scorer.goals,
+  }));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 lg:container">
@@ -295,13 +367,24 @@ export default async function MatchDetailPage({
         </p>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
           icon={<TargetIcon />}
           label="Goles totales"
           value={String(totalGoals)}
           detail={pace ? `1 gol cada ${pace} min` : "Ritmo pendiente"}
           tone="primary"
+        />
+        <StatTile
+          icon={<UsersIcon />}
+          label="Goleadores"
+          value={String(scored.length)}
+          detail={
+            guestGoals > 0
+              ? `${guestGoals} gol${guestGoals === 1 ? "" : "es"} de invitados`
+              : `de ${match.scorers.length} jugadores`
+          }
+          tone="emerald"
         />
         <StatTile
           icon={<ScaleIcon />}
@@ -322,29 +405,98 @@ export default async function MatchDetailPage({
       </section>
 
       <SectionHeading title="Los goleadores" />
+      <Card className="overflow-hidden">
+        <CardContent className="grid gap-5 sm:grid-cols-2 sm:items-center sm:divide-x">
+          {/* Figura del partido: máximo goleador entre ambos equipos. */}
+          <div className="flex items-center gap-4 sm:pr-5">
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-400 [&_svg]:size-7">
+              <TrophyIcon />
+            </span>
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                Figura del partido
+              </p>
+              {mvp ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <p className="font-display truncate text-xl font-bold">
+                      {mvp.name}
+                    </p>
+                    {mvp.isGuest ? (
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        invitado
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {mvpTeam ? (
+                      <span className={cn("font-medium", TEAM_TEXT[mvpTeam])}>
+                        {mvpTeam === "A" ? match.teamAName : match.teamBName}
+                      </span>
+                    ) : (
+                      "Sin equipo"
+                    )}{" "}
+                    · {mvp.goals} gol{mvp.goals === 1 ? "" : "es"}
+                    {mvp.assists > 0
+                      ? ` · ${mvp.assists} asistencia${mvp.assists === 1 ? "" : "s"}`
+                      : ""}
+                  </p>
+                </>
+              ) : (
+                <p className="text-muted-foreground mt-0.5 text-sm">
+                  Sin goles registrados
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Cuota de gol: proporción del marcador por equipo. */}
+          <div className="sm:pl-5">
+            <div className="mb-1.5 flex items-center justify-between gap-2 text-xs">
+              <span className={cn("min-w-0 truncate font-medium", TEAM_TEXT.A)}>
+                {match.teamAName}
+              </span>
+              <span className="text-muted-foreground shrink-0 text-[10px] font-semibold tracking-wider uppercase">
+                Cuota de gol
+              </span>
+              <span
+                className={cn(
+                  "min-w-0 truncate text-right font-medium",
+                  TEAM_TEXT.B,
+                )}
+              >
+                {match.teamBName}
+              </span>
+            </div>
+            <div className="bg-muted flex h-2.5 overflow-hidden rounded-full">
+              <div className="bg-sky-500" style={{ width: `${aShare}%` }} />
+              <div className="bg-rose-500" style={{ width: `${100 - aShare}%` }} />
+            </div>
+            <div className="mt-1 flex items-center justify-between font-mono text-sm font-bold tabular-nums">
+              <span className={TEAM_TEXT.A}>{match.scoreA}</span>
+              <span className={TEAM_TEXT.B}>{match.scoreB}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <section className="grid gap-6 lg:grid-cols-2">
         <TeamFigureCard
           teamName={match.teamAName}
           score={match.scoreA}
           scorers={teamAScorers}
+          tone="A"
+          cleanSheet={match.scoreB === 0 && totalGoals > 0}
         />
         <TeamFigureCard
           teamName={match.teamBName}
           score={match.scoreB}
           scorers={teamBScorers}
+          tone="B"
+          cleanSheet={match.scoreA === 0 && totalGoals > 0}
         />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Goles por equipo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MatchTeamGoalsChart data={teamChartData} />
-          </CardContent>
-        </Card>
-
+      {scorerChartData.length > 0 ? (
         <Card>
           <CardHeader className="border-b">
             <CardTitle>Goleadores del partido</CardTitle>
@@ -353,7 +505,7 @@ export default async function MatchDetailPage({
             <MatchScorersChart data={scorerChartData} />
           </CardContent>
         </Card>
-      </section>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
         <div className="space-y-3">
@@ -376,11 +528,13 @@ export default async function MatchDetailPage({
                 title={match.teamAName}
                 scorers={teamAScorers}
                 maxGoals={maxScorerGoals}
+                tone="sky"
               />
               <TeamRosterCard
                 title={match.teamBName}
                 scorers={teamBScorers}
                 maxGoals={maxScorerGoals}
+                tone="rose"
               />
               {unassignedScorers.length > 0 ? (
                 <TeamRosterCard

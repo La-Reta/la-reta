@@ -31,6 +31,29 @@ export const currentGeneratedRetaIdAtom = atomWithStorage<number | null>(
   null,
 );
 
+/**
+ * A past generated reta handed off from /teams/registro to the match form so it
+ * can be registered as a real match. MatchForm reads it once on mount (prefilling
+ * team names + attendance, guests included) and then clears it — nothing is
+ * submitted automatically. Persisted so it survives the navigation to /matches.
+ */
+export type MatchPrefill = {
+  teamAName: string;
+  teamBName: string;
+  playedAt?: string;
+  generatedRetaId?: number | null;
+  scorers: {
+    playerId: number | null;
+    guestName?: string;
+    team: "A" | "B" | null;
+    goals: number;
+  }[];
+};
+export const matchPrefillAtom = atomWithStorage<MatchPrefill | null>(
+  "reta:match-prefill",
+  null,
+);
+
 /** Convenience writer to toggle a single player in/out of the pool. */
 export const toggleSelectedAtom = atom(null, (get, set, id: number) => {
   const current = get(selectedIdsAtom);

@@ -120,6 +120,21 @@ export function useCasacaWheel({
     else toast.error(res.error);
   }
 
+  // Assign the turn manually (someone volunteers) — no spin, but picks from the
+  // same pool so the current list is respected.
+  async function assignManual(id: number) {
+    if (!canManage || spinning) return;
+    const chosen = pool.find((p) => p.id === id) ?? null;
+    if (!chosen) return;
+    const res = await recordCasacaSpin(
+      isGuest(chosen) ? { guestName: chosen.displayName } : { playerId: chosen.id },
+    );
+    if (res.ok) {
+      setWinner(chosen);
+      router.refresh();
+    } else toast.error(res.error);
+  }
+
   return {
     pool,
     selectedCount: selectedIds.length,
@@ -133,6 +148,7 @@ export function useCasacaWheel({
     canManage,
     canSpin,
     spin,
+    assignManual,
     onSpinEnd,
     dismissWinner: () => setWinner(null),
   };

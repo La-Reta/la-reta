@@ -25,6 +25,7 @@ export function Matchup({
   nameB,
   hasResult,
   onViewChange,
+  onSwap,
 }: {
   result: BalancedTeams;
   view: MatchupView;
@@ -32,6 +33,7 @@ export function Matchup({
   nameB: string;
   hasResult: boolean;
   onViewChange: (view: MatchupView) => void;
+  onSwap?: (fromId: number, toId: number) => void;
 }) {
   const { ratingA, ratingB, diff, teamA, teamB } = result;
   const { pitchRef, exportPitchRef, listRef, exportListRef, busy, download } =
@@ -120,7 +122,13 @@ export function Matchup({
               ratingB={ratingB}
               nameA={nameA}
               nameB={nameB}
+              onSwap={onSwap}
             />
+            {onSwap ? (
+              <p className="text-muted-foreground text-center text-xs">
+                Arrastra una ficha sobre otra para intercambiarlas.
+              </p>
+            ) : null}
             <div
               aria-hidden="true"
               className="pointer-events-none fixed top-0"

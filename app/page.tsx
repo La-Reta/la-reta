@@ -56,9 +56,10 @@ export default async function DashboardPage() {
   for (const p of players) counts[positionGroup(p.position)]++;
 
   // Everyone tied for the most goals — the spotlight rotates through them.
-  const maxGoals = topScorers[0]?.goals ?? 0;
+  // Independiente del orden de la tabla (getTopScorers ordena por G+A).
+  const maxGoals = Math.max(0, ...topScorers.map((s) => s.goals));
   const tiedScorers = topScorers
-    .filter((s) => s.goals === maxGoals)
+    .filter((s) => s.goals === maxGoals && s.goals > 0)
     .map((s) => ({
       player: players.find((p) => p.id === s.playerId),
       goals: s.goals,

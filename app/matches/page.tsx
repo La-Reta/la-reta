@@ -40,7 +40,7 @@ export default async function MatchesPage() {
         </section>
 
         <section className="space-y-3 lg:sticky lg:top-6">
-          <SectionHeading title="Goleadores" />
+          <SectionHeading title="Goles y asistencias" />
           <TopScorersCard scorers={scorers} />
         </section>
       </div>
