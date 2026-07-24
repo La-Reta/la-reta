@@ -339,6 +339,7 @@ export default async function MatchDetailPage({
       playerId: s.playerId,
       guestName,
       name: s.name,
+      photoUrl: s.photoUrl,
       team: s.team,
       isGuest: s.isGuest,
     });

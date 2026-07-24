@@ -226,6 +226,7 @@ export type Scorer = {
   name: string;
   displayName: string;
   nationality: string;
+  photoUrl: string | null;
   team: string | null;
   goals: number;
   assists: number;
@@ -251,10 +252,12 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
+      photoUrl: players.photoUrl,
     })
     .from(matchGoals)
     .leftJoin(players, eq(matchGoals.playerId, players.id));
 
+  const imageMap = playerImageMap();
   const byMatch = new Map<number, Scorer[]>();
   for (const g of goalRows) {
     const list = byMatch.get(g.matchId) ?? [];
@@ -264,6 +267,10 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       name: g.name ?? g.guestName ?? "Invitado",
       displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
       nationality: g.nationality ?? "mx",
+      photoUrl:
+        g.playerId != null
+          ? (imageMap.get(g.playerId) ?? g.photoUrl ?? null)
+          : null,
       team: g.team,
       goals: g.goals,
       assists: g.assists,
@@ -299,11 +306,13 @@ export async function getMatchById(
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
+      photoUrl: players.photoUrl,
     })
     .from(matchGoals)
     .leftJoin(players, eq(matchGoals.playerId, players.id))
     .where(eq(matchGoals.matchId, id));
 
+  const imageMap = playerImageMap();
   return {
     ...m,
     scorers: goalRows
@@ -312,6 +321,10 @@ export async function getMatchById(
         name: g.name ?? g.guestName ?? "Invitado",
         displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
         nationality: g.nationality ?? "mx",
+        photoUrl:
+          g.playerId != null
+            ? (imageMap.get(g.playerId) ?? g.photoUrl ?? null)
+            : null,
         team: g.team,
         goals: g.goals,
         assists: g.assists,

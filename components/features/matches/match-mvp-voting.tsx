@@ -2,7 +2,7 @@
 
 import { castMatchVote, resetMatchVote } from "@/app/actions/match-votes";
 import { SectionHeading } from "@/components/shared/section-heading";
-import { Avatar, AvatarFallback } from "@/components/ui/avatar";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -32,6 +32,7 @@ export type VoteCandidate = {
   playerId: number | null;
   guestName: string | null;
   name: string;
+  photoUrl: string | null;
   team: string | null;
   isGuest: boolean;
 };
@@ -292,6 +293,9 @@ function VotingPanel({
             const row = (
               <div className="flex items-center gap-3">
                 <Avatar className="size-8 shrink-0">
+                  {c.photoUrl ? (
+                    <AvatarImage src={c.photoUrl} alt="" />
+                  ) : null}
                   <AvatarFallback className="text-[10px] font-semibold">
                     {initials(c.name)}
                   </AvatarFallback>
@@ -402,6 +406,9 @@ function ClosedResults({
               {winner ? (
                 <>
                   <Avatar className="size-14">
+                    {winner.photoUrl ? (
+                      <AvatarImage src={winner.photoUrl} alt="" />
+                    ) : null}
                     <AvatarFallback className="text-sm font-bold">
                       {initials(winner.name)}
                     </AvatarFallback>
