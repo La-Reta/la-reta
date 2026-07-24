@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/select";
 import { POSITION_NAME, POSITIONS, type Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
-import { UserPlusIcon, XIcon } from "lucide-react";
+import { PencilIcon, UserPlusIcon, XIcon } from "lucide-react";
 import * as React from "react";
 
 // value + label, así el trigger del Select muestra la posición completa.
@@ -29,10 +29,15 @@ const POSITION_ITEMS = POSITIONS.map((p) => ({
 export function GuestManager({
   guests,
   onAdd,
+  onEdit,
   onRemove,
 }: {
   guests: Player[];
   onAdd: (input: { name: string; overall: number; position: Position }) => void;
+  onEdit: (
+    id: number,
+    input: { name: string; overall: number; position: Position },
+  ) => void;
   onRemove: (id: number) => void;
 }) {
   const [name, setName] = React.useState("");
@@ -40,15 +45,31 @@ export function GuestManager({
   // guard the submit instead of coercing an empty value to a number.
   const [overall, setOverall] = React.useState("38");
   const [position, setPosition] = React.useState<Position>("CM");
+  // When set, the form edits that guest instead of adding a new one.
+  const [editingId, setEditingId] = React.useState<number | null>(null);
+
+  function reset() {
+    setName("");
+    setOverall("38");
+    setPosition("CM");
+    setEditingId(null);
+  }
+
+  function startEdit(g: Player) {
+    setEditingId(g.id);
+    setName(g.name);
+    setOverall(String(g.overall));
+    setPosition(g.position as Position);
+  }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const n = name.trim();
     if (!n) return;
-    onAdd({ name: n, overall: Number(overall), position });
-    setName("");
-    setOverall("38");
-    setPosition("CM");
+    const input = { name: n, overall: Number(overall), position };
+    if (editingId !== null) onEdit(editingId, input);
+    else onAdd(input);
+    reset();
   }
 
   return (
@@ -105,7 +126,10 @@ export function GuestManager({
               </SelectTrigger>
               {/* alignItemWithTrigger=false + w-auto: dropdown normal debajo del
                   trigger y ancho por contenido, para no cortar los labels largos. */}
-              <SelectContent alignItemWithTrigger={false} className="w-auto min-w-52">
+              <SelectContent
+                alignItemWithTrigger={false}
+                className="w-auto min-w-52"
+              >
                 {POSITION_ITEMS.map((it) => (
                   <SelectItem key={it.value} value={it.value}>
                     {it.label}
@@ -116,9 +140,14 @@ export function GuestManager({
           </div>
 
           <Button type="submit" disabled={!name.trim()}>
-            <UserPlusIcon />
-            Agregar
+            {editingId !== null ? <PencilIcon /> : <UserPlusIcon />}
+            {editingId !== null ? "Guardar" : "Agregar"}
           </Button>
+          {editingId !== null ? (
+            <Button type="button" variant="secondary" onClick={reset}>
+              Cancelar
+            </Button>
+          ) : null}
         </form>
 
         {guests.length > 0 ? (
@@ -133,6 +162,14 @@ export function GuestManager({
                 </span>
                 <span className="font-medium">{g.name}</span>
                 <span className="text-muted-foreground">{g.position}</span>
+                <button
+                  type="button"
+                  onClick={() => startEdit(g)}
+                  aria-label={`Editar ${g.name}`}
+                  className="hover:bg-background text-muted-foreground hover:text-foreground flex size-5 items-center justify-center rounded-full transition-colors"
+                >
+                  <PencilIcon className="size-3" />
+                </button>
                 <button
                   type="button"
                   onClick={() => onRemove(g.id)}

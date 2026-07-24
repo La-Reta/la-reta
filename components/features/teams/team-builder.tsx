@@ -101,6 +101,18 @@ export function TeamBuilder({
     setSelected((prev) => [...prev, guest.id]); // auto-convocar
   }
 
+  function editGuest(
+    id: number,
+    input: { name: string; overall: number; position: Position },
+  ) {
+    setResult(null);
+    // Rebuild the guest (recomputing stats from overall) but keep its id so it
+    // stays selected and its board/live references don't break.
+    setGuests((prev) =>
+      prev.map((g) => (g.id === id ? { ...makeGuestPlayer(input, prev), id } : g)),
+    );
+  }
+
   function removeGuest(id: number) {
     setResult(null);
     setGuests((prev) => prev.filter((g) => g.id !== id));
@@ -198,7 +210,12 @@ export function TeamBuilder({
         </Empty>
       )}
 
-      <GuestManager guests={guests} onAdd={addGuest} onRemove={removeGuest} />
+      <GuestManager
+        guests={guests}
+        onAdd={addGuest}
+        onEdit={editGuest}
+        onRemove={removeGuest}
+      />
 
       <Convocatoria
         players={allPlayers}
