@@ -233,6 +233,8 @@ export const matchGoals = pgTable("match_goals", {
   // A/B from the match scoreboard. Nullable so existing historical rows remain valid.
   team: varchar("team", { length: 1 }),
   goals: smallint("goals").notNull().default(0),
+  // Asistencias a gol del jugador/invitado en este partido (para stats G+A).
+  assists: smallint("assists").notNull().default(0),
 });
 
 export type MatchGoal = typeof matchGoals.$inferSelect;

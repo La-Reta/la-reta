@@ -34,12 +34,23 @@ export type EditMatch = {
     playerId: number | null;
     guestName?: string | null;
     goals: number;
+    assists?: number;
     team?: string | null;
   }[];
 };
 
-type ScorerRow = { playerId: string; team: string; goals: string };
-type GuestRow = { guestName: string; team: string; goals: string };
+type ScorerRow = {
+  playerId: string;
+  team: string;
+  goals: string;
+  assists: string;
+};
+type GuestRow = {
+  guestName: string;
+  team: string;
+  goals: string;
+  assists: string;
+};
 type MatchTeam = "A" | "B";
 
 function subscribe() {
@@ -111,10 +122,11 @@ export function MatchForm({
         playerId: String(s.playerId),
         team: s.team ?? "",
         goals: String(s.goals),
+        assists: String(s.assists ?? 0),
       })) ?? [],
   );
   // Guests aren't in the roster picker, so they get their own editable rows
-  // (name/team/goals) — a guest who didn't show up can be edited or removed.
+  // (name/team/goals/asistencias) — a guest who didn't show up can be edited or removed.
   const [guestScorers, setGuestScorers] = React.useState<GuestRow[]>(
     () =>
       match?.scorers
@@ -123,6 +135,7 @@ export function MatchForm({
           guestName: s.guestName ?? "Invitado",
           team: s.team ?? "",
           goals: String(s.goals),
+          assists: String(s.assists ?? 0),
         })) ?? [],
   );
   // Set when the form was prefilled from a generated reta, so the created match
@@ -148,6 +161,7 @@ export function MatchForm({
           playerId: String(s.playerId),
           team: s.team ?? "",
           goals: String(s.goals),
+          assists: "0",
         })),
     );
     setGuestScorers(
@@ -157,6 +171,7 @@ export function MatchForm({
           guestName: s.guestName ?? "Invitado",
           team: s.team ?? "",
           goals: String(s.goals),
+          assists: "0",
         })),
     );
     setPrefill(null);
@@ -193,7 +208,10 @@ export function MatchForm({
       return;
     }
     // Fila nueva sin jugador aún → no altera el marcador todavía.
-    setScorers((s) => [...s, { playerId: "", team: "A", goals: "1" }]);
+    setScorers((s) => [
+      ...s,
+      { playerId: "", team: "A", goals: "1", assists: "0" },
+    ]);
   }
   function updateScorer(i: number, patch: Partial<ScorerRow>) {
     const next = scorers.map((row, idx) =>
@@ -209,7 +227,10 @@ export function MatchForm({
   }
 
   function addGuest() {
-    setGuestScorers((g) => [...g, { guestName: "", team: "A", goals: "0" }]);
+    setGuestScorers((g) => [
+      ...g,
+      { guestName: "", team: "A", goals: "0", assists: "0" },
+    ]);
   }
   function updateGuest(i: number, patch: Partial<GuestRow>) {
     const next = guestScorers.map((row, idx) =>
@@ -250,8 +271,9 @@ export function MatchForm({
               playerId: Number(s.playerId),
               team: parseTeam(s.team),
               goals: parseNumberInput(s.goals),
+              assists: parseNumberInput(s.assists),
             })),
-          // Guests carry their own editable name/team/goals; drop blank names.
+          // Guests carry their own editable name/team/goals/asistencias; drop blanks.
           ...guestScorers
             .filter((g) => g.guestName.trim())
             .map((g) => ({
@@ -259,6 +281,7 @@ export function MatchForm({
               guestName: g.guestName.trim(),
               team: parseTeam(g.team),
               goals: parseNumberInput(g.goals),
+              assists: parseNumberInput(g.assists),
             })),
         ],
       };
@@ -393,7 +416,7 @@ export function MatchForm({
           <div className="space-y-2">
             <div className="flex items-center justify-between">
               <Label className="text-xs">
-                Jugadores (goles y asistencia)
+                Jugadores (goles y asistencias)
                 {scorers.length > 0 ? (
                   <span className="text-muted-foreground ml-1 font-normal">
                     · {scorers.length}
@@ -412,16 +435,17 @@ export function MatchForm({
             </div>
             {scorers.length === 0 ? (
               <p className="text-muted-foreground text-xs">
-                Agrega a quienes jugaron y asígnalos a un equipo. Deja los goles
-                en 0 para registrar solo su asistencia.
+                Agrega a quienes jugaron y asígnalos a un equipo. Deja goles y
+                asistencias en 0 para registrar solo su presencia.
               </p>
             ) : (
               <div className="space-y-1.5">
-                <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
                   <span className="text-center">#</span>
                   <span>Jugador</span>
                   <span>Equipo</span>
                   <span className="text-center">Goles</span>
+                  <span className="text-center">Asist.</span>
                   <span className="sr-only">Quitar</span>
                 </div>
                 {scorers.map((row, i) => {
@@ -434,7 +458,7 @@ export function MatchForm({
                   return (
                     <div
                       key={i}
-                      className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_auto]"
+                      className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_auto]"
                     >
                       <span className="text-muted-foreground text-center text-xs font-medium tabular-nums">
                         {i + 1}
@@ -483,6 +507,16 @@ export function MatchForm({
                         className="w-full text-center"
                         aria-label="Goles"
                       />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={row.assists}
+                        onChange={(e) =>
+                          updateScorer(i, { assists: e.target.value })
+                        }
+                        className="w-full text-center"
+                        aria-label="Asistencias"
+                      />
                       <Button
                         type="button"
                         variant="destructive"
@@ -522,20 +556,22 @@ export function MatchForm({
               {guestScorers.length === 0 ? (
                 <p className="text-muted-foreground text-xs">
                   Jugadores de última hora que no están en la plantilla. Edita su
-                  nombre, equipo o goles; quítalos si al final no jugaron.
+                  nombre, equipo, goles o asistencias; quítalos si al final no
+                  jugaron.
                 </p>
               ) : (
                 <div className="space-y-1.5">
-                  <div className="text-muted-foreground hidden grid-cols-[1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                  <div className="text-muted-foreground hidden grid-cols-[1fr_9rem_3.5rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
                     <span>Invitado</span>
                     <span>Equipo</span>
                     <span className="text-center">Goles</span>
+                    <span className="text-center">Asist.</span>
                     <span className="sr-only">Quitar</span>
                   </div>
                   {guestScorers.map((g, i) => (
                     <div
                       key={i}
-                      className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_3.5rem_auto]"
+                      className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_3.5rem_3.5rem_auto]"
                     >
                       <Input
                         value={g.guestName}
@@ -571,6 +607,16 @@ export function MatchForm({
                         }
                         className="w-full text-center"
                         aria-label="Goles"
+                      />
+                      <Input
+                        type="number"
+                        min={0}
+                        value={g.assists}
+                        onChange={(e) =>
+                          updateGuest(i, { assists: e.target.value })
+                        }
+                        className="w-full text-center"
+                        aria-label="Asistencias"
                       />
                       <Button
                         type="button"

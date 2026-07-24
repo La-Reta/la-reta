@@ -54,6 +54,7 @@ export default async function EditMatchPage({
             guestName: s.isGuest ? s.name : undefined,
             team: s.team,
             goals: s.goals,
+            assists: s.assists,
           })),
         }}
         admin={admin}

@@ -213,6 +213,7 @@ export type Scorer = {
   nationality: string;
   team: string | null;
   goals: number;
+  assists: number;
   isGuest: boolean;
 };
 export type MatchWithScorers = Match & { scorers: Scorer[] };
@@ -231,6 +232,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
+      assists: matchGoals.assists,
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
@@ -249,6 +251,7 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
       nationality: g.nationality ?? "mx",
       team: g.team,
       goals: g.goals,
+      assists: g.assists,
       isGuest: guest,
     });
     byMatch.set(g.matchId, list);
@@ -277,6 +280,7 @@ export async function getMatchById(
       guestName: matchGoals.guestName,
       team: matchGoals.team,
       goals: matchGoals.goals,
+      assists: matchGoals.assists,
       name: players.name,
       displayName: players.displayName,
       nationality: players.nationality,
@@ -295,6 +299,7 @@ export async function getMatchById(
         nationality: g.nationality ?? "mx",
         team: g.team,
         goals: g.goals,
+        assists: g.assists,
         isGuest: g.playerId == null,
       }))
       .sort((a, b) => b.goals - a.goals),
@@ -309,15 +314,18 @@ export type TopScorer = {
   displayName: string;
   nationality: string;
   goals: number;
+  assists: number;
+  /** Goles + asistencias — el ordenamiento de la tabla combinada. */
+  contributions: number;
   matches: number;
   isGuest: boolean;
 };
 
 /**
- * Goal tally across all matches, top scorers first — roster players AND guests.
- * Grouping by (playerId, guestName) keeps each roster player their own group and
- * each guest aggregated by name, so guest goals aren't lost for stats even
- * though guests have no player profile.
+ * Goal + assist tally across all matches — roster players AND guests — ordered by
+ * G+A (contributions), then goals. Grouping by (playerId, guestName) keeps each
+ * roster player their own group and each guest aggregated by name, so their goals
+ * and assists aren't lost even though guests have no player profile.
  *
  * ponytail: guests group by their exact (trimmed) name; a different spelling or
  * casing won't merge. Add name normalization/an index on guest_name if guest
@@ -325,6 +333,8 @@ export type TopScorer = {
  */
 export async function getTopScorers(): Promise<TopScorer[]> {
   const totalGoals = sql<number>`sum(${matchGoals.goals})`;
+  const totalAssists = sql<number>`sum(${matchGoals.assists})`;
+  const contributions = sql<number>`sum(${matchGoals.goals} + ${matchGoals.assists})`;
   const rows = await db
     .select({
       playerId: matchGoals.playerId,
@@ -333,6 +343,8 @@ export async function getTopScorers(): Promise<TopScorer[]> {
       displayName: players.displayName,
       nationality: players.nationality,
       goals: totalGoals.mapWith(Number),
+      assists: totalAssists.mapWith(Number),
+      contributions: contributions.mapWith(Number),
       matches: sql<number>`count(distinct ${matchGoals.matchId})`.mapWith(
         Number,
       ),
@@ -346,8 +358,9 @@ export async function getTopScorers(): Promise<TopScorer[]> {
       players.displayName,
       players.nationality,
     )
-    .having(sql`sum(${matchGoals.goals}) > 0`)
-    .orderBy(desc(totalGoals));
+    // Aparece quien haya aportado algo (gol o asistencia).
+    .having(sql`sum(${matchGoals.goals} + ${matchGoals.assists}) > 0`)
+    .orderBy(desc(contributions), desc(totalGoals));
 
   return rows
     .filter((r) => r.playerId != null || Boolean(r.guestName))
@@ -361,6 +374,8 @@ export async function getTopScorers(): Promise<TopScorer[]> {
         displayName: isGuest ? guestName : (r.displayName ?? guestName),
         nationality: isGuest ? "" : (r.nationality ?? "mx"),
         goals: r.goals,
+        assists: r.assists,
+        contributions: r.contributions,
         matches: r.matches,
         isGuest,
       };

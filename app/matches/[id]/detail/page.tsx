@@ -119,6 +119,7 @@ function TeamFigureCard({
     (sum, scorer) => sum + scorer.goals,
     0,
   );
+  const totalAssists = scorers.reduce((sum, s) => sum + s.assists, 0);
   const guestGoals = scorers
     .filter((s) => s.isGuest)
     .reduce((sum, s) => sum + s.goals, 0);
@@ -172,6 +173,12 @@ function TeamFigureCard({
           <span>Goles asociados</span>
           <span className="font-mono font-bold tabular-nums">
             {registeredGoals}/{score}
+          </span>
+        </div>
+        <div className="text-muted-foreground flex items-center justify-between text-xs">
+          <span>Asistencias</span>
+          <span className="font-mono font-bold tabular-nums">
+            {totalAssists}
           </span>
         </div>
         {guestGoals > 0 ? (
@@ -252,9 +259,16 @@ function TeamRosterCard({
                       {scorer.name}
                     </Link>
                   )}
-                  <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
-                    {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
-                  </Badge>
+                  <span className="flex shrink-0 items-center gap-1.5">
+                    <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
+                      {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
+                    </Badge>
+                    {scorer.assists > 0 ? (
+                      <Badge variant="outline" className="text-[10px]">
+                        {scorer.assists} asis.
+                      </Badge>
+                    ) : null}
+                  </span>
                 </div>
                 <div className="bg-muted ml-[1.625rem] h-1.5 overflow-hidden rounded-full">
                   <div
@@ -423,6 +437,9 @@ export default async function MatchDetailPage({
                       "Sin equipo"
                     )}{" "}
                     · {mvp.goals} gol{mvp.goals === 1 ? "" : "es"}
+                    {mvp.assists > 0
+                      ? ` · ${mvp.assists} asistencia${mvp.assists === 1 ? "" : "s"}`
+                      : ""}
                   </p>
                 </>
               ) : (
