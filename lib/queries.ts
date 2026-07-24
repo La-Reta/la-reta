@@ -17,6 +17,7 @@ import {
   reports,
   playerSignups,
   casacaAssignments,
+  matchVotes,
   type Player,
   type StatHistory,
   type Idea,
@@ -28,6 +29,7 @@ import {
   type PlayerSignup,
 } from "@/lib/db";
 import type { Position } from "@/lib/constants";
+import { candidateKey, type VoteCategory } from "@/lib/match-votes";
 import { rotatingWords } from "@/constants/rotatingWords";
 
 /**
@@ -317,6 +319,68 @@ export async function getMatchById(
       }))
       .sort((a, b) => b.goals - a.goals),
   };
+}
+
+// ── Match awards (votación) ──────────────────────────────────────────────────
+export type VoteTally = {
+  category: VoteCategory;
+  playerId: number | null;
+  guestName: string | null;
+  name: string;
+  count: number;
+};
+
+/** Conteo de votos por (categoría, candidato) de un partido, con nombres. */
+export async function getMatchVoteTally(matchId: number): Promise<VoteTally[]> {
+  const rows = await db
+    .select({
+      category: matchVotes.category,
+      playerId: matchVotes.playerId,
+      guestName: matchVotes.guestName,
+      name: players.name,
+      count: sql<number>`count(*)`.mapWith(Number),
+    })
+    .from(matchVotes)
+    .leftJoin(players, eq(matchVotes.playerId, players.id))
+    .where(eq(matchVotes.matchId, matchId))
+    .groupBy(
+      matchVotes.category,
+      matchVotes.playerId,
+      matchVotes.guestName,
+      players.name,
+    );
+  return rows.map((r) => ({
+    category: r.category as VoteCategory,
+    playerId: r.playerId,
+    guestName: r.guestName,
+    name: r.playerId != null ? (r.name ?? "—") : (r.guestName ?? "Invitado"),
+    count: r.count,
+  }));
+}
+
+/** Votos del votante actual: `category → candidateKey`. Vacío sin votante. */
+export async function getMyMatchVotes(
+  matchId: number,
+  voterId: string | null | undefined,
+): Promise<Record<string, string>> {
+  if (!voterId) return {};
+  const rows = await db
+    .select({
+      category: matchVotes.category,
+      playerId: matchVotes.playerId,
+      guestName: matchVotes.guestName,
+    })
+    .from(matchVotes)
+    .where(
+      and(eq(matchVotes.matchId, matchId), eq(matchVotes.voterId, voterId)),
+    );
+  const out: Record<string, string> = {};
+  for (const r of rows)
+    out[r.category] = candidateKey({
+      playerId: r.playerId,
+      guestName: r.guestName,
+    });
+  return out;
 }
 
 export type TopScorer = {

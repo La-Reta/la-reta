@@ -1,13 +1,25 @@
 import { MatchScorersChart } from "@/components/features/matches/match-detail-charts";
-import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { MatchHero } from "@/components/features/matches/match-hero";
+import {
+  MatchMvpVoting,
+  type VoteCandidate,
+} from "@/components/features/matches/match-mvp-voting";
+import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
+import { SectionHeading } from "@/components/shared/section-heading";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
-import { formatShortDateOnly } from "@/lib/dates";
-import { getMatchById, type Scorer } from "@/lib/queries";
+import { formatLongDate, formatShortDateOnly } from "@/lib/dates";
+import { candidateKey, isVotingOpen, votingClosesAt } from "@/lib/match-votes";
+import {
+  getMatchById,
+  getMatchVoteTally,
+  getMyMatchVotes,
+  type Scorer,
+} from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { auth } from "@clerk/nextjs/server";
 import {
   ClockIcon,
   MedalIcon,
@@ -22,7 +34,6 @@ import { Metadata } from "next";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { ReactNode } from "react";
-import { SectionHeading } from "@/components/shared/section-heading";
 
 export const metadata: Metadata = { title: "Detalle de partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -130,7 +141,10 @@ function TeamFigureCard({
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <span
-              className={cn("size-2 rounded-full", ROSTER_TONE[tone === "A" ? "sky" : "rose"])}
+              className={cn(
+                "size-2 rounded-full",
+                ROSTER_TONE[tone === "A" ? "sky" : "rose"],
+              )}
             />
             {teamName}
           </CardTitle>
@@ -296,12 +310,39 @@ export default async function MatchDetailPage({
   params: Promise<{ id: string }>;
 }) {
   const { id } = await params;
-  const [match, admin] = await Promise.all([
+  const [match, admin, { userId }] = await Promise.all([
     getMatchById(Number(id)),
     isAdmin(),
+    auth(),
   ]);
 
   if (!match) notFound();
+
+  // ── Votación de premios (Figura / Golazo / Error) ──
+  const voterId = userId ?? (admin ? "admin" : null);
+  const [voteTally, myVotes] = await Promise.all([
+    getMatchVoteTally(match.id),
+    getMyMatchVotes(match.id, voterId),
+  ]);
+  const votingOpen = isVotingOpen(match.createdAt);
+  const closesLabel = formatLongDate(votingClosesAt(match.createdAt));
+  // Candidatos = participantes únicos del partido (roster o invitado).
+  const voteCandidates: VoteCandidate[] = [];
+  const seenCandidates = new Set<string>();
+  for (const s of match.scorers) {
+    const guestName = s.isGuest ? s.name : null;
+    const key = candidateKey({ playerId: s.playerId, guestName });
+    if (seenCandidates.has(key)) continue;
+    seenCandidates.add(key);
+    voteCandidates.push({
+      key,
+      playerId: s.playerId,
+      guestName,
+      name: s.name,
+      team: s.team,
+      isGuest: s.isGuest,
+    });
+  }
 
   const totalGoals = match.scoreA + match.scoreB;
   const winner =
@@ -327,7 +368,9 @@ export default async function MatchDetailPage({
   const guestGoals = match.scorers
     .filter((s) => s.isGuest)
     .reduce((n, s) => n + s.goals, 0);
-  const aShare = totalGoals ? Math.round((match.scoreA / totalGoals) * 100) : 50;
+  const aShare = totalGoals
+    ? Math.round((match.scoreA / totalGoals) * 100)
+    : 50;
 
   const scorerChartData = scored.slice(0, 6).map((scorer) => ({
     player: scorer.displayName,
@@ -470,7 +513,10 @@ export default async function MatchDetailPage({
             </div>
             <div className="bg-muted flex h-2.5 overflow-hidden rounded-full">
               <div className="bg-sky-500" style={{ width: `${aShare}%` }} />
-              <div className="bg-rose-500" style={{ width: `${100 - aShare}%` }} />
+              <div
+                className="bg-rose-500"
+                style={{ width: `${100 - aShare}%` }}
+              />
             </div>
             <div className="mt-1 flex items-center justify-between font-mono text-sm font-bold tabular-nums">
               <span className={TEAM_TEXT.A}>{match.scoreA}</span>
@@ -600,6 +646,16 @@ export default async function MatchDetailPage({
           </CardContent>
         </Card>
       </section>
+
+      <MatchMvpVoting
+        matchId={match.id}
+        candidates={voteCandidates}
+        tally={voteTally}
+        myVotes={myVotes}
+        canVote={admin || Boolean(userId)}
+        votingOpen={votingOpen}
+        closesLabel={closesLabel}
+      />
     </div>
   );
 }

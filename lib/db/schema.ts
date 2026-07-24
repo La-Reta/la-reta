@@ -245,6 +245,48 @@ export const matchGoals = pgTable("match_goals", {
 export type MatchGoal = typeof matchGoals.$inferSelect;
 export type NewMatchGoal = typeof matchGoals.$inferInsert;
 
+// ── Match awards (votación post-partido) ────────────────────────────────────
+/** Premios que se votan por partido: mejor gol, peor error y figura (MVP). */
+export const voteCategoryEnum = pgEnum("vote_category", [
+  "gol",
+  "error",
+  "figura",
+]);
+
+/**
+ * Un voto de un usuario para un candidato del partido en una categoría. El
+ * candidato es un participante: roster (`playerId`) o invitado (`guestName`),
+ * mismo patrón que match_goals. Único por (partido, categoría, votante), así que
+ * cambiar de voto hace upsert. Votante = userId de Clerk (o "admin" por PIN).
+ */
+export const matchVotes = pgTable(
+  "match_votes",
+  {
+    id: serial("id").primaryKey(),
+    matchId: integer("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    category: voteCategoryEnum("category").notNull(),
+    voterId: text("voter_id").notNull(),
+    playerId: integer("player_id").references(() => players.id, {
+      onDelete: "cascade",
+    }),
+    guestName: varchar("guest_name", { length: 60 }),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+    updatedAt: timestamp("updated_at").notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex("match_votes_voter_unique").on(
+      t.matchId,
+      t.category,
+      t.voterId,
+    ),
+  ],
+);
+
+export type MatchVote = typeof matchVotes.$inferSelect;
+export type NewMatchVote = typeof matchVotes.$inferInsert;
+
 // ── Reta words (community banner) ───────────────────────────────────────────
 /** Words people contribute to fill "La Reta ____", with light client context. */
 export const retaWords = pgTable("reta_words", {

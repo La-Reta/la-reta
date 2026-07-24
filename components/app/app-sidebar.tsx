@@ -374,16 +374,12 @@ export function AppSidebar({ admin }: { admin: boolean }) {
       </SidebarContent>
 
       <SidebarFooter className="gap-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1">
-        <div className="border-sidebar-border/70 bg-sidebar-accent/35 rounded-xl border px-3 py-2 group-data-[collapsible=icon]:hidden">
-          <div className="text-sidebar-foreground/72 flex items-center gap-2 text-[11px] font-medium">
-            <SparkleIcon className="text-sidebar-primary size-3.5" />
-            Stack actual
-          </div>
-          <p className="text-sidebar-foreground/58 mt-1 text-[11px]">
-            Next.js React.js Neon Drizzle y más para la mejor reta.
-          </p>
-          <Badge variant={"outline"}>Beta v1.1.0</Badge>
-        </div>
+        <Badge
+          variant={"outline"}
+          className="group-data-[collapsible=icon]:hidden"
+        >
+          <SparkleIcon className="text-sidebar-primary size-3.5" /> Beta v1.1.0
+        </Badge>
       </SidebarFooter>
     </Sidebar>
   );
