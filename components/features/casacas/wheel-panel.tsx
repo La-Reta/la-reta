@@ -10,8 +10,16 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import type { CasacaWheel } from "@/hooks/use-casaca-wheel";
-import { RefreshCwIcon, ShirtIcon, UserPlusIcon } from "lucide-react";
+import { HandIcon, RefreshCwIcon, ShirtIcon, UserPlusIcon } from "lucide-react";
+import * as React from "react";
 
 /** Status line under the spin button: why you can't spin, or who's resting. */
 function WheelStatus({
@@ -46,6 +54,52 @@ function WheelStatus({
     );
   }
   return null;
+}
+
+/** Manually assign the turn to someone who volunteers, from the current pool. */
+function ManualAssign({
+  wheel,
+}: {
+  wheel: Pick<CasacaWheel, "canManage" | "spinning" | "pool" | "assignManual">;
+}) {
+  const [id, setId] = React.useState("");
+  if (!wheel.canManage || wheel.pool.length === 0) return null;
+
+  return (
+    <div className="w-full border-t pt-4">
+      <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase">
+        <HandIcon className="size-3.5" />
+        Asignar manualmente (voluntario)
+      </div>
+      <div className="flex flex-wrap items-center gap-2">
+        <Select value={id} onValueChange={(v) => setId(v ?? "")}>
+          <SelectTrigger className="min-w-44 flex-1">
+            <SelectValue placeholder="Elige jugador" />
+          </SelectTrigger>
+          <SelectContent
+            alignItemWithTrigger={false}
+            className="w-auto min-w-52"
+          >
+            {wheel.pool.map((p) => (
+              <SelectItem key={p.id} value={String(p.id)}>
+                {p.displayName}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+        <Button
+          variant={!id ? "secondary" : "default"}
+          disabled={!id || wheel.spinning}
+          onClick={() => {
+            wheel.assignManual(Number(id));
+            setId("");
+          }}
+        >
+          Asignar
+        </Button>
+      </div>
+    </div>
+  );
 }
 
 export function WheelPanel({ wheel }: { wheel: CasacaWheel }) {
@@ -83,6 +137,8 @@ export function WheelPanel({ wheel }: { wheel: CasacaWheel }) {
         </Button>
 
         <WheelStatus wheel={wheel} />
+
+        <ManualAssign wheel={wheel} />
 
         {wheel.guestPlayers.length > 0 ? (
           <div className="w-full border-t pt-4">
