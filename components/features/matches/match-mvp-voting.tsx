@@ -2,6 +2,12 @@
 
 import { castMatchVote, resetMatchVote } from "@/app/actions/match-votes";
 import { SectionHeading } from "@/components/shared/section-heading";
+import {
+  Alert,
+  AlertAction,
+  AlertDescription,
+  AlertTitle,
+} from "@/components/ui/alert";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
@@ -15,13 +21,16 @@ import {
 } from "@/lib/match-votes";
 import type { VoteTally } from "@/lib/queries";
 import { cn } from "@/lib/utils";
+import { SignInButton, SignUpButton } from "@clerk/nextjs";
 import {
   CheckCircle2Icon,
   GoalIcon,
   LockIcon,
+  LogInIcon,
   RotateCcwIcon,
   ThumbsDownIcon,
   TrophyIcon,
+  UserRoundPlusIcon,
   type LucideIcon,
 } from "lucide-react";
 import * as React from "react";
@@ -165,6 +174,31 @@ export function MatchMvpVoting({
         </Badge>
       </div>
 
+      {votingOpen && !canVote ? (
+        <Alert>
+          <LogInIcon />
+          <AlertTitle>Inicia sesión para votar</AlertTitle>
+          <AlertDescription>
+            Necesitas una cuenta para elegir la figura, el golazo y el error del
+            partido.
+          </AlertDescription>
+          <AlertAction className="flex flex-wrap gap-2">
+            <SignInButton mode="modal">
+              <Button variant="secondary">
+                <LogInIcon />
+                Iniciar sesión
+              </Button>
+            </SignInButton>
+            <SignUpButton mode="modal">
+              <Button>
+                <UserRoundPlusIcon />
+                Crear cuenta
+              </Button>
+            </SignUpButton>
+          </AlertAction>
+        </Alert>
+      ) : null}
+
       {votingOpen ? (
         <VotingPanel
           activeCat={activeCat}
@@ -261,9 +295,7 @@ function VotingPanel({
             <p className="text-muted-foreground text-xs">
               {alreadyVoted
                 ? "Ya votaste aquí. Puedes resetear para volver a elegir."
-                : canVote
-                  ? cat.description
-                  : "Inicia sesión o entra como admin para votar."}
+                : cat.description}
             </p>
           </div>
           {canVote && alreadyVoted ? (
