@@ -440,7 +440,7 @@ export function MatchForm({
               </p>
             ) : (
               <div className="space-y-1.5">
-                <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                <div className="text-muted-foreground hidden grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_2.25rem] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
                   <span className="text-center">#</span>
                   <span>Jugador</span>
                   <span>Equipo</span>
@@ -458,7 +458,7 @@ export function MatchForm({
                   return (
                     <div
                       key={i}
-                      className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_auto]"
+                      className="grid items-center gap-2 sm:grid-cols-[1.5rem_1fr_9rem_3.5rem_3.5rem_2.25rem]"
                     >
                       <span className="text-muted-foreground text-center text-xs font-medium tabular-nums">
                         {i + 1}
@@ -555,13 +555,13 @@ export function MatchForm({
               </div>
               {guestScorers.length === 0 ? (
                 <p className="text-muted-foreground text-xs">
-                  Jugadores de última hora que no están en la plantilla. Edita su
-                  nombre, equipo, goles o asistencias; quítalos si al final no
-                  jugaron.
+                  Jugadores de última hora que no están en la plantilla. Edita
+                  su nombre, equipo, goles o asistencias; quítalos si al final
+                  no jugaron.
                 </p>
               ) : (
                 <div className="space-y-1.5">
-                  <div className="text-muted-foreground hidden grid-cols-[1fr_9rem_3.5rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                  <div className="text-muted-foreground hidden grid-cols-[1fr_9rem_3.5rem_3.5rem_2.25rem] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
                     <span>Invitado</span>
                     <span>Equipo</span>
                     <span className="text-center">Goles</span>
@@ -571,7 +571,7 @@ export function MatchForm({
                   {guestScorers.map((g, i) => (
                     <div
                       key={i}
-                      className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_3.5rem_3.5rem_auto]"
+                      className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_3.5rem_3.5rem_2.25rem]"
                     >
                       <Input
                         value={g.guestName}
@@ -585,7 +585,9 @@ export function MatchForm({
                       <NativeSelect
                         className="w-full"
                         value={g.team}
-                        onChange={(e) => updateGuest(i, { team: e.target.value })}
+                        onChange={(e) =>
+                          updateGuest(i, { team: e.target.value })
+                        }
                         aria-label="Equipo"
                       >
                         <NativeSelectOption value="">
@@ -635,16 +637,6 @@ export function MatchForm({
           </div>
 
           <div className="flex items-center gap-2 lg:justify-end">
-            {admin && (
-              <Button type="submit" disabled={pending}>
-                {isEdit ? <SaveIcon /> : <TrophyIcon />}
-                {pending
-                  ? "Guardando…"
-                  : isEdit
-                    ? "Guardar cambios"
-                    : "Registrar partido"}
-              </Button>
-            )}
             {isEdit && (
               <Button
                 type="button"
@@ -653,6 +645,16 @@ export function MatchForm({
                 disabled={pending}
               >
                 Cancelar
+              </Button>
+            )}
+            {admin && (
+              <Button type="submit" disabled={pending}>
+                {isEdit ? <SaveIcon /> : <TrophyIcon />}
+                {pending
+                  ? "Guardando…"
+                  : isEdit
+                    ? "Guardar cambios"
+                    : "Registrar partido"}
               </Button>
             )}
           </div>
