@@ -1,4 +1,8 @@
 import { GenerationsChart } from "@/components/features/teams/registro/generations-chart";
+import {
+  RetaToMatchList,
+  type RetaToMatchItem,
+} from "@/components/features/teams/registro/reta-to-match-list";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -8,16 +12,45 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import { formatApiDate, formatCompactDate } from "@/lib/dates";
 import { getGeneratedRetas } from "@/lib/queries";
 import { computeRetaStats, type RetaStats } from "@/lib/reta-stats";
+import { cn } from "@/lib/utils";
 import {
   ArrowLeftIcon,
+  CalendarRangeIcon,
+  CopyIcon,
+  HandshakeIcon,
+  LayersIcon,
   RepeatIcon,
+  ScaleIcon,
   ShuffleIcon,
-  UsersIcon,
+  TrophyIcon,
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
+
+/** Small tinted icon chip that fronts every section title, for a shared rhythm. */
+function CardIcon({
+  children,
+  tone = "primary",
+}: {
+  children: React.ReactNode;
+  tone?: "primary" | "amber";
+}) {
+  return (
+    <span
+      className={cn(
+        "grid size-7 shrink-0 place-items-center rounded-lg [&_svg]:size-4",
+        tone === "amber"
+          ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
+          : "bg-primary/10 text-primary",
+      )}
+    >
+      {children}
+    </span>
+  );
+}
 
 export const metadata: Metadata = { title: "Registro de retas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
@@ -25,6 +58,24 @@ export const dynamic = "force-dynamic";
 export default async function RetaRegistroPage() {
   const retas = await getGeneratedRetas();
   const stats = computeRetaStats(retas);
+
+  // Newest 12 retas, trimmed for the "llevar a partidos" hand-off. Date is
+  // formatted here (server) to avoid a client hydration mismatch.
+  const retaItems: RetaToMatchItem[] = retas.slice(0, 12).map((r) => ({
+    id: r.id,
+    teamAName: r.teamAName,
+    teamBName: r.teamBName,
+    ratingA: r.ratingA,
+    ratingB: r.ratingB,
+    dateLabel: formatCompactDate(r.createdAt),
+    playedAt: formatApiDate(r.createdAt),
+    players: r.players.map((p) => ({
+      playerId: p.playerId,
+      guestName: p.isGuest ? p.name : null,
+      team: p.team === "A" || p.team === "B" ? p.team : null,
+      name: p.name,
+    })),
+  }));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6">
@@ -47,30 +98,37 @@ export default async function RetaRegistroPage() {
             <StatTile
               label="Generaciones"
               value={stats.total}
-              icon={<ShuffleIcon className="size-4" />}
+              icon={<ShuffleIcon />}
             />
             <StatTile
               label="Splits únicos"
               value={stats.unique}
-              icon={<UsersIcon className="size-4" />}
+              icon={<LayersIcon />}
             />
             <StatTile
               label="Repetición"
               value={`${stats.repetitionRate}%`}
               sub={`${stats.repeated} repetidos`}
-              icon={<RepeatIcon className="size-4" />}
+              icon={<RepeatIcon />}
+              meter={stats.repetitionRate}
               accent={stats.repetitionRate >= 40}
             />
             <StatTile
               label="Diferencia media"
               value={stats.avgDiff}
               sub="OVR entre equipos"
+              icon={<ScaleIcon />}
             />
           </div>
 
           <Card size="sm">
             <CardHeader className="border-b">
-              <CardTitle className="text-base">Generaciones por día</CardTitle>
+              <CardTitle className="flex items-center gap-2 text-base">
+                <CardIcon>
+                  <CalendarRangeIcon />
+                </CardIcon>
+                Generaciones por día
+              </CardTitle>
               <CardDescription>
                 Últimos {Math.min(14, stats.perDay.length)} días con actividad
               </CardDescription>
@@ -88,6 +146,7 @@ export default async function RetaRegistroPage() {
           {stats.repeatedMatchups.length > 0 && (
             <RepeatedMatchups stats={stats} />
           )}
+          <RetaToMatchList retas={retaItems} />
         </>
       )}
     </div>
@@ -100,30 +159,44 @@ function StatTile({
   sub,
   icon,
   accent,
+  meter,
 }: {
   label: string;
   value: string | number;
   sub?: string;
   icon?: React.ReactNode;
   accent?: boolean;
+  /** 0–100. Draws a slim health bar under the value (e.g. repetition rate). */
+  meter?: number;
 }) {
   return (
     <Card size="sm">
       <CardContent>
         <p className="text-muted-foreground flex items-center gap-1.5 text-[11px] font-semibold tracking-wide uppercase">
-          {icon}
+          <CardIcon tone={accent ? "amber" : "primary"}>{icon}</CardIcon>
           {label}
         </p>
         <p
-          className="mt-1 font-mono text-3xl font-black tabular-nums"
-          style={{
-            color: accent ? "var(--color-amber-500, #f59e0b)" : undefined,
-          }}
+          className={cn(
+            "font-display mt-2 text-4xl leading-none font-bold tabular-nums",
+            accent && "text-amber-600 dark:text-amber-400",
+          )}
         >
           {value}
         </p>
+        {meter !== undefined ? (
+          <div className="bg-muted mt-2 h-1 overflow-hidden rounded-full">
+            <div
+              className={cn(
+                "h-full rounded-full",
+                accent ? "bg-amber-500" : "bg-primary",
+              )}
+              style={{ width: `${Math.min(100, Math.max(0, meter))}%` }}
+            />
+          </div>
+        ) : null}
         {sub ? (
-          <p className="text-muted-foreground mt-0.5 text-[11px]">{sub}</p>
+          <p className="text-muted-foreground mt-1.5 text-[11px]">{sub}</p>
         ) : null}
       </CardContent>
     </Card>
@@ -134,7 +207,12 @@ function TopPairs({ stats }: { stats: RetaStats }) {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
-        <CardTitle className="text-base">Duplas más frecuentes</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <CardIcon>
+            <HandshakeIcon />
+          </CardIcon>
+          Duplas más frecuentes
+        </CardTitle>
         <CardDescription>
           Jugadores que caen en el mismo equipo una y otra vez
         </CardDescription>
@@ -149,14 +227,14 @@ function TopPairs({ stats }: { stats: RetaStats }) {
             {stats.topPairs.map((pair) => (
               <li
                 key={pair.key}
-                className="flex items-center justify-between gap-2 py-2 text-sm"
+                className="flex items-center justify-between gap-2 py-2.5 text-sm"
               >
                 <span className="min-w-0 truncate">
                   <span className="font-medium">{pair.a}</span>
                   <span className="text-muted-foreground"> + </span>
                   <span className="font-medium">{pair.b}</span>
                 </span>
-                <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
+                <span className="bg-muted text-muted-foreground shrink-0 rounded-full px-2 py-0.5 font-mono text-xs font-semibold tabular-nums">
                   {pair.count}×
                 </span>
               </li>
@@ -173,22 +251,35 @@ function TopPlayers({ stats }: { stats: RetaStats }) {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
-        <CardTitle className="text-base">Más convocados</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <CardIcon>
+            <TrophyIcon />
+          </CardIcon>
+          Más convocados
+        </CardTitle>
         <CardDescription>Apariciones en equipos generados</CardDescription>
       </CardHeader>
       <CardContent className="pt-4">
         <ul className="space-y-3">
-          {stats.topPlayers.map((p) => (
-            <li key={p.playerId} className="space-y-1">
+          {stats.topPlayers.map((p, i) => (
+            <li key={p.playerId} className="space-y-1.5">
               <div className="flex items-center justify-between gap-2 text-sm">
-                <span className="min-w-0 truncate font-medium">{p.name}</span>
-                <span className="text-muted-foreground shrink-0 font-mono text-xs tabular-nums">
+                <span className="flex min-w-0 items-center gap-2">
+                  <span className="text-muted-foreground w-4 shrink-0 text-center font-mono text-xs font-semibold tabular-nums">
+                    {i + 1}
+                  </span>
+                  <span className="min-w-0 truncate font-medium">{p.name}</span>
+                </span>
+                <span className="text-foreground shrink-0 font-mono text-xs font-semibold tabular-nums">
                   {p.count}
                 </span>
               </div>
-              <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+              <div className="bg-muted ml-6 h-1.5 overflow-hidden rounded-full">
                 <div
-                  className="bg-primary h-full rounded-full"
+                  className={cn(
+                    "h-full rounded-full",
+                    i === 0 ? "bg-primary" : "bg-primary/50",
+                  )}
                   style={{ width: `${Math.round((p.count / max) * 100)}%` }}
                 />
               </div>
@@ -204,18 +295,23 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
-        <CardTitle className="text-base">Splits repetidos</CardTitle>
+        <CardTitle className="flex items-center gap-2 text-base">
+          <CardIcon tone="amber">
+            <CopyIcon />
+          </CardIcon>
+          Splits repetidos
+        </CardTitle>
         <CardDescription>
           Mismos equipos generados más de una vez (sin importar A/B)
         </CardDescription>
       </CardHeader>
-      <CardContent className="space-y-3 pt-4">
+      <CardContent className="space-y-2 pt-4">
         {stats.repeatedMatchups.map((m) => (
           <div
             key={m.retaId}
-            className="ring-foreground/10 flex flex-col gap-2 rounded-lg p-3 ring-1 sm:flex-row sm:items-center"
+            className="bg-muted/40 flex flex-col gap-2 rounded-2xl p-3 sm:flex-row sm:items-center"
           >
-            <span className="shrink-0 self-start rounded-sm bg-amber-500/15 px-2 py-0.5 font-mono text-xs font-bold text-amber-600 dark:text-amber-400">
+            <span className="shrink-0 self-start rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-xs font-bold text-amber-600 tabular-nums dark:text-amber-400">
               {m.count}×
             </span>
             <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs">
@@ -234,10 +330,14 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center gap-3 rounded-lg border border-dashed py-16 text-center">
-      <ShuffleIcon className="text-muted-foreground size-8" />
+    <div className="flex flex-col items-center gap-4 rounded-4xl border border-dashed py-20 text-center">
+      <span className="bg-primary/10 text-primary grid size-14 place-items-center rounded-2xl">
+        <ShuffleIcon className="size-7" />
+      </span>
       <div>
-        <p className="font-medium">Aún no hay retas generadas</p>
+        <p className="font-display text-lg font-bold tracking-tight">
+          Aún no hay retas generadas
+        </p>
         <p className="text-muted-foreground mt-1 text-sm">
           Arma unos equipos y aquí verás cómo se reparten con el tiempo.
         </p>

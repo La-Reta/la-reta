@@ -9,7 +9,6 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import { formatShortDateOnly } from "@/lib/dates";
-import { flagEmoji } from "@/lib/format";
 import { getMatchById, type Scorer } from "@/lib/queries";
 import { cn } from "@/lib/utils";
 import {
@@ -153,44 +152,62 @@ function TeamFigureCard({
   );
 }
 
+// Team accent for the roster bars/dot; unassigned falls back to primary.
+const ROSTER_TONE = {
+  sky: "bg-sky-500",
+  rose: "bg-rose-500",
+  muted: "bg-primary",
+} as const;
+
 function TeamRosterCard({
   title,
   scorers,
   maxGoals,
+  tone = "muted",
 }: {
   title: string;
   scorers: Scorer[];
   maxGoals: number;
+  tone?: keyof typeof ROSTER_TONE;
 }) {
+  // Sorted by goals so the numbered rank reflects the scoring order.
+  const ranked = [...scorers].sort((a, b) => b.goals - a.goals);
+
   return (
-    <div className="rounded-lg border">
-      <div className="flex items-center justify-between border-b px-3 py-2">
-        <p className="text-sm font-semibold">{title}</p>
-        <Badge variant="outline">{scorers.length} jugadores</Badge>
-      </div>
-      {scorers.length === 0 ? (
-        <p className="text-muted-foreground p-3 text-xs">
-          Sin jugadores asignados.
-        </p>
-      ) : (
-        <div className="space-y-2 p-3">
-          {scorers
-            .sort((a, b) => b.goals - a.goals)
-            .map((scorer, idx) => (
-              <div
+    <Card size="sm" className="overflow-hidden">
+      <CardHeader className="border-b">
+        <div className="flex items-center justify-between gap-2">
+          <CardTitle className="flex items-center gap-2 text-sm">
+            <span className={cn("size-2 rounded-full", ROSTER_TONE[tone])} />
+            {title}
+          </CardTitle>
+          <Badge variant="secondary">{scorers.length} jugadores</Badge>
+        </div>
+      </CardHeader>
+      <CardContent className="pt-3">
+        {ranked.length === 0 ? (
+          <p className="text-muted-foreground py-2 text-xs">
+            Sin jugadores asignados.
+          </p>
+        ) : (
+          <ul className="space-y-2.5">
+            {ranked.map((scorer, idx) => (
+              <li
                 key={`${title}-${scorer.playerId ?? `guest-${idx}`}`}
-                className="space-y-2"
+                className="space-y-1.5"
               >
-                <div className="flex items-center gap-2">
-                  <span className="text-lg">
-                    {flagEmoji(scorer.nationality)}
+                <div className="flex items-center gap-2.5">
+                  <span className="text-muted-foreground w-4 shrink-0 text-center font-mono text-xs font-semibold tabular-nums">
+                    {idx + 1}
                   </span>
                   {scorer.isGuest ? (
-                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
-                      {scorer.name}{" "}
-                      <span className="text-muted-foreground text-xs font-normal">
-                        · invitado
+                    <span className="flex min-w-0 flex-1 items-center gap-1.5">
+                      <span className="truncate text-sm font-medium">
+                        {scorer.name}
                       </span>
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        invitado
+                      </Badge>
                     </span>
                   ) : (
                     <Link
@@ -204,9 +221,9 @@ function TeamRosterCard({
                     {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
                   </Badge>
                 </div>
-                <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+                <div className="bg-muted ml-[1.625rem] h-1.5 overflow-hidden rounded-full">
                   <div
-                    className="bg-primary h-full rounded-full"
+                    className={cn("h-full rounded-full", ROSTER_TONE[tone])}
                     style={{
                       width:
                         scorer.goals > 0
@@ -215,11 +232,12 @@ function TeamRosterCard({
                     }}
                   />
                 </div>
-              </div>
+              </li>
             ))}
-        </div>
-      )}
-    </div>
+          </ul>
+        )}
+      </CardContent>
+    </Card>
   );
 }
 
@@ -376,11 +394,13 @@ export default async function MatchDetailPage({
                 title={match.teamAName}
                 scorers={teamAScorers}
                 maxGoals={maxScorerGoals}
+                tone="sky"
               />
               <TeamRosterCard
                 title={match.teamBName}
                 scorers={teamBScorers}
                 maxGoals={maxScorerGoals}
+                tone="rose"
               />
               {unassignedScorers.length > 0 ? (
                 <TeamRosterCard

@@ -65,6 +65,8 @@ function ManualAssign({
   const [id, setId] = React.useState("");
   if (!wheel.canManage || wheel.pool.length === 0) return null;
 
+  const hasntSelectedValue = !id || wheel.spinning;
+
   return (
     <div className="w-full border-t pt-4">
       <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase">
@@ -88,8 +90,8 @@ function ManualAssign({
           </SelectContent>
         </Select>
         <Button
-          variant={!id ? "secondary" : "default"}
-          disabled={!id || wheel.spinning}
+          variant={hasntSelectedValue ? "secondary" : "default"}
+          disabled={hasntSelectedValue}
           onClick={() => {
             wheel.assignManual(Number(id));
             setId("");

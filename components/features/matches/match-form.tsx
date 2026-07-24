@@ -1,7 +1,6 @@
 "use client";
 
 import { createMatch, updateMatch } from "@/app/actions/matches";
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -12,6 +11,8 @@ import {
 } from "@/components/ui/native-select";
 import { Slider } from "@/components/ui/slider";
 import { formatApiDate } from "@/lib/dates";
+import { matchPrefillAtom } from "@/lib/state/atoms";
+import { useAtom } from "jotai";
 import { PlusIcon, SaveIcon, TrophyIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -38,6 +39,7 @@ export type EditMatch = {
 };
 
 type ScorerRow = { playerId: string; team: string; goals: string };
+type GuestRow = { guestName: string; team: string; goals: string };
 type MatchTeam = "A" | "B";
 
 function subscribe() {
@@ -111,18 +113,75 @@ export function MatchForm({
         goals: String(s.goals),
       })) ?? [],
   );
-  // Guest scorers aren't editable via the roster picker; kept as-is and
-  // re-submitted so an edit never deletes their goals.
-  const [guestScorers] = React.useState(
+  // Guests aren't in the roster picker, so they get their own editable rows
+  // (name/team/goals) — a guest who didn't show up can be edited or removed.
+  const [guestScorers, setGuestScorers] = React.useState<GuestRow[]>(
     () =>
       match?.scorers
         .filter((s) => s.playerId == null)
         .map((s) => ({
           guestName: s.guestName ?? "Invitado",
           team: s.team ?? "",
-          goals: s.goals,
+          goals: String(s.goals),
         })) ?? [],
   );
+  // Set when the form was prefilled from a generated reta, so the created match
+  // links back to it (like the live flow).
+  const [generatedRetaId, setGeneratedRetaId] = React.useState<number | null>(
+    null,
+  );
+
+  // Prefill (create only) from a reta handed off by /teams/registro. Read once
+  // on mount, apply, and clear the atom — nothing is submitted automatically.
+  const [prefill, setPrefill] = useAtom(matchPrefillAtom);
+  // eslint-disable-next-line react-hooks/set-state-in-effect
+  React.useEffect(() => {
+    if (isEdit || !prefill) return;
+    setTeamAName(prefill.teamAName || "Equipo A");
+    setTeamBName(prefill.teamBName || "Equipo B");
+    if (prefill.playedAt) setPlayedAt(prefill.playedAt);
+    setGeneratedRetaId(prefill.generatedRetaId ?? null);
+    setScorers(
+      prefill.scorers
+        .filter((s) => s.playerId != null)
+        .map((s) => ({
+          playerId: String(s.playerId),
+          team: s.team ?? "",
+          goals: String(s.goals),
+        })),
+    );
+    setGuestScorers(
+      prefill.scorers
+        .filter((s) => s.playerId == null)
+        .map((s) => ({
+          guestName: s.guestName ?? "Invitado",
+          team: s.team ?? "",
+          goals: String(s.goals),
+        })),
+    );
+    setPrefill(null);
+    toast.success("Reta cargada. Ajusta los detalles y registra el partido.");
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Goles de un equipo = jugadores con jugador elegido + invitados de ese equipo.
+  // ponytail: no cubre goles en propia; el marcador sigue siendo editable a mano.
+  function teamGoals(rows: ScorerRow[], guests: GuestRow[], team: MatchTeam) {
+    const roster = rows
+      .filter((r) => r.playerId && r.team === team)
+      .reduce((n, r) => n + (parseNumberInput(r.goals) || 0), 0);
+    const guest = guests
+      .filter((g) => g.team === team)
+      .reduce((n, g) => n + (parseNumberInput(g.goals) || 0), 0);
+    return roster + guest;
+  }
+  // Refleja los goles asignados en el marcador general. Se llama solo cuando el
+  // usuario edita participantes, no al montar/editar (para no pisar el marcador
+  // cargado de un partido existente).
+  function syncScoreboard(rows: ScorerRow[], guests: GuestRow[]) {
+    setScoreA(String(teamGoals(rows, guests, "A")));
+    setScoreB(String(teamGoals(rows, guests, "B")));
+  }
 
   function addScorer() {
     if (scorers.length >= 22) {
@@ -133,15 +192,36 @@ export function MatchForm({
       toast.error("Ya agregaste a todos los jugadores");
       return;
     }
+    // Fila nueva sin jugador aún → no altera el marcador todavía.
     setScorers((s) => [...s, { playerId: "", team: "A", goals: "1" }]);
   }
   function updateScorer(i: number, patch: Partial<ScorerRow>) {
-    setScorers((s) =>
-      s.map((row, idx) => (idx === i ? { ...row, ...patch } : row)),
+    const next = scorers.map((row, idx) =>
+      idx === i ? { ...row, ...patch } : row,
     );
+    setScorers(next);
+    syncScoreboard(next, guestScorers);
   }
   function removeScorer(i: number) {
-    setScorers((s) => s.filter((_, idx) => idx !== i));
+    const next = scorers.filter((_, idx) => idx !== i);
+    setScorers(next);
+    syncScoreboard(next, guestScorers);
+  }
+
+  function addGuest() {
+    setGuestScorers((g) => [...g, { guestName: "", team: "A", goals: "0" }]);
+  }
+  function updateGuest(i: number, patch: Partial<GuestRow>) {
+    const next = guestScorers.map((row, idx) =>
+      idx === i ? { ...row, ...patch } : row,
+    );
+    setGuestScorers(next);
+    syncScoreboard(scorers, next);
+  }
+  function removeGuest(i: number) {
+    const next = guestScorers.filter((_, idx) => idx !== i);
+    setGuestScorers(next);
+    syncScoreboard(scorers, next);
   }
 
   const takenPlayerIds = new Set(
@@ -162,6 +242,7 @@ export function MatchForm({
           ? Math.round(parseNumberInput(durationMin) * 60) || null
           : null,
         notes,
+        generatedRetaId,
         scorers: [
           ...scorers
             .filter((s) => s.playerId)
@@ -170,13 +251,15 @@ export function MatchForm({
               team: parseTeam(s.team),
               goals: parseNumberInput(s.goals),
             })),
-          // Preserve guest goals through the edit (roster picker can't hold them).
-          ...guestScorers.map((g) => ({
-            playerId: null,
-            guestName: g.guestName,
-            team: parseTeam(g.team),
-            goals: g.goals,
-          })),
+          // Guests carry their own editable name/team/goals; drop blank names.
+          ...guestScorers
+            .filter((g) => g.guestName.trim())
+            .map((g) => ({
+              playerId: null,
+              guestName: g.guestName.trim(),
+              team: parseTeam(g.team),
+              goals: parseNumberInput(g.goals),
+            })),
         ],
       };
       const res = isEdit
@@ -193,6 +276,8 @@ export function MatchForm({
           setBalance(50);
           setNotes("");
           setScorers([]);
+          setGuestScorers([]);
+          setGeneratedRetaId(null);
           router.refresh();
         }
       } else {
@@ -239,6 +324,10 @@ export function MatchForm({
               />
             </div>
           </div>
+          <p className="text-muted-foreground text-center text-xs">
+            El marcador suma los goles que asignes a los jugadores. Ajústalo a
+            mano si hubo goles en propia.
+          </p>
 
           <div className="grid gap-4 sm:grid-cols-3">
             <div>
@@ -409,25 +498,94 @@ export function MatchForm({
               </div>
             )}
 
-            {guestScorers.length > 0 ? (
-              <div className="text-muted-foreground space-y-1 pt-1 text-xs">
-                <p className="font-medium">
-                  Invitados (se conservan, no editables aquí)
+            {/* Invitados: fuera de la plantilla, con sus propias filas editables. */}
+            <div className="space-y-2 border-t pt-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-xs">
+                  Invitados
+                  {guestScorers.length > 0 ? (
+                    <span className="text-muted-foreground ml-1 font-normal">
+                      · {guestScorers.length}
+                    </span>
+                  ) : null}
+                </Label>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={addGuest}
+                  disabled={!admin}
+                >
+                  <PlusIcon />
+                  Añadir invitado
+                </Button>
+              </div>
+              {guestScorers.length === 0 ? (
+                <p className="text-muted-foreground text-xs">
+                  Jugadores de última hora que no están en la plantilla. Edita su
+                  nombre, equipo o goles; quítalos si al final no jugaron.
                 </p>
-                <div className="flex flex-wrap gap-1.5">
+              ) : (
+                <div className="space-y-1.5">
+                  <div className="text-muted-foreground hidden grid-cols-[1fr_9rem_3.5rem_auto] items-center gap-2 text-[10px] font-semibold tracking-wide uppercase sm:grid">
+                    <span>Invitado</span>
+                    <span>Equipo</span>
+                    <span className="text-center">Goles</span>
+                    <span className="sr-only">Quitar</span>
+                  </div>
                   {guestScorers.map((g, i) => (
-                    <Badge key={i} variant="secondary">
-                      {g.guestName}
-                      {g.team
-                        ? ` · ${g.team === "A" ? teamAName : teamBName}`
-                        : ""}
-                      {" · "}
-                      {g.goals} gol{g.goals === 1 ? "" : "es"}
-                    </Badge>
+                    <div
+                      key={i}
+                      className="grid items-center gap-2 sm:grid-cols-[1fr_9rem_3.5rem_auto]"
+                    >
+                      <Input
+                        value={g.guestName}
+                        onChange={(e) =>
+                          updateGuest(i, { guestName: e.target.value })
+                        }
+                        placeholder="Nombre del invitado"
+                        maxLength={60}
+                        aria-label="Nombre del invitado"
+                      />
+                      <NativeSelect
+                        className="w-full"
+                        value={g.team}
+                        onChange={(e) => updateGuest(i, { team: e.target.value })}
+                        aria-label="Equipo"
+                      >
+                        <NativeSelectOption value="">
+                          Sin equipo
+                        </NativeSelectOption>
+                        <NativeSelectOption value="A">
+                          {teamAName}
+                        </NativeSelectOption>
+                        <NativeSelectOption value="B">
+                          {teamBName}
+                        </NativeSelectOption>
+                      </NativeSelect>
+                      <Input
+                        type="number"
+                        min={0}
+                        value={g.goals}
+                        onChange={(e) =>
+                          updateGuest(i, { goals: e.target.value })
+                        }
+                        className="w-full text-center"
+                        aria-label="Goles"
+                      />
+                      <Button
+                        type="button"
+                        variant="destructive"
+                        size="icon"
+                        onClick={() => removeGuest(i)}
+                        aria-label="Quitar invitado"
+                      >
+                        <XIcon />
+                      </Button>
+                    </div>
                   ))}
                 </div>
-              </div>
-            ) : null}
+              )}
+            </div>
           </div>
 
           <div className="flex items-center gap-2 lg:justify-end">

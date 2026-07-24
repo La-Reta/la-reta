@@ -2,7 +2,6 @@
 
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
-import emojiRegex from "emoji-regex";
 import { auth, currentUser } from "@clerk/nextjs/server";
 import { db, playerComments, commentReactions } from "@/lib/db";
 import { MAX_DISTINCT_REACTIONS } from "@/lib/constants";
@@ -19,11 +18,19 @@ function clerkDisplayName(
   return user.username || full || email || null;
 }
 
-/** True when `s` is exactly one emoji (incl. ZWJ/modifier sequences). */
+// Reusar el segmenter (crearlo por llamada es caro).
+const graphemes = new Intl.Segmenter();
+
+/**
+ * True when `s` is exactly one emoji (incl. ZWJ/modifier sequences). Usa
+ * `Intl.Segmenter` (un solo grapheme cluster) + property Unicode — sin depender
+ * de `emoji-regex`. ponytail: keycaps tipo "1️⃣" pueden no pasar; los emojis de
+ * reacción habituales (👍❤️😂) sí. Ampliar si hace falta soportarlos.
+ */
 function isSingleEmoji(s: string): boolean {
   if (!s || s.length > 16) return false;
-  const matches = [...s.matchAll(emojiRegex())];
-  return matches.length === 1 && matches[0][0] === s;
+  const segments = [...graphemes.segment(s)];
+  return segments.length === 1 && /\p{Extended_Pictographic}/u.test(s);
 }
 
 export type ClientInfo = {
