@@ -1,6 +1,6 @@
 import { STAT_ABBR, STAT_KEYS } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
-import { flagEmoji, initials } from "@/lib/format";
+import { initials } from "@/lib/format";
 import { cardTier } from "@/lib/ratings";
 import { cn } from "@/lib/utils";
 import {
@@ -107,9 +107,6 @@ export function FifaCard({
             className={cn("font-black tracking-tight", s.accent, z.overall)}
           >
             {player.overall}
-          </span>
-          <span className={cn("opacity-90", z.flag)}>
-            {flagEmoji(player.nationality)}
           </span>
         </div>
       </div>
