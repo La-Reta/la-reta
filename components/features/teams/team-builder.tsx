@@ -29,6 +29,7 @@ import {
 } from "@/lib/state/atoms";
 import {
   balanceTeamsVaried,
+  swapPlayers,
   type BalancedTeams,
   type Lineup,
 } from "@/lib/team-balancer";
@@ -195,6 +196,11 @@ export function TeamBuilder({
           nameB={nameB}
           onViewChange={setView}
           hasResult={result !== null}
+          // ponytail: swap edita solo el tablero en memoria; la reta ya guardada
+          // en DB (y el flujo /live) no se re-persiste. Añadir re-save si importa.
+          onSwap={(fromId, toId) =>
+            setResult((r) => (r ? swapPlayers(r, fromId, toId) : r))
+          }
         />
       ) : (
         <Empty className="border">
