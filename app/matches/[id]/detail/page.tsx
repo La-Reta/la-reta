@@ -1,7 +1,4 @@
-import {
-  MatchScorersChart,
-  MatchTeamGoalsChart,
-} from "@/components/features/matches/match-detail-charts";
+import { MatchScorersChart } from "@/components/features/matches/match-detail-charts";
 import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { MatchHero } from "@/components/features/matches/match-hero";
 import { Badge } from "@/components/ui/badge";
@@ -18,6 +15,8 @@ import {
   ScaleIcon,
   ShieldIcon,
   TargetIcon,
+  TrophyIcon,
+  UsersIcon,
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
@@ -35,6 +34,12 @@ const STAT_TONES = {
   amber: "bg-amber-500/10 text-amber-600 dark:text-amber-400",
   rose: "bg-rose-500/10 text-rose-600 dark:text-rose-400",
   sky: "bg-sky-500/10 text-sky-600 dark:text-sky-400",
+} as const;
+
+// Team-colored text (sky = A, rose = B) to tie figures/shares to a side.
+const TEAM_TEXT = {
+  A: "text-sky-600 dark:text-sky-400",
+  B: "text-rose-600 dark:text-rose-400",
 } as const;
 
 function balanceTone(value: number) {
@@ -100,23 +105,45 @@ function TeamFigureCard({
   teamName,
   score,
   scorers,
+  tone,
+  cleanSheet,
 }: {
   teamName: string;
   score: number;
   scorers: Scorer[];
+  tone: "A" | "B";
+  cleanSheet: boolean;
 }) {
   const figure = topScorer(scorers);
   const registeredGoals = scorers.reduce(
     (sum, scorer) => sum + scorer.goals,
     0,
   );
+  const guestGoals = scorers
+    .filter((s) => s.isGuest)
+    .reduce((sum, s) => sum + s.goals, 0);
 
   return (
     <Card size="sm">
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-3">
-          <CardTitle>{teamName}</CardTitle>
-          <Badge variant="secondary">{score} goles</Badge>
+          <CardTitle className="flex items-center gap-2">
+            <span
+              className={cn("size-2 rounded-full", ROSTER_TONE[tone === "A" ? "sky" : "rose"])}
+            />
+            {teamName}
+          </CardTitle>
+          <div className="flex items-center gap-1.5">
+            {cleanSheet ? (
+              <Badge className="border-transparent bg-emerald-500/15 text-emerald-600 dark:text-emerald-400">
+                <ShieldIcon />
+                Valla invicta
+              </Badge>
+            ) : null}
+            <Badge variant="secondary" className="tabular-nums">
+              {score} goles
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -147,6 +174,14 @@ function TeamFigureCard({
             {registeredGoals}/{score}
           </span>
         </div>
+        {guestGoals > 0 ? (
+          <div className="text-muted-foreground flex items-center justify-between text-xs">
+            <span>Goles de invitados</span>
+            <span className="font-mono font-bold tabular-nums">
+              {guestGoals}
+            </span>
+          </div>
+        ) : null}
       </CardContent>
     </Card>
   );
@@ -268,17 +303,22 @@ export default async function MatchDetailPage({
   );
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
-  const teamChartData = [
-    { team: match.teamAName, goals: match.scoreA },
-    { team: match.teamBName, goals: match.scoreB },
-  ];
-  const scorerChartData = match.scorers
-    .filter((scorer) => scorer.goals > 0)
-    .slice(0, 6)
-    .map((scorer) => ({
-      player: scorer.displayName,
-      goals: scorer.goals,
-    }));
+
+  // Derived, data-driven highlights.
+  const scored = match.scorers
+    .filter((s) => s.goals > 0)
+    .sort((a, b) => b.goals - a.goals);
+  const mvp = scored[0] ?? null;
+  const mvpTeam = mvp?.team === "A" || mvp?.team === "B" ? mvp.team : null;
+  const guestGoals = match.scorers
+    .filter((s) => s.isGuest)
+    .reduce((n, s) => n + s.goals, 0);
+  const aShare = totalGoals ? Math.round((match.scoreA / totalGoals) * 100) : 50;
+
+  const scorerChartData = scored.slice(0, 6).map((scorer) => ({
+    player: scorer.displayName,
+    goals: scorer.goals,
+  }));
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 lg:container">
@@ -313,13 +353,24 @@ export default async function MatchDetailPage({
         </p>
       ) : null}
 
-      <section className="grid gap-3 sm:grid-cols-3">
+      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
         <StatTile
           icon={<TargetIcon />}
           label="Goles totales"
           value={String(totalGoals)}
           detail={pace ? `1 gol cada ${pace} min` : "Ritmo pendiente"}
           tone="primary"
+        />
+        <StatTile
+          icon={<UsersIcon />}
+          label="Goleadores"
+          value={String(scored.length)}
+          detail={
+            guestGoals > 0
+              ? `${guestGoals} gol${guestGoals === 1 ? "" : "es"} de invitados`
+              : `de ${match.scorers.length} jugadores`
+          }
+          tone="emerald"
         />
         <StatTile
           icon={<ScaleIcon />}
@@ -340,29 +391,95 @@ export default async function MatchDetailPage({
       </section>
 
       <SectionHeading title="Los goleadores" />
+      <Card className="overflow-hidden">
+        <CardContent className="grid gap-5 sm:grid-cols-2 sm:items-center sm:divide-x">
+          {/* Figura del partido: máximo goleador entre ambos equipos. */}
+          <div className="flex items-center gap-4 sm:pr-5">
+            <span className="grid size-14 shrink-0 place-items-center rounded-2xl bg-amber-500/10 text-amber-600 ring-1 ring-amber-500/20 dark:text-amber-400 [&_svg]:size-7">
+              <TrophyIcon />
+            </span>
+            <div className="min-w-0">
+              <p className="text-muted-foreground text-[10px] font-semibold tracking-wider uppercase">
+                Figura del partido
+              </p>
+              {mvp ? (
+                <>
+                  <div className="flex items-center gap-2">
+                    <p className="font-display truncate text-xl font-bold">
+                      {mvp.name}
+                    </p>
+                    {mvp.isGuest ? (
+                      <Badge variant="outline" className="shrink-0 text-[10px]">
+                        invitado
+                      </Badge>
+                    ) : null}
+                  </div>
+                  <p className="text-muted-foreground text-xs">
+                    {mvpTeam ? (
+                      <span className={cn("font-medium", TEAM_TEXT[mvpTeam])}>
+                        {mvpTeam === "A" ? match.teamAName : match.teamBName}
+                      </span>
+                    ) : (
+                      "Sin equipo"
+                    )}{" "}
+                    · {mvp.goals} gol{mvp.goals === 1 ? "" : "es"}
+                  </p>
+                </>
+              ) : (
+                <p className="text-muted-foreground mt-0.5 text-sm">
+                  Sin goles registrados
+                </p>
+              )}
+            </div>
+          </div>
+
+          {/* Cuota de gol: proporción del marcador por equipo. */}
+          <div className="sm:pl-5">
+            <div className="mb-1.5 flex items-center justify-between gap-2 text-xs">
+              <span className={cn("min-w-0 truncate font-medium", TEAM_TEXT.A)}>
+                {match.teamAName}
+              </span>
+              <span className="text-muted-foreground shrink-0 text-[10px] font-semibold tracking-wider uppercase">
+                Cuota de gol
+              </span>
+              <span
+                className={cn(
+                  "min-w-0 truncate text-right font-medium",
+                  TEAM_TEXT.B,
+                )}
+              >
+                {match.teamBName}
+              </span>
+            </div>
+            <div className="bg-muted flex h-2.5 overflow-hidden rounded-full">
+              <div className="bg-sky-500" style={{ width: `${aShare}%` }} />
+              <div className="bg-rose-500" style={{ width: `${100 - aShare}%` }} />
+            </div>
+            <div className="mt-1 flex items-center justify-between font-mono text-sm font-bold tabular-nums">
+              <span className={TEAM_TEXT.A}>{match.scoreA}</span>
+              <span className={TEAM_TEXT.B}>{match.scoreB}</span>
+            </div>
+          </div>
+        </CardContent>
+      </Card>
       <section className="grid gap-6 lg:grid-cols-2">
         <TeamFigureCard
           teamName={match.teamAName}
           score={match.scoreA}
           scorers={teamAScorers}
+          tone="A"
+          cleanSheet={match.scoreB === 0 && totalGoals > 0}
         />
         <TeamFigureCard
           teamName={match.teamBName}
           score={match.scoreB}
           scorers={teamBScorers}
+          tone="B"
+          cleanSheet={match.scoreA === 0 && totalGoals > 0}
         />
       </section>
 
-      <section className="grid gap-6 lg:grid-cols-2">
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Goles por equipo</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MatchTeamGoalsChart data={teamChartData} />
-          </CardContent>
-        </Card>
-
+      {scorerChartData.length > 0 ? (
         <Card>
           <CardHeader className="border-b">
             <CardTitle>Goleadores del partido</CardTitle>
@@ -371,7 +488,7 @@ export default async function MatchDetailPage({
             <MatchScorersChart data={scorerChartData} />
           </CardContent>
         </Card>
-      </section>
+      ) : null}
 
       <section className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
         <div className="space-y-3">
