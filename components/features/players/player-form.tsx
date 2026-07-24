@@ -3,6 +3,7 @@
 import {
   createPlayer,
   updatePlayer,
+  updatePlayerInfo,
   type PlayerInput,
 } from "@/app/actions/players";
 import { uploadImage } from "@/app/actions/uploads";
@@ -103,11 +104,14 @@ function initialState(
 export function PlayerForm({
   player,
   canManage,
+  canEditStats = true,
   prefill,
   signupId,
 }: {
   player?: Player;
   canManage: boolean;
+  // false → edición info-only del dueño (oculta y no guarda atributos).
+  canEditStats?: boolean;
   prefill?: Partial<FormState>;
   // Cuando el alta viene de una solicitud, la marcamos como registrada al crear.
   signupId?: number;
@@ -174,6 +178,7 @@ export function PlayerForm({
     overall,
     createdById: player?.createdById ?? null,
     createdByName: player?.createdByName ?? null,
+    clerkUserId: player?.clerkUserId ?? null,
     createdAt: player?.createdAt ?? new Date(),
     updatedAt: player?.updatedAt ?? new Date(),
   };
@@ -192,7 +197,9 @@ export function PlayerForm({
         weightKg,
       };
       const res = isEdit
-        ? await updatePlayer(player!.id, input)
+        ? canEditStats
+          ? await updatePlayer(player!.id, input)
+          : await updatePlayerInfo(player!.id, input)
         : await createPlayer(input, signupId);
       if (res.ok) {
         toast.success(isEdit ? "Jugador actualizado" : "Jugador creado");
@@ -327,6 +334,7 @@ export function PlayerForm({
           </div>
         </FormSection>
 
+        {canEditStats ? (
         <FormSection title="Atributos">
           <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
             {STAT_KEYS.map((key) => (
@@ -358,6 +366,12 @@ export function PlayerForm({
             ))}
           </div>
         </FormSection>
+        ) : (
+          <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
+            Los atributos (PAC, SHO, PAS…) los ajusta el staff. Aquí puedes
+            editar tu información: nombre, posición, foto y datos físicos.
+          </p>
+        )}
 
         <div className="flex items-center justify-between gap-2">
           {canManage ? (

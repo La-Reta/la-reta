@@ -61,6 +61,19 @@ export async function getPlayers(): Promise<Player[]> {
   return rows.map((p) => withLocalPhoto(p, images));
 }
 
+/** Id del jugador vinculado a esta cuenta de Clerk, o null (una vinculación por cuenta). */
+export async function getOwnedPlayerId(
+  userId: string | null | undefined,
+): Promise<number | null> {
+  if (!userId) return null;
+  const [row] = await db
+    .select({ id: players.id })
+    .from(players)
+    .where(eq(players.clerkUserId, userId))
+    .limit(1);
+  return row?.id ?? null;
+}
+
 export async function getPlayerById(id: number): Promise<Player | null> {
   const rows = await db
     .select()

@@ -70,6 +70,11 @@ export const players = pgTable("players", {
   createdById: text("created_by_id"),
   createdByName: varchar("created_by_name", { length: 60 }),
 
+  // Cuenta de Clerk dueña de este perfil (auto-reclamo). Null = sin dueño. Un
+  // índice único parcial garantiza una cuenta ↔ un jugador. Distinto de
+  // createdById, que solo registra quién creó la fila (a veces el admin).
+  clerkUserId: text("clerk_user_id"),
+
   createdAt: timestamp("created_at").notNull().defaultNow(),
   updatedAt: timestamp("updated_at").notNull().defaultNow(),
 });

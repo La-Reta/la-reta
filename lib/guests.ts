@@ -41,6 +41,7 @@ export function makeGuestPlayer(
     overall: ovr,
     createdById: null,
     createdByName: null,
+    clerkUserId: null,
     createdAt: now,
     updatedAt: now,
   };

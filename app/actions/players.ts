@@ -174,6 +174,8 @@ export async function updatePlayer(
   input: PlayerInput,
 ): Promise<ActionResult> {
   try {
+    // Edición completa (incluye atributos) — solo admin.
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
     const values = normalize(input);
     const [existing] = await db
       .select()
@@ -198,6 +200,122 @@ export async function updatePlayer(
     revalidatePath("/players");
     revalidatePath(`/players/${id}`);
     revalidatePath("/teams");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/**
+ * Info-only edit for the profile owner (or admin). Never touches the 6 stats:
+ * they're read from the existing row, so `overall` recomputes from the possibly
+ * new position but the attributes stay put. Authorized by ownership OR admin.
+ */
+export async function updatePlayerInfo(
+  id: number,
+  input: PlayerInput,
+): Promise<ActionResult> {
+  try {
+    const { userId } = await auth();
+    const [existing] = await db
+      .select()
+      .from(players)
+      .where(eq(players.id, id))
+      .limit(1);
+    if (!existing) return { ok: false, error: "Jugador no encontrado." };
+
+    const owner = Boolean(userId) && existing.clerkUserId === userId;
+    if (!owner && !(await isAdmin()))
+      return { ok: false, error: "No autorizado." };
+
+    // Ignora los stats del cliente: usa los existentes (el dueño no los edita).
+    const values = normalize({
+      ...input,
+      pace: existing.pace,
+      shooting: existing.shooting,
+      passing: existing.passing,
+      dribbling: existing.dribbling,
+      defending: existing.defending,
+      physical: existing.physical,
+    });
+
+    // Whitelist explícita de campos de info (atributos quedan intactos).
+    await db
+      .update(players)
+      .set({
+        name: values.name,
+        displayName: values.displayName,
+        position: values.position,
+        position2: values.position2,
+        preferredFoot: values.preferredFoot,
+        nationality: values.nationality,
+        photoUrl: values.photoUrl,
+        birthDate: values.birthDate,
+        age: values.age,
+        heightCm: values.heightCm,
+        weightKg: values.weightKg,
+        overall: values.overall,
+        updatedAt: values.updatedAt,
+      })
+      .where(eq(players.id, id));
+
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    revalidatePath("/teams");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/**
+ * Self-claim an unclaimed player profile to the signed-in Clerk account. One
+ * account ↔ one player (also enforced by a partial unique index). Admin unlinks.
+ */
+export async function claimPlayer(id: number): Promise<ActionResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId)
+      return { ok: false, error: "Inicia sesión para reclamar tu perfil." };
+
+    const [player] = await db
+      .select({ id: players.id, clerkUserId: players.clerkUserId })
+      .from(players)
+      .where(eq(players.id, id))
+      .limit(1);
+    if (!player) return { ok: false, error: "Jugador no encontrado." };
+    if (player.clerkUserId === userId) return { ok: true, id };
+    if (player.clerkUserId)
+      return { ok: false, error: "Este perfil ya está vinculado a otra cuenta." };
+
+    const [mine] = await db
+      .select({ id: players.id })
+      .from(players)
+      .where(eq(players.clerkUserId, userId))
+      .limit(1);
+    if (mine)
+      return { ok: false, error: "Tu cuenta ya está vinculada a otro jugador." };
+
+    await db.update(players).set({ clerkUserId: userId }).where(eq(players.id, id));
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/** Unlink a player from its account. Admin only. */
+export async function unlinkPlayer(id: number): Promise<ActionResult> {
+  try {
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    await db
+      .update(players)
+      .set({ clerkUserId: null })
+      .where(eq(players.id, id));
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
     return { ok: true, id };
   } catch (err) {
     return { ok: false, error: (err as Error).message };

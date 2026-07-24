@@ -128,15 +128,19 @@ export function WheelPanel({ wheel }: { wheel: CasacaWheel }) {
           onSpinEnd={wheel.onSpinEnd}
         />
 
-        <Button
-          size="lg"
-          className="w-full max-w-xs"
-          disabled={!wheel.canSpin}
-          onClick={wheel.spin}
-        >
-          <RefreshCwIcon />
-          {wheel.spinning ? "Girando…" : "Girar la ruleta"}
-        </Button>
+        {/* El botón solo se muestra a admins o usuarios con sesión (Clerk).
+            Sin permiso, WheelStatus explica cómo desbloquearlo. */}
+        {wheel.canManage ? (
+          <Button
+            size="lg"
+            className="w-full max-w-xs"
+            disabled={!wheel.canSpin}
+            onClick={wheel.spin}
+          >
+            <RefreshCwIcon />
+            {wheel.spinning ? "Girando…" : "Girar la ruleta"}
+          </Button>
+        ) : null}
 
         <WheelStatus wheel={wheel} />
 

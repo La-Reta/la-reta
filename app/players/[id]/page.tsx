@@ -6,6 +6,10 @@ import {
 import { PlayerGoalHistory } from "@/components/features/players/player-goal-history";
 import { PlayerHistory } from "@/components/features/players/player-history";
 import { PlayerRadar } from "@/components/features/players/player-radar";
+import {
+  ClaimProfileButton,
+  UnlinkProfileButton,
+} from "@/components/features/players/profile-ownership";
 import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Pitch } from "@/components/shared/pitch";
@@ -24,13 +28,15 @@ import {
 import { flagEmoji, playerPositions } from "@/lib/format";
 import {
   getCommentReactions,
+  getOwnedPlayerId,
   getPlayerById,
   getPlayerComments,
   getPlayerGoalHistory,
   getPlayerHistory,
 } from "@/lib/queries";
 import { cardTier, TIER_LABEL } from "@/lib/ratings";
-import { ArrowLeftIcon, PencilIcon } from "lucide-react";
+import { auth } from "@clerk/nextjs/server";
+import { ArrowLeftIcon, PencilIcon, UserPenIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
 
@@ -55,7 +61,7 @@ export default async function PlayerDetailPage({
 }) {
   const { id } = await params;
   const numId = Number(id);
-  const [player, history, comments, reactions, goalHistory, admin] =
+  const [player, history, comments, reactions, goalHistory, admin, { userId }] =
     await Promise.all([
       getPlayerById(numId),
       getPlayerHistory(numId),
@@ -63,8 +69,18 @@ export default async function PlayerDetailPage({
       getCommentReactions(numId),
       getPlayerGoalHistory(numId),
       isAdmin(),
+      auth(),
     ]);
   if (!player) notFound();
+
+  const isOwner = Boolean(userId) && player.clerkUserId === userId;
+  // Una vinculación por cuenta: si ya tienes un jugador vinculado, no puedes reclamar otro.
+  const ownedPlayerId = await getOwnedPlayerId(userId);
+  const canClaim =
+    Boolean(userId) &&
+    !player.clerkUserId &&
+    !isOwner &&
+    ownedPlayerId === null;
 
   const group = positionGroup(player.position);
   const tier = cardTier(player.overall);
@@ -119,10 +135,31 @@ export default async function PlayerDetailPage({
                 <PencilIcon />
                 Editar
               </Button>
+            ) : isOwner ? (
+              <Button render={<Link href={`/players/${player.id}/edit`} />}>
+                <UserPenIcon />
+                Editar mi información
+              </Button>
             ) : null}
+            {canClaim ? <ClaimProfileButton playerId={player.id} /> : null}
             <SelectForTeamsButton size="default" id={player.id} />
+            {admin && player.clerkUserId ? (
+              <UnlinkProfileButton playerId={player.id} />
+            ) : null}
             {admin && <DeletePlayerButton id={player.id} name={player.name} />}
           </div>
+
+          {userId && !player.clerkUserId && !isOwner && ownedPlayerId !== null ? (
+            <p className="text-muted-foreground text-xs">
+              Ya tienes un perfil vinculado a tu cuenta.{" "}
+              <Link
+                href={`/players/${ownedPlayerId}`}
+                className="text-primary underline"
+              >
+                Ver mi perfil
+              </Link>
+            </p>
+          ) : null}
 
           {/* Datos */}
           <div className="bg-foreground/10 ring-foreground/10 grid grid-cols-2 gap-px overflow-hidden rounded-lg ring-1 sm:grid-cols-3 xl:grid-cols-5">
