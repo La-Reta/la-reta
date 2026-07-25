@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { IDEA_CATEGORIES, IDEA_CATEGORY_LABEL } from "@/lib/constants";
+import { useUser } from "@clerk/nextjs";
 import { LightbulbIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -37,7 +38,11 @@ function collectClient() {
 
 export function IdeaForm() {
   const router = useRouter();
-  const [form, setForm] = React.useState(EMPTY);
+  const { user, isSignedIn } = useUser();
+  const [form, setForm] = React.useState({
+    ...EMPTY,
+    author: user?.fullName ?? "",
+  });
   const [pending, startTransition] = React.useTransition();
 
   function set<K extends keyof typeof EMPTY>(key: K, value: string) {
@@ -106,10 +111,11 @@ export function IdeaForm() {
                 Tu nombre (opcional)
               </Label>
               <Input
-                value={form.author}
+                value={isSignedIn ? (user.fullName ?? "") : form.author}
                 onChange={(e) => set("author", e.target.value)}
                 placeholder="Anónimo"
                 maxLength={60}
+                disabled={isSignedIn}
               />
             </div>
           </div>
