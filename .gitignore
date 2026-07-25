@@ -42,3 +42,6 @@ yarn-error.log*
 next-env.d.ts
 public/choucha-video.MP4
 public/choucha-video.MP4
+
+# clerk configuration (can include secrets)
+/.clerk/
