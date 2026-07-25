@@ -5,7 +5,7 @@ import { uploadImage } from "@/app/actions/uploads";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { ImagePlusIcon, TrophyIcon, Trash2Icon } from "lucide-react";
+import { ImagePlusIcon, Trash2Icon, TrophyIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -168,7 +168,7 @@ export function MatchHero({
                 {busy ? "Subiendo…" : "Cambiar"}
               </Button>
               <Button
-                variant="secondary"
+                variant="destructive"
                 size="icon"
                 disabled={busy}
                 onClick={remove}
