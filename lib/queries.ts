@@ -1,36 +1,36 @@
-import "server-only";
-import { readdirSync } from "node:fs";
-import { join } from "node:path";
-import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { rotatingWords } from "@/constants/rotatingWords";
+import type { Position } from "@/lib/constants";
 import {
+  casacaAssignments,
+  commentReactions,
   db,
-  players,
-  playerStatHistory,
+  generatedRetaPlayers,
+  generatedRetas,
   ideas,
   matches,
   matchGoals,
-  generatedRetas,
-  generatedRetaPlayers,
-  retaWords,
-  playerComments,
-  commentReactions,
-  reports,
-  playerSignups,
-  casacaAssignments,
   matchVotes,
-  type Player,
-  type StatHistory,
+  playerComments,
+  players,
+  playerSignups,
+  playerStatHistory,
+  reports,
+  retaWords,
+  type GeneratedReta,
   type Idea,
   type Match,
-  type GeneratedReta,
-  type RetaWord,
+  type Player,
   type PlayerComment,
-  type Report,
   type PlayerSignup,
+  type Report,
+  type RetaWord,
+  type StatHistory,
 } from "@/lib/db";
-import type { Position } from "@/lib/constants";
 import { candidateKey, type VoteCategory } from "@/lib/match-votes";
-import { rotatingWords } from "@/constants/rotatingWords";
+import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
+import { readdirSync } from "node:fs";
+import { join } from "node:path";
+import "server-only";
 
 /**
  * Maps player id → public image path for files in `public/players/`
@@ -174,19 +174,19 @@ export async function getPlayerGoalHistory(
     .orderBy(desc(matches.playedAt), desc(matches.id));
 }
 
-// ── Ideas ────────────────────────────────────────────────────────────────
+// Ideas
 /** All ideas, newest first. */
 export async function getIdeas(): Promise<Idea[]> {
   return db.select().from(ideas).orderBy(desc(ideas.createdAt));
 }
 
-// ── Reports ──────────────────────────────────────────────────────────────
+// Reports
 /** Private admin reports, newest first. */
 export async function getReports(): Promise<Report[]> {
   return db.select().from(reports).orderBy(desc(reports.createdAt));
 }
 
-// ── Player signups ─────────────────────────────────────────────────────────
+// Player signups
 /** Signup requests to become a player, pending first then newest. */
 export async function getPlayerSignups(): Promise<PlayerSignup[]> {
   return db
@@ -220,7 +220,7 @@ export async function getPendingSignupCount(): Promise<number> {
   return row?.n ?? 0;
 }
 
-// ── Matches ──────────────────────────────────────────────────────────────
+// Matches
 export type Scorer = {
   playerId: number | null;
   name: string;
@@ -334,7 +334,7 @@ export async function getMatchById(
   };
 }
 
-// ── Match awards (votación) ──────────────────────────────────────────────────
+// Match awards (votación)
 export type VoteTally = {
   category: VoteCategory;
   playerId: number | null;
@@ -472,7 +472,7 @@ export async function getTopScorers(): Promise<TopScorer[]> {
     });
 }
 
-// ── Generated retas ──────────────────────────────────────────────────────────
+// Generated retas
 export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
 
 /**
@@ -577,13 +577,13 @@ export async function getGeneratedRetas(
   return retas.map((r) => ({ ...r, players: byReta.get(r.id) ?? [] }));
 }
 
-// ── Reta words ─────────────────────────────────────────────────────────────
+// Reta words
 /** All contributed words, newest first (for the /palabras wall). */
 export async function getRetaWords(): Promise<RetaWord[]> {
   return db.select().from(retaWords).orderBy(desc(retaWords.createdAt));
 }
 
-// ── Casacas ──────────────────────────────────────────────────────────────────
+// Casacas
 export type CasacaAssignmentRow = {
   id: number;
   playerId: number | null;

@@ -77,10 +77,10 @@ export default async function DashboardPage() {
 
   return (
     <div className="space-y-6 xl:container xl:mx-auto">
-      {/* ── Countdown a la próxima reta (solo ≤2 días antes) ───────── */}
+      {/* Countdown a la próxima reta (solo ≤2 días antes)  */}
       <RetaCountdownBanner />
 
-      {/* ── Matchday banner ───────────────────────────────────────── */}
+      {/*  Matchday banner  */}
       <MatchdayBanner
         bannerWords={bannerWords}
         stats={{
@@ -92,7 +92,7 @@ export default async function DashboardPage() {
         }}
       />
 
-      {/* ── Destacados: crack + goleador + jugadores (horizontal en desktop) ───── */}
+      {/* Destacados: crack + goleador + jugadores (horizontal en desktop) */}
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Spotlight
           title="El crack"
@@ -110,13 +110,12 @@ export default async function DashboardPage() {
         <RotatingPlayer players={players} />
       </div>
 
-      {/* ── Comentarista + Leyenda ──────────────────────────────────── */}
       <div className="grid gap-6 lg:grid-cols-2">
         <Commentator />
         <PlayerLegend />
       </div>
 
-      {/* ── Pizarra + ranking ──────────────────────────────────────── */}
+      {/* Pizarra + ranking  */}
       <div className="grid gap-6 lg:grid-cols-[1.6fr_1fr] lg:items-start">
         <div className="space-y-2">
           {/* Pizarra del once ideal */}

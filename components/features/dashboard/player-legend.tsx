@@ -25,7 +25,7 @@ export function PlayerLegend() {
           />
 
           <div className="relative flex items-stretch">
-            {/* ── Player image ────────────────────────────────────────── */}
+            {/* Player image */}
             <div className="relative w-28 shrink-0 bg-black/30 sm:w-44">
               {/* gold vignette on the right edge */}
               <div
@@ -42,7 +42,7 @@ export function PlayerLegend() {
               />
             </div>
 
-            {/* ── Content ─────────────────────────────────────────────── */}
+            {/* Content */}
             <div className="flex flex-1 flex-col justify-center gap-2.5 p-5">
               <span className="font-display inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-400/20 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-amber-300 uppercase ring-1 ring-amber-400/30">
                 <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />

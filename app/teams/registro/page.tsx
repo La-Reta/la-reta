@@ -330,7 +330,7 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
 
 function EmptyState() {
   return (
-    <div className="flex flex-col items-center gap-4 rounded-4xl border border-dashed py-20 text-center">
+    <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed py-20 text-center">
       <span className="bg-primary/10 text-primary grid size-14 place-items-center rounded-2xl">
         <ShuffleIcon className="size-7" />
       </span>

@@ -5,7 +5,7 @@ import { upload } from "@vercel/blob/client";
 import imageCompression from "browser-image-compression";
 import * as React from "react";
 
-// ── Constantes ───────────────────────────────────────────────────────────────
+// Constantes
 const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
 const OUTPUT_TYPE = "image/webp";
 const MAX_LONG_EDGE_PX = 1600;
@@ -27,7 +27,7 @@ type Props = {
   maxSizeMB?: number;
 };
 
-// ── Helpers puros ────────────────────────────────────────────────────────────
+// Helpers puros
 function isAcceptedType(type: string): type is (typeof ACCEPTED_TYPES)[number] {
   return (ACCEPTED_TYPES as readonly string[]).includes(type);
 }
@@ -66,7 +66,7 @@ async function compressToWebp(
   });
 }
 
-// ── Componente ───────────────────────────────────────────────────────────────
+// Componente
 export function ImageUploader({
   onUploadComplete,
   maxSizeMB = DEFAULT_MAX_SIZE_MB,
@@ -85,7 +85,8 @@ export function ImageUploader({
   const [resultUrl, setResultUrl] = React.useState<string | null>(null);
   const [error, setError] = React.useState<string | null>(null);
 
-  const busy = stage === "reading" || stage === "compressing" || stage === "uploading";
+  const busy =
+    stage === "reading" || stage === "compressing" || stage === "uploading";
 
   // Revoca el object URL previo (evita fugas de memoria) y guarda el nuevo.
   const setPreview = React.useCallback((blob: Blob | null) => {

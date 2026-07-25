@@ -54,7 +54,7 @@ FIFA-style dashboard for organizing pickup football ("la reta"). **Next 16 App R
 - `components/ui/button.tsx` is modified: when `render` is passed (e.g. `<Button render={<Link/>}>`) it sets `nativeButton={false}` to avoid a Base UI warning. Keep this if regenerating.
 - Component layout: `components/ui/*` (shadcn primitives), `components/app/*` (shell/sidebar/providers), `components/features/<domain>/*`, `components/shared/*` (fifa-card, pitch, page-header, section-heading).
 - **Reusable page chrome**: every view's header is `<PageHeader title description actions />` (`components/shared/page-header.tsx`); section separators with the accent bar are `<SectionHeading title count? tone? />` (`components/shared/section-heading.tsx`, tones `primary`/`emerald`/`muted`). Reach for these instead of re-inlining an `h1`/`h2`.
-- **Prefer shadcn primitives over bespoke containers**: cards/panels use `Card`/`CardContent` (theme radius is `rounded-4xl`; use `size="sm"` for compact density), empty states use `Empty`. Don't hand-roll `bg-card ring rounded-lg` boxes.
+- **Prefer shadcn primitives over bespoke containers**: cards/panels use `Card`/`CardContent` (theme radius is `rounded-xl`; use `size="sm"` for compact density), empty states use `Empty`. Don't hand-roll `bg-card ring rounded-lg` boxes.
 - Dashboard banner rotates a colored word via `getBannerWords()` = base `constants/rotatingWords.ts` + user `reta_words`, deduped; starts on index 0 so SSR/client match.
 
 If a new Tailwind/`@theme` class doesn't appear, the long-running dev server may be serving stale CSS: `rm -rf .next/dev` and relaunch. Production build is the truth.

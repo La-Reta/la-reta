@@ -63,7 +63,7 @@ export const toggleSelectedAtom = atom(null, (get, set, id: number) => {
   );
 });
 
-// ── Live match ─────────────────────────────────────────────────────────────
+// Live match
 /** A single goal: which team, who scored (optional), and when (epoch ms). */
 export type LiveGoal = {
   id: string;

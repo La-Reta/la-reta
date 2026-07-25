@@ -1,28 +1,28 @@
 import {
-  pgTable,
-  pgEnum,
-  serial,
-  varchar,
-  integer,
-  smallint,
-  timestamp,
-  text,
-  date,
-  real,
-  boolean,
-  index,
-  uniqueIndex,
-} from "drizzle-orm/pg-core";
-import {
-  POSITIONS,
   FEET,
   IDEA_CATEGORIES,
-  IDEA_STATUSES,
   IDEA_PRIORITIES,
+  IDEA_STATUSES,
+  POSITIONS,
   REPORT_CATEGORIES,
   REPORT_STATUSES,
   SIGNUP_STATUSES,
 } from "@/lib/constants";
+import {
+  boolean,
+  date,
+  index,
+  integer,
+  pgEnum,
+  pgTable,
+  real,
+  serial,
+  smallint,
+  text,
+  timestamp,
+  uniqueIndex,
+  varchar,
+} from "drizzle-orm/pg-core";
 
 /**
  * Specific on-pitch position, FIFA style (GK, CB, CM, ST, ...).
@@ -104,7 +104,7 @@ export const playerStatHistory = pgTable("player_stat_history", {
 export type StatHistory = typeof playerStatHistory.$inferSelect;
 export type NewStatHistory = typeof playerStatHistory.$inferInsert;
 
-// ── Ideas ──────────────────────────────────────────────────────────────────
+// Ideas
 export const ideaCategoryEnum = pgEnum("idea_category", IDEA_CATEGORIES);
 export const ideaStatusEnum = pgEnum("idea_status", IDEA_STATUSES);
 export const ideaPriorityEnum = pgEnum("idea_priority", IDEA_PRIORITIES);
@@ -133,7 +133,7 @@ export const ideas = pgTable("ideas", {
 export type Idea = typeof ideas.$inferSelect;
 export type NewIdea = typeof ideas.$inferInsert;
 
-// ── Generated retas ─────────────────────────────────────────────────────────
+// Generated retas
 /**
  * One row per "Generar equipos" run: which players landed on which side, so we
  * can measure repetition across generations and feed variety back into the
@@ -190,7 +190,7 @@ export const generatedRetaPlayers = pgTable("generated_reta_players", {
 export type GeneratedRetaPlayer = typeof generatedRetaPlayers.$inferSelect;
 export type NewGeneratedRetaPlayer = typeof generatedRetaPlayers.$inferInsert;
 
-// ── Matches ────────────────────────────────────────────────────────────────
+// Matches
 export const matches = pgTable("matches", {
   id: serial("id").primaryKey(),
   playedAt: date("played_at").notNull(),
@@ -245,7 +245,7 @@ export const matchGoals = pgTable("match_goals", {
 export type MatchGoal = typeof matchGoals.$inferSelect;
 export type NewMatchGoal = typeof matchGoals.$inferInsert;
 
-// ── Match awards (votación post-partido) ────────────────────────────────────
+// Match awards (votación post-partido)
 /** Premios que se votan por partido: mejor gol, peor error y figura (MVP). */
 export const voteCategoryEnum = pgEnum("vote_category", [
   "gol",
@@ -287,7 +287,7 @@ export const matchVotes = pgTable(
 export type MatchVote = typeof matchVotes.$inferSelect;
 export type NewMatchVote = typeof matchVotes.$inferInsert;
 
-// ── Reta words (community banner) ───────────────────────────────────────────
+// Reta words (community banner)
 /** Words people contribute to fill "La Reta ____", with light client context. */
 export const retaWords = pgTable("reta_words", {
   id: serial("id").primaryKey(),
@@ -304,7 +304,7 @@ export const retaWords = pgTable("reta_words", {
 export type RetaWord = typeof retaWords.$inferSelect;
 export type NewRetaWord = typeof retaWords.$inferInsert;
 
-// ── Player comments ─────────────────────────────────────────────────────────
+// Player comments
 /** Open comments on a player, with light client context. */
 export const playerComments = pgTable("player_comments", {
   id: serial("id").primaryKey(),
@@ -361,7 +361,7 @@ export const commentReactions = pgTable(
 export type CommentReaction = typeof commentReactions.$inferSelect;
 export type NewCommentReaction = typeof commentReactions.$inferInsert;
 
-// ── Legal consent evidence ─────────────────────────────────────────────────
+// Legal consent evidence
 /** Minimal audit trail for users who accept the public legal documents. */
 export const legalAcceptances = pgTable("legal_acceptances", {
   id: serial("id").primaryKey(),
@@ -387,7 +387,7 @@ export const legalAcceptances = pgTable("legal_acceptances", {
 export type LegalAcceptance = typeof legalAcceptances.$inferSelect;
 export type NewLegalAcceptance = typeof legalAcceptances.$inferInsert;
 
-// ── Reports ────────────────────────────────────────────────────────────────
+// Reports
 export const reportCategoryEnum = pgEnum("report_category", REPORT_CATEGORIES);
 export const reportStatusEnum = pgEnum("report_status", REPORT_STATUSES);
 
@@ -425,7 +425,7 @@ export const reports = pgTable("reports", {
 export type Report = typeof reports.$inferSelect;
 export type NewReport = typeof reports.$inferInsert;
 
-// ── Player signups ───────────────────────────────────────────────────────────
+// Player signups
 export const signupStatusEnum = pgEnum("signup_status", SIGNUP_STATUSES);
 
 /**
@@ -475,7 +475,7 @@ export const playerSignups = pgTable("player_signups", {
 export type PlayerSignup = typeof playerSignups.$inferSelect;
 export type NewPlayerSignup = typeof playerSignups.$inferInsert;
 
-// ── Casacas (turno de lavar) ────────────────────────────────────────────────
+// Casacas (turno de lavar)
 /**
  * Append-only record of who was randomly assigned to wash the bibs ("casacas")
  * for a reta. Newest rows are the most recent turns; the wheel excludes the last

@@ -72,7 +72,7 @@ export function Convocatoria({
                       type="button"
                       onClick={() => onToggle(p.id)}
                       className={cn(
-                        "flex items-center gap-2 rounded-4xl border px-2.5 py-2 text-left text-xs transition-colors",
+                        "flex items-center gap-2 rounded-xl border px-2.5 py-2 text-left text-xs transition-colors",
                         isSel
                           ? "border-primary bg-primary/10"
                           : "border-border hover:bg-muted",

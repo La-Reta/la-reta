@@ -51,12 +51,12 @@ export function rotationForWinner(
   const seg = 360 / segmentCount;
   const center = (winnerIndex + 0.5) * seg;
   // Where the winner's center currently sits relative to the top pointer.
-  const offset = ((center + currentRotation) % 360 + 360) % 360;
+  const offset = (((center + currentRotation) % 360) + 360) % 360;
   const delta = (360 - offset) % 360; // bring it up to the pointer
   return currentRotation + turns * 360 + delta;
 }
 
-// ── self-check ───────────────────────────────────────────────────────────────
+// self-check
 export function demo() {
   const assert = (c: boolean, m: string) => {
     if (!c) throw new Error("casacas demo failed: " + m);
@@ -65,7 +65,8 @@ export function demo() {
   // Resting rule excludes the last 2 winners.
   const pool = [1, 2, 3, 4, 5];
   assert(
-    JSON.stringify(eligiblePlayerIds(pool, [5, 4])) === JSON.stringify([1, 2, 3]),
+    JSON.stringify(eligiblePlayerIds(pool, [5, 4])) ===
+      JSON.stringify([1, 2, 3]),
     "should drop last two winners",
   );
   // Relaxes when everyone would be excluded.
@@ -84,7 +85,7 @@ export function demo() {
       const start = i * 37.5; // arbitrary current angle
       const r = rotationForWinner(i, n, start);
       const center = (i + 0.5) * (360 / n);
-      const atTop = ((center + r) % 360 + 360) % 360;
+      const atTop = (((center + r) % 360) + 360) % 360;
       assert(
         Math.abs(atTop) < 1e-6 || Math.abs(atTop - 360) < 1e-6,
         `winner ${i}/${n} should land at top (got ${atTop})`,

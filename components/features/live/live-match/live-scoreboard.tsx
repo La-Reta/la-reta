@@ -21,7 +21,7 @@ export function LiveScoreboard({
   scorersB: string[];
 }) {
   return (
-    <div className="relative overflow-hidden rounded-4xl bg-neutral-950 text-white shadow-lg ring-1 ring-white/10">
+    <div className="relative overflow-hidden rounded-xl bg-neutral-950 text-white shadow-lg ring-1 ring-white/10">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.03),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]" />
       <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-sky-500/16 via-sky-500/5 to-transparent" />
       <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-rose-500/16 via-rose-500/5 to-transparent" />

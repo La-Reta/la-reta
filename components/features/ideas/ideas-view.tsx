@@ -43,7 +43,7 @@ export function IdeasView({
         ))}
       </div>
 
-      <div className="bg-card ring-foreground/10 hidden overflow-x-auto rounded-4xl ring-1 lg:block">
+      <div className="bg-card ring-foreground/10 hidden overflow-x-auto rounded-xl ring-1 lg:block">
         <Table>
           <TableHeader>
             <TableRow>

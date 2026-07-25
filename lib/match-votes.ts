@@ -57,7 +57,7 @@ export function candidateKey(c: {
   return c.playerId != null ? `p:${c.playerId}` : `g:${c.guestName ?? ""}`;
 }
 
-// ── self-check ───────────────────────────────────────────────────────────────
+// self-check
 export function demo() {
   const assert = (c: boolean, m: string) => {
     if (!c) throw new Error("match-votes demo failed: " + m);

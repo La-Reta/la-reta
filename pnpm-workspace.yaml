@@ -7,3 +7,7 @@ minimumReleaseAgeExclude:
   - '@clerk/nextjs@7.6.1'
   - '@clerk/react@6.12.8'
   - '@clerk/shared@4.25.8'
+onlyBuiltDependencies:
+  - esbuild
+  - sharp
+  - unrs-resolver

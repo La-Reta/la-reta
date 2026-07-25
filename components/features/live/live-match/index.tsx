@@ -15,7 +15,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
 import { isGuest } from "@/lib/guests";
-import { cn } from "@/lib/utils";
 import {
   currentGeneratedRetaIdAtom,
   EMPTY_LIVE_MATCH,
@@ -24,6 +23,7 @@ import {
   teamNameAAtom,
   teamNameBAtom,
 } from "@/lib/state/atoms";
+import { cn } from "@/lib/utils";
 import { useAtom, useAtomValue } from "jotai";
 import { FlagIcon, PlayIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -242,7 +242,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
             <Button
               key={team}
               className={cn(
-                "h-24 flex-col gap-1 rounded-4xl text-white shadow-sm transition-transform active:scale-[0.99]",
+                "h-24 flex-col gap-1 rounded-xl text-white shadow-sm transition-transform active:scale-[0.99]",
                 team === "A"
                   ? "bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
                   : "bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400",

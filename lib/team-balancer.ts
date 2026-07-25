@@ -323,7 +323,7 @@ export function balanceTeams(selected: Player[]): BalancedTeams {
   };
 }
 
-// ── self-check (npx tsx lib/team-balancer.ts) ────────────────────────────────
+// self-check (npx tsx lib/team-balancer.ts)
 export function demo() {
   const assert = (c: boolean, m: string) => {
     if (!c) throw new Error("team-balancer demo failed: " + m);
@@ -342,8 +342,14 @@ export function demo() {
 
   // Cross-team swap: occupant trades, role stays, ratings recomputed.
   const s = swapPlayers(teams, 2, 4);
-  assert(s.teamA[1].player.id === 4 && s.teamA[1].role === "CB", "occupant swaps, role kept");
-  assert(s.teamB[1].player.id === 2 && s.teamB[1].role === "ST", "other side mirrored");
+  assert(
+    s.teamA[1].player.id === 4 && s.teamA[1].role === "CB",
+    "occupant swaps, role kept",
+  );
+  assert(
+    s.teamB[1].player.id === 2 && s.teamB[1].role === "ST",
+    "other side mirrored",
+  );
   assert(s.ratingA === 60 && s.ratingB === 55, "ratings recomputed");
   assert(teams.teamA[1].player.id === 2, "original not mutated");
   // Same-team swap leaves ratings untouched.

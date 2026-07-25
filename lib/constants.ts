@@ -138,7 +138,7 @@ export const STAT_LABEL: Record<StatKey, string> = {
   physical: "Físico",
 };
 
-// ── Ideas ────────────────────────────────────────────────────────────────
+// Ideas
 export const IDEA_CATEGORIES = [
   "mejora",
   "cancha",
@@ -199,7 +199,7 @@ export const IDEA_PRIORITY_CLASS: Record<IdeaPriority, string> = {
   critica: "bg-rose-500/15 text-rose-600 dark:text-rose-400",
 };
 
-// ── Reports ──────────────────────────────────────────────────────────────
+// Reports
 export const REPORT_CATEGORIES = [
   "ayuda",
   "bug",
@@ -241,7 +241,7 @@ export const REPORT_STATUS_CLASS: Record<ReportStatus, string> = {
   descartado: "bg-muted text-muted-foreground",
 };
 
-// ── Player signups (solicitudes para registrarse como jugador) ───────────────
+// Player signups (solicitudes para registrarse como jugador)
 export const SIGNUP_STATUSES = [
   "pendiente",
   "aprobado",

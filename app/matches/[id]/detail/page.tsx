@@ -312,7 +312,7 @@ export default async function MatchDetailPage({
 
   if (!match) notFound();
 
-  // ── Votación de premios (Figura / Golazo / Error) ──
+  //  Votación de premios (Figura / Golazo / Error)
   const voterId = userId ?? (admin ? "admin" : null);
   const [voteTally, myVotes] = await Promise.all([
     getMatchVoteTally(match.id),

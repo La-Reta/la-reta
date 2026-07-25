@@ -264,10 +264,10 @@ export function AppSidebar({ admin }: { admin: boolean }) {
         <Link
           href="/"
           aria-label="Ir al resumen"
-          className="border-sidebar-border/70 bg-sidebar/80 hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 block rounded-2xl border p-3 shadow-sm transition-colors group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
+          className="border-sidebar-border/70 bg-sidebar/80 hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 block rounded-xl border p-3 shadow-sm transition-colors group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
         >
           <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:rounded-2xl">
+            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:rounded-xl">
               <Image
                 src="/fifa-wc.webp"
                 alt="Reta Credix · FIFA 26"

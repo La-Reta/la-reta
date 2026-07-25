@@ -1,30 +1,30 @@
 "use client";
 
-import * as React from "react";
-import { useRouter } from "next/navigation";
-import { toast } from "sonner";
-import { MonitorSmartphoneIcon, SaveIcon, Trash2Icon } from "lucide-react";
-import { updateIdeaTriage, deleteIdea } from "@/app/actions/ideas";
-import {
-  IDEA_CATEGORY_LABEL,
-  IDEA_STATUSES,
-  IDEA_STATUS_LABEL,
-  IDEA_STATUS_CLASS,
-  IDEA_PRIORITIES,
-  IDEA_PRIORITY_LABEL,
-} from "@/lib/constants";
-import type { Idea } from "@/lib/db/schema";
+import { deleteIdea, updateIdeaTriage } from "@/app/actions/ideas";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
-import { cn } from "@/lib/utils";
+import { Textarea } from "@/components/ui/textarea";
+import {
+  IDEA_CATEGORY_LABEL,
+  IDEA_PRIORITIES,
+  IDEA_PRIORITY_LABEL,
+  IDEA_STATUSES,
+  IDEA_STATUS_CLASS,
+  IDEA_STATUS_LABEL,
+} from "@/lib/constants";
 import { formatCompactDate } from "@/lib/dates";
+import type { Idea } from "@/lib/db/schema";
+import { cn } from "@/lib/utils";
+import { MonitorSmartphoneIcon, SaveIcon, Trash2Icon } from "lucide-react";
+import { useRouter } from "next/navigation";
+import * as React from "react";
+import { toast } from "sonner";
 
 export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
   const [selectedId, setSelectedId] = React.useState<number | null>(
@@ -40,7 +40,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
   return (
     <div className="grid min-w-0 gap-4 lg:grid-cols-[280px_minmax(0,1fr)] lg:items-start">
       {/* Lista */}
-      <div className="divide-border bg-card ring-foreground/10 min-w-0 divide-y overflow-hidden rounded-4xl ring-1 lg:sticky lg:top-16 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
+      <div className="divide-border bg-card ring-foreground/10 min-w-0 divide-y overflow-hidden rounded-xl ring-1 lg:sticky lg:top-16 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
         {ideas.map((idea) => (
           <button
             key={idea.id}

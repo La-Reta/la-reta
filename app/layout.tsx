@@ -13,7 +13,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 const cloudflareWebAnalyticsToken =
   process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 
-const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
+const inter = Inter({subsets:['latin'],variable:'--font-sans'});
 
 // Condensed display face for matchday/scoreboard headings.
 const oswald = Oswald({

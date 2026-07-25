@@ -21,7 +21,7 @@ type Props = {
 /** Matchday banner: hero (temporada, título rotativo, CTAs, imagen) + scoreboard. */
 export function MatchdayBanner({ bannerWords, stats }: Props) {
   return (
-    <section className="ring-foreground/10 relative overflow-hidden rounded-4xl bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] text-white ring-1">
+    <section className="ring-foreground/10 relative overflow-hidden rounded-xl bg-[linear-gradient(135deg,#0b3d2e_0%,#0a3327_60%,#072018_100%)] text-white ring-1">
       {/* faint chalk pitch, drawn from the right touchline */}
       <svg
         viewBox="0 0 600 400"

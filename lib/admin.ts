@@ -1,5 +1,5 @@
-import "server-only";
 import { cookies } from "next/headers";
+import "server-only";
 
 export const ADMIN_COOKIE = "reta_admin";
 
@@ -14,7 +14,7 @@ export async function isAdmin(): Promise<boolean> {
   return store.get(ADMIN_COOKIE)?.value === adminPin();
 }
 
-// ── Live scoreboard access ───────────────────────────────────────────────────
+// Live scoreboard access
 export const LIVE_COOKIE = "reta_live";
 
 /** Separate password to open the live scoreboard. Override with LIVE_PIN. */
