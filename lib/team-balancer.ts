@@ -274,6 +274,66 @@ export function swapPlayers(
 }
 
 /**
+ * Mete a un jugador (o invitado de última hora) en un equipo ya generado, sin
+ * volver a repartir a nadie. Toma el arco si el equipo aún no tiene portero y
+ * el jugador sabe atajar; si no, juega en su posición principal.
+ */
+export function addToTeam(
+  teams: BalancedTeams,
+  player: Player,
+  key: TeamKey,
+): BalancedTeams {
+  const clean = removeFromTeams(teams, player.id);
+  return withRatings(
+    clean.teams.map((team) => {
+      if (team.key !== key) return team;
+      const needsGK = !team.lineups.some((l) => l.role === "GK");
+      const role: Position =
+        needsGK && canKeepGoal(player) ? "GK" : outfieldPositions(player)[0];
+      return { ...team, lineups: [...team.lineups, { player, role }] };
+    }),
+  );
+}
+
+/** Saca a alguien de los equipos (se desconvocó o se borró el invitado). */
+export function removeFromTeams(
+  teams: BalancedTeams,
+  playerId: number,
+): BalancedTeams {
+  return withRatings(
+    teams.teams.map((t) => ({
+      ...t,
+      lineups: t.lineups.filter((l) => l.player.id !== playerId),
+    })),
+  );
+}
+
+/**
+ * Refresca la ficha de un jugador dentro del tablero (p. ej. un invitado al que
+ * le cambiaron el overall) conservando su equipo y su posición.
+ */
+export function replacePlayer(
+  teams: BalancedTeams,
+  player: Player,
+): BalancedTeams {
+  return withRatings(
+    teams.teams.map((t) => ({
+      ...t,
+      lineups: t.lineups.map((l) =>
+        l.player.id === player.id ? { ...l, player } : l,
+      ),
+    })),
+  );
+}
+
+/** El equipo con menos gente (a empate, el de menor OVR) — para autoasignar. */
+export function lightestTeam(teams: BalancedTeams): TeamKey {
+  return [...teams.teams].sort(
+    (a, b) => a.lineups.length - b.lineups.length || a.rating - b.rating,
+  )[0].key;
+}
+
+/**
  * Splits the selected players into `teamCount` teams of similar strength.
  *
  *  1. One goalkeeper per team is picked from the GK-capable players. The pick is

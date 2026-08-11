@@ -25,6 +25,16 @@ export const selectedIdsAtom = atomWithStorage<number[]>(
  */
 export const teamNamesAtom = atomWithStorage<string[]>("reta:team-names", []);
 
+/**
+ * Preferencia: volver a repartir los equipos cada vez que se agrega, edita o
+ * quita a alguien después de generar. Apagada por default — el tablero se
+ * conserva y quien entra tarde se asigna a un equipo a mano (o automático).
+ */
+export const resetTeamsOnEditAtom = atomWithStorage(
+  "reta:reset-on-edit",
+  false,
+);
+
 /** Cuántos equipos genera "Armar equipos" (2 por default, hasta MAX_TEAMS). */
 export const teamCountAtom = atomWithStorage<number>(
   "reta:team-count",

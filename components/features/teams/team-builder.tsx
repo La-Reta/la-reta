@@ -6,7 +6,10 @@ import {
   type MatchupView,
 } from "@/components/features/teams/control-bar";
 import { Convocatoria } from "@/components/features/teams/convocatoria";
-import { GuestManager } from "@/components/features/teams/guest-manager";
+import {
+  GuestManager,
+  type GuestInput,
+} from "@/components/features/teams/guest-manager";
 import { Matchup } from "@/components/features/teams/matchup";
 import { TeamNameInputs } from "@/components/features/teams/team-name-inputs";
 import {
@@ -16,26 +19,32 @@ import {
   EmptyMedia,
   EmptyTitle,
 } from "@/components/ui/empty";
-import type { Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { isGuest, makeGuestPlayer } from "@/lib/guests";
 import type { RecentSplit } from "@/lib/queries";
 import {
   currentGeneratedRetaIdAtom,
   guestsAtom,
+  resetTeamsOnEditAtom,
   selectedIdsAtom,
   teamCountAtom,
   teamNamesAtom,
 } from "@/lib/state/atoms";
 import {
+  addToTeam,
   balanceTeamsVaried,
+  lightestTeam,
+  removeFromTeams,
+  replacePlayer,
   swapPlayers,
   type BalancedTeams,
   type TeamSplit,
 } from "@/lib/team-balancer";
-import { MAX_TEAMS, teamName } from "@/lib/teams";
+import { MAX_TEAMS, TEAM_COLORS, teamName, type TeamKey } from "@/lib/teams";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import { useAtom, useSetAtom } from "jotai";
-import { ScaleIcon } from "lucide-react";
+import { ScaleIcon, ShuffleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
@@ -63,6 +72,7 @@ export function TeamBuilder({
   const [view, setView] = React.useState<MatchupView>("board");
   const [names, setNames] = useAtom(teamNamesAtom);
   const [teamCount, setTeamCount] = useAtom(teamCountAtom);
+  const [resetOnEdit, setResetOnEdit] = useAtom(resetTeamsOnEditAtom);
   const setCurrentRetaId = useSetAtom(currentGeneratedRetaIdAtom);
   const [mounted, setMounted] = React.useState(false);
   // Splits generated this session, so consecutive regenerations vary even
@@ -89,8 +99,18 @@ export function TeamBuilder({
   const maxTeams = Math.max(2, Math.min(MAX_TEAMS, selectedPlayers.length));
   const effectiveCount = Math.min(teamCount, maxTeams);
 
+  /**
+   * Editar la convocatoria no tira el tablero: quien entra queda "por asignar"
+   * y quien sale se retira de su equipo. Con "Reiniciar al editar" encendido
+   * vuelve a repartir desde cero, como antes.
+   */
+  function afterEdit(mutate: (teams: BalancedTeams) => BalancedTeams) {
+    setResult((r) => (r && !resetOnEdit ? mutate(r) : null));
+  }
+
   function toggle(id: number) {
-    setResult(null);
+    const leaving = selected.includes(id);
+    afterEdit((teams) => (leaving ? removeFromTeams(teams, id) : teams));
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
@@ -105,33 +125,33 @@ export function TeamBuilder({
     });
   }
 
-  function addGuest(input: {
-    name: string;
-    overall: number;
-    position: Position;
-  }) {
-    setResult(null);
+  function addGuest(input: GuestInput) {
     const guest = makeGuestPlayer(input, guests);
     setGuests((prev) => [...prev, guest]);
     setSelected((prev) => [...prev, guest.id]); // auto-convocar
-  }
-
-  function editGuest(
-    id: number,
-    input: { name: string; overall: number; position: Position },
-  ) {
-    setResult(null);
-    // Rebuild the guest (recomputing stats from overall) but keep its id so it
-    // stays selected and its board/live references don't break.
-    setGuests((prev) =>
-      prev.map((g) =>
-        g.id === id ? { ...makeGuestPlayer(input, prev), id } : g,
-      ),
+    // Si el formulario ya trae equipo, entra directo; si no, queda por asignar.
+    afterEdit((teams) =>
+      input.team ? addToTeam(teams, guest, input.team) : teams,
     );
   }
 
+  function editGuest(id: number, input: GuestInput) {
+    // Rebuild the guest (recomputing stats from overall) but keep its id so it
+    // stays selected and its board/live references don't break.
+    const updated: Player = { ...makeGuestPlayer(input, guests), id };
+    setGuests((prev) => prev.map((g) => (g.id === id ? updated : g)));
+    // El tablero se queda: se refresca la ficha (nombre/OVR) y, si el select
+    // cambió de equipo, se mueve — "Sin asignar" lo saca del tablero.
+    afterEdit((teams) => {
+      const synced = replacePlayer(teams, updated);
+      return input.team
+        ? addToTeam(synced, updated, input.team)
+        : removeFromTeams(synced, id);
+    });
+  }
+
   function removeGuest(id: number) {
-    setResult(null);
+    afterEdit((teams) => removeFromTeams(teams, id));
     setGuests((prev) => prev.filter((g) => g.id !== id));
     setSelected((prev) => prev.filter((x) => x !== id));
   }
@@ -166,6 +186,18 @@ export function TeamBuilder({
     });
   }
 
+  // Convocados que aún no están en ningún equipo del tablero actual.
+  const assignedIds = new Set(
+    result?.teams.flatMap((t) => t.lineups.map((l) => l.player.id)) ?? [],
+  );
+  const pending = result
+    ? selectedPlayers.filter((p) => !assignedIds.has(p.id))
+    : [];
+
+  function assign(player: Player, key: TeamKey) {
+    setResult((r) => (r ? addToTeam(r, player, key) : r));
+  }
+
   const allSelected =
     allPlayers.length > 0 && selected.length === allPlayers.length;
 
@@ -192,6 +224,8 @@ export function TeamBuilder({
         hasResult={result !== null}
         teamCount={effectiveCount}
         maxTeams={maxTeams}
+        resetOnEdit={resetOnEdit}
+        onResetOnEditChange={setResetOnEdit}
         onTeamCountChange={(n) => {
           setResult(null);
           setTeamCount(n);
@@ -234,8 +268,39 @@ export function TeamBuilder({
         </Empty>
       )}
 
+      {result && pending.length > 0 ? (
+        <PendingAssignments
+          pending={pending}
+          teams={result.teams}
+          names={names}
+          onAssign={assign}
+          onAuto={() =>
+            setResult((r) =>
+              pending.reduce(
+                (acc, p) => addToTeam(acc, p, lightestTeam(acc)),
+                r!,
+              ),
+            )
+          }
+        />
+      ) : null}
+
       <GuestManager
         guests={guests}
+        // Con "Reiniciar al editar" encendido, cualquier cambio vuelve a
+        // repartir: elegir equipo aquí no significaría nada, así que no se ofrece.
+        teams={
+          resetOnEdit
+            ? []
+            : (result?.teams.map((t) => ({
+                key: t.key,
+                name: teamName(names, t.key),
+              })) ?? [])
+        }
+        teamOf={(id) =>
+          result?.teams.find((t) => t.lineups.some((l) => l.player.id === id))
+            ?.key ?? null
+        }
         onAdd={addGuest}
         onEdit={editGuest}
         onRemove={removeGuest}
@@ -248,5 +313,73 @@ export function TeamBuilder({
         selectedCount={selectedPlayers.length}
       />
     </div>
+  );
+}
+
+/**
+ * Quien llegó después de generar (invitado de última hora o alguien que se
+ * convocó tarde) espera aquí hasta que se le asigne equipo — a mano o con
+ * "Repartir", que lo manda al equipo con menos gente.
+ */
+function PendingAssignments({
+  pending,
+  teams,
+  names,
+  onAssign,
+  onAuto,
+}: {
+  pending: Player[];
+  teams: TeamSplit[];
+  names: string[];
+  onAssign: (player: Player, key: TeamKey) => void;
+  onAuto: () => void;
+}) {
+  return (
+    <Card size="sm" className="border-dashed">
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap items-center justify-between gap-2">
+          <p className="text-sm font-semibold">
+            Por asignar
+            <span className="text-muted-foreground ml-1.5 text-xs font-normal">
+              · {pending.length} sin equipo
+            </span>
+          </p>
+          <Button variant="outline" onClick={onAuto}>
+            <ShuffleIcon />
+            Repartir
+          </Button>
+        </div>
+        <ul className="space-y-2">
+          {pending.map((player) => (
+            <li
+              key={player.id}
+              className="flex flex-wrap items-center gap-2 text-sm"
+            >
+              <span className="min-w-0 flex-1 truncate font-medium">
+                {player.name}
+                <span className="text-muted-foreground ml-1.5 font-mono text-xs">
+                  {player.overall}
+                </span>
+              </span>
+              {teams.map((team) => (
+                <Button
+                  key={team.key}
+                  variant="outline"
+                  size="sm"
+                  onClick={() => onAssign(player, team.key)}
+                >
+                  <span
+                    aria-hidden="true"
+                    className="size-2 rounded-full"
+                    style={{ backgroundColor: TEAM_COLORS[team.key] }}
+                  />
+                  {teamName(names, team.key)}
+                </Button>
+              ))}
+            </li>
+          ))}
+        </ul>
+      </CardContent>
+    </Card>
   );
 }

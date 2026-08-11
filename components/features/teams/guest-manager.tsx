@@ -13,6 +13,7 @@ import {
 } from "@/components/ui/select";
 import { POSITION_NAME, POSITIONS, type Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { TEAM_COLORS, type TeamKey } from "@/lib/teams";
 import { PencilIcon, UserPlusIcon, XIcon } from "lucide-react";
 import * as React from "react";
 
@@ -22,22 +23,37 @@ const POSITION_ITEMS = POSITIONS.map((p) => ({
   label: `${p} · ${POSITION_NAME[p]}`,
 }));
 
+/** Valor del select cuando el invitado no va a ningún equipo todavía. */
+const NO_TEAM = "none";
+
+export type GuestInput = {
+  name: string;
+  overall: number;
+  position: Position;
+  /** Equipo al que se manda; null lo deja "por asignar". */
+  team: TeamKey | null;
+};
+
 /**
  * Add last-minute ("de última hora") guest players for this generation only.
  * They're client-only (never saved to the roster) and get added to the pool.
+ * Con un tablero ya generado, el formulario también asigna equipo: al editar
+ * arranca en el que ya tiene, así que mover a alguien es un solo paso.
  */
 export function GuestManager({
   guests,
+  teams = [],
+  teamOf,
   onAdd,
   onEdit,
   onRemove,
 }: {
   guests: Player[];
-  onAdd: (input: { name: string; overall: number; position: Position }) => void;
-  onEdit: (
-    id: number,
-    input: { name: string; overall: number; position: Position },
-  ) => void;
+  /** Equipos del tablero actual; vacío = todavía no se genera nada. */
+  teams?: { key: TeamKey; name: string }[];
+  teamOf?: (guestId: number) => TeamKey | null;
+  onAdd: (input: GuestInput) => void;
+  onEdit: (id: number, input: GuestInput) => void;
   onRemove: (id: number) => void;
 }) {
   const [name, setName] = React.useState("");
@@ -45,13 +61,20 @@ export function GuestManager({
   // guard the submit instead of coercing an empty value to a number.
   const [overall, setOverall] = React.useState("38");
   const [position, setPosition] = React.useState<Position>("CM");
+  const [team, setTeam] = React.useState<string>(NO_TEAM);
   // When set, the form edits that guest instead of adding a new one.
   const [editingId, setEditingId] = React.useState<number | null>(null);
+
+  const teamItems = [
+    { value: NO_TEAM, label: "Sin asignar" },
+    ...teams.map((t) => ({ value: t.key as string, label: t.name })),
+  ];
 
   function reset() {
     setName("");
     setOverall("38");
     setPosition("CM");
+    setTeam(NO_TEAM);
     setEditingId(null);
   }
 
@@ -60,13 +83,19 @@ export function GuestManager({
     setName(g.name);
     setOverall(String(g.overall));
     setPosition(g.position as Position);
+    setTeam(teamOf?.(g.id) ?? NO_TEAM);
   }
 
   function submit(e: React.FormEvent) {
     e.preventDefault();
     const n = name.trim();
     if (!n) return;
-    const input = { name: n, overall: Number(overall), position };
+    const input: GuestInput = {
+      name: n,
+      overall: Number(overall),
+      position,
+      team: team === NO_TEAM ? null : (team as TeamKey),
+    };
     if (editingId !== null) onEdit(editingId, input);
     else onAdd(input);
     reset();
@@ -138,6 +167,44 @@ export function GuestManager({
               </SelectContent>
             </Select>
           </div>
+
+          {teams.length > 0 ? (
+            <div className="flex flex-col gap-1">
+              <Label htmlFor="guest-team" className="text-xs">
+                Equipo
+              </Label>
+              <Select
+                items={teamItems}
+                value={team}
+                onValueChange={(v) => setTeam(v ?? NO_TEAM)}
+              >
+                <SelectTrigger id="guest-team" className="min-w-36">
+                  <SelectValue />
+                </SelectTrigger>
+                <SelectContent
+                  alignItemWithTrigger={false}
+                  className="w-auto min-w-40"
+                >
+                  {teamItems.map((it) => (
+                    <SelectItem key={it.value} value={it.value}>
+                      <span className="flex items-center gap-2">
+                        {it.value === NO_TEAM ? null : (
+                          <span
+                            aria-hidden="true"
+                            className="size-2 rounded-full"
+                            style={{
+                              backgroundColor: TEAM_COLORS[it.value as TeamKey],
+                            }}
+                          />
+                        )}
+                        {it.label}
+                      </span>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+          ) : null}
 
           <Button type="submit" disabled={!name.trim()}>
             {editingId !== null ? <PencilIcon /> : <UserPlusIcon />}

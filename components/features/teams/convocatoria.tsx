@@ -12,7 +12,7 @@ import type { Player } from "@/lib/db/schema";
 import { flagEmoji, playerPositions } from "@/lib/format";
 import { isGuest } from "@/lib/guests";
 import { cn } from "@/lib/utils";
-import { CheckIcon } from "lucide-react";
+import { CheckIcon, InfoIcon } from "lucide-react";
 import * as React from "react";
 import { SelectedCountItem } from "./selected-count-item";
 
@@ -37,7 +37,10 @@ export function Convocatoria({
         <CardTitle className="flex items-center justify-between">
           <span>Convocatoria</span>
           <div className="flex flex-wrap-reverse items-center justify-end gap-2">
-            <Badge variant={"outline"}>Toca para convocar</Badge>
+            <Badge variant={"outline"}>
+              <InfoIcon />
+              Toca para convocar
+            </Badge>
             <SelectedCountItem count={selectedCount} />
           </div>
         </CardTitle>

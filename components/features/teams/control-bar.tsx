@@ -1,23 +1,46 @@
 "use client";
 
-import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { Label } from "@/components/ui/label";
+import {
+  Popover,
+  PopoverContent,
+  PopoverDescription,
+  PopoverHeader,
+  PopoverTitle,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Separator } from "@/components/ui/separator";
+import { Switch } from "@/components/ui/switch";
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipTrigger,
+} from "@/components/ui/tooltip";
 import { MAX_TEAMS } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import {
   ChartNoAxesColumnIcon,
   ListChecksIcon,
   RadioIcon,
+  Settings2Icon,
   ShuffleIcon,
-  UsersIcon,
   XIcon,
 } from "lucide-react";
 import { SelectedCountItem } from "./selected-count-item";
 
 export type MatchupView = "board" | "list";
 
+/**
+ * Barra de "Armar equipos", en tres zonas para que no se lea como un montón de
+ * botones sueltos:
+ *
+ *  1. Estado — cuántos van convocados, más los accesos secundarios (registros,
+ *     preferencias).
+ *  2. Ajustes de la generación — a quién convocas y en cuántos equipos.
+ *  3. La acción — generar (y de ahí al live).
+ */
 export function ControlBar({
   selectedCount,
   allSelected,
@@ -25,6 +48,8 @@ export function ControlBar({
   hasResult,
   teamCount,
   maxTeams,
+  resetOnEdit,
+  onResetOnEditChange,
   onTeamCountChange,
   onToggleAll,
   onClear,
@@ -40,6 +65,9 @@ export function ControlBar({
   teamCount: number;
   /** Tope real: no puede haber más equipos que convocados. */
   maxTeams: number;
+  /** Volver a repartir al editar la convocatoria o los invitados. */
+  resetOnEdit: boolean;
+  onResetOnEditChange: (value: boolean) => void;
   onTeamCountChange: (count: number) => void;
   onToggleAll: () => void;
   onClear: () => void;
@@ -50,38 +78,52 @@ export function ControlBar({
 }) {
   return (
     <Card size="sm">
-      <CardContent className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        {/* Info: convocados + acceso al registro */}
-        <div className="flex items-center justify-between gap-2 sm:justify-start sm:gap-3">
+      <CardContent className="space-y-3">
+        {/* 1 · Estado + secundarias */}
+        <div className="flex items-center justify-between gap-2">
           <SelectedCountItem count={selectedCount} />
-          <Button variant="default" onClick={onRegistro}>
-            <ChartNoAxesColumnIcon />
-            Registros
-          </Button>
+          <div className="flex items-center gap-2">
+            <PreferencesPopover
+              resetOnEdit={resetOnEdit}
+              onResetOnEditChange={onResetOnEditChange}
+            />
+            <Button variant="default" onClick={onRegistro}>
+              <ChartNoAxesColumnIcon />
+              <span className="hidden sm:inline">Registros</span>
+            </Button>
+          </div>
         </div>
 
-        {/* Acciones: selección · vista · matchup */}
-        <div className="flex flex-wrap items-center justify-end gap-2">
-          <TeamCountPicker
-            value={teamCount}
-            max={maxTeams}
-            onChange={onTeamCountChange}
-          />
-          <Button variant="outline" onClick={onToggleAll}>
-            <ListChecksIcon />
-            {allSelected ? "Quitar todos" : "Todos"}
-          </Button>
-          {hasSelection && (
-            <Button variant="outline" onClick={onClear}>
-              <XIcon />
-              Limpiar
-            </Button>
-          )}
+        <Separator />
 
-          {/* Primary CTA (+ live) — full-width row on mobile, inline on desktop */}
-          <div className="flex w-full gap-2 sm:w-auto">
+        {/* 2 · Ajustes de la generación · 3 · la acción */}
+        <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
+          <div className="flex flex-wrap items-end gap-4">
+            <Field label="Convocatoria">
+              <Button variant="outline" onClick={onToggleAll}>
+                <ListChecksIcon />
+                {allSelected ? "Quitar todos" : "Todos"}
+              </Button>
+              {hasSelection && (
+                <Button variant="outline" onClick={onClear}>
+                  <XIcon />
+                  Limpiar
+                </Button>
+              )}
+            </Field>
+
+            <Field label="Equipos">
+              <TeamCountPicker
+                value={teamCount}
+                max={maxTeams}
+                onChange={onTeamCountChange}
+              />
+            </Field>
+          </div>
+
+          <div className="flex gap-2">
             <Button
-              className="flex-1 sm:flex-none"
+              className="flex-1 lg:flex-none"
               onClick={onGenerate}
               disabled={generateDisabled}
             >
@@ -91,7 +133,7 @@ export function ControlBar({
             {hasResult && (
               <Button
                 variant="destructive"
-                className="flex-1 sm:flex-none"
+                className="flex-1 lg:flex-none"
                 onClick={onGoLive}
               >
                 <RadioIcon />
@@ -102,6 +144,99 @@ export function ControlBar({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/** Grupo de controles con su etiqueta, para que se lea qué hace cada cosa. */
+function Field({
+  label,
+  children,
+}: {
+  label: string;
+  children: React.ReactNode;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <span className="text-muted-foreground block text-[11px] font-semibold tracking-wide uppercase">
+        {label}
+      </span>
+      <div className="flex flex-wrap items-center gap-2">{children}</div>
+    </div>
+  );
+}
+
+/**
+ * Casa de las preferencias del generador. Hoy vive una sola; el popover existe
+ * para que las que vengan no vuelvan a llenar la barra.
+ */
+function PreferencesPopover({
+  resetOnEdit,
+  onResetOnEditChange,
+}: {
+  resetOnEdit: boolean;
+  onResetOnEditChange: (value: boolean) => void;
+}) {
+  return (
+    <Popover>
+      {/* Botón solo de icono: el tooltip dice qué abre. */}
+      <Tooltip>
+        <TooltipTrigger
+          render={
+            <PopoverTrigger
+              render={
+                <Button variant="outline" size="icon" aria-label="Preferencias">
+                  <Settings2Icon />
+                </Button>
+              }
+            />
+          }
+        />
+        <TooltipContent>Preferencias</TooltipContent>
+      </Tooltip>
+      <PopoverContent align="end" className="w-80">
+        <PopoverHeader>
+          <PopoverTitle>Preferencias</PopoverTitle>
+          <PopoverDescription>
+            Cómo se comporta el generador. Se guardan en este navegador.
+          </PopoverDescription>
+        </PopoverHeader>
+        <Setting
+          id="reset-on-edit"
+          label="Reiniciar al editar"
+          hint="Encendido: agregar, editar o quitar convocados vuelve a repartir todos los equipos. Apagado: el tablero se conserva y quien entra queda “por asignar”."
+          checked={resetOnEdit}
+          onCheckedChange={onResetOnEditChange}
+        />
+      </PopoverContent>
+    </Popover>
+  );
+}
+
+function Setting({
+  id,
+  label,
+  hint,
+  checked,
+  onCheckedChange,
+}: {
+  id: string;
+  label: string;
+  hint: string;
+  checked: boolean;
+  onCheckedChange: (value: boolean) => void;
+}) {
+  return (
+    <div className="flex items-start justify-between gap-3">
+      <div className="min-w-0">
+        <Label htmlFor={id} className="cursor-pointer text-sm font-medium">
+          {label}
+        </Label>
+        <p className="text-muted-foreground mt-1 text-xs leading-snug">
+          {hint}
+        </p>
+      </div>
+      <Switch id={id} checked={checked} onCheckedChange={onCheckedChange} />
+    </div>
   );
 }
 
@@ -126,11 +261,10 @@ function TeamCountPicker({
 
   return (
     <div
-      className="bg-muted inline-flex items-center gap-1 rounded-xl p-0.5"
+      className="bg-muted inline-flex items-center gap-0.5 rounded-xl p-0.5"
       role="group"
       aria-label="Número de equipos"
     >
-      <UsersIcon className="text-muted-foreground ml-1.5 size-3.5" />
       {options.map((n) => (
         <button
           key={n}
@@ -138,7 +272,7 @@ function TeamCountPicker({
           onClick={() => onChange(n)}
           aria-pressed={value === n}
           className={cn(
-            "rounded-[10px] px-2.5 py-1 font-mono text-xs font-bold tabular-nums transition-colors",
+            "rounded-[10px] px-3 py-1.5 font-mono text-xs font-bold tabular-nums transition-colors",
             value === n
               ? "bg-background text-foreground shadow-sm"
               : "text-muted-foreground hover:text-foreground",
