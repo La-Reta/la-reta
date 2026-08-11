@@ -27,6 +27,8 @@ import {
   type StatHistory,
 } from "@/lib/db";
 import { candidateKey, type VoteCategory } from "@/lib/match-votes";
+import type { RecentSplit } from "@/lib/team-balancer";
+import { isTeamKey, type TeamKey } from "@/lib/teams";
 import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import { readdirSync } from "node:fs";
 import { join } from "node:path";
@@ -147,6 +149,8 @@ export type PlayerGoalHistoryItem = {
   scoreB: number;
   balance: number;
   durationSec: number | null;
+  /** Marcador completo cuando la reta fue de 3+ equipos (ver `matchTeams`). */
+  teams: { key: string; name: string; score: number }[] | null;
   team: string | null;
   goals: number;
 };
@@ -165,6 +169,7 @@ export async function getPlayerGoalHistory(
       scoreB: matches.scoreB,
       balance: matches.balance,
       durationSec: matches.durationSec,
+      teams: matches.teams,
       team: matchGoals.team,
       goals: matchGoals.goals,
     })
@@ -473,11 +478,12 @@ export async function getTopScorers(): Promise<TopScorer[]> {
 }
 
 // Generated retas
-export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
+export type { RecentSplit } from "@/lib/team-balancer";
 
 /**
  * The most recent generated splits (ids per side), for feeding variety into the
- * balancer. Cheap: only ids, newest first.
+ * balancer. Cheap: only ids, newest first. Funciona igual con 2 o con N equipos:
+ * agrupa por la letra guardada en `generated_reta_players.team`.
  */
 export async function getRecentSplits(limit = 20): Promise<RecentSplit[]> {
   const retas = await db
@@ -501,14 +507,40 @@ export async function getRecentSplits(limit = 20): Promise<RecentSplit[]> {
       ),
     );
 
-  const byReta = new Map<number, RecentSplit>();
-  for (const r of retas) byReta.set(r.id, { teamAIds: [], teamBIds: [] });
+  const byReta = new Map<number, Map<string, number[]>>();
+  for (const r of retas) byReta.set(r.id, new Map());
   for (const row of rows) {
     const split = byReta.get(row.retaId);
     if (!split || row.playerId == null) continue; // guests excluded from variety
-    (row.team === "A" ? split.teamAIds : split.teamBIds).push(row.playerId);
+    const side = split.get(row.team) ?? [];
+    side.push(row.playerId);
+    split.set(row.team, side);
   }
-  return retas.map((r) => byReta.get(r.id)!);
+  return retas.map((r) => ({ sides: [...byReta.get(r.id)!.values()] }));
+}
+
+/**
+ * Los equipos de una reta generada, siempre como lista. Las retas nuevas traen
+ * la columna `teams`; las viejas (y cualquiera de 2 equipos) se reconstruyen de
+ * `team_a_name` / `rating_a` y su par B.
+ */
+export function retaTeams(
+  reta: Pick<
+    GeneratedReta,
+    "teams" | "teamAName" | "teamBName" | "ratingA" | "ratingB"
+  >,
+): { key: TeamKey; name: string; rating: number }[] {
+  if (reta.teams?.length) {
+    return reta.teams.map((t) => ({
+      key: (isTeamKey(t.key) ? t.key : "A") as TeamKey,
+      name: t.name,
+      rating: t.rating,
+    }));
+  }
+  return [
+    { key: "A" as TeamKey, name: reta.teamAName, rating: reta.ratingA },
+    { key: "B" as TeamKey, name: reta.teamBName, rating: reta.ratingB },
+  ];
 }
 
 export type GeneratedRetaPlayerRow = {

@@ -1,30 +1,46 @@
 "use client";
 
 import { formatDuration } from "@/lib/format";
+import { TEAM_COLORS_LIGHT, type TeamKey } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 
+export type LiveSide = { key: TeamKey; name: string };
+
 export function LiveScoreboard({
-  teamA,
-  teamB,
-  scoreA,
-  scoreB,
+  home,
+  away,
+  scoreHome,
+  scoreAway,
   elapsedSec,
-  scorersA,
-  scorersB,
+  scorersHome,
+  scorersAway,
+  queue,
 }: {
-  teamA: string;
-  teamB: string;
-  scoreA: number;
-  scoreB: number;
+  home: LiveSide;
+  away: LiveSide;
+  scoreHome: number;
+  scoreAway: number;
   elapsedSec: number;
-  scorersA: string[];
-  scorersB: string[];
+  scorersHome: string[];
+  scorersAway: string[];
+  /** Equipos esperando cancha (vacío en una reta de 2). */
+  queue: LiveSide[];
 }) {
   return (
     <div className="relative overflow-hidden rounded-xl bg-neutral-950 text-white shadow-lg ring-1 ring-white/10">
       <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_top,rgba(255,255,255,0.08),transparent_28%),linear-gradient(135deg,rgba(255,255,255,0.03),transparent_35%),linear-gradient(180deg,rgba(255,255,255,0.02),rgba(255,255,255,0))]" />
-      <div className="pointer-events-none absolute inset-y-0 left-0 w-1/2 bg-gradient-to-r from-sky-500/16 via-sky-500/5 to-transparent" />
-      <div className="pointer-events-none absolute inset-y-0 right-0 w-1/2 bg-gradient-to-l from-rose-500/16 via-rose-500/5 to-transparent" />
+      <div
+        className="pointer-events-none absolute inset-y-0 left-0 w-1/2 opacity-20"
+        style={{
+          background: `linear-gradient(to right, ${TEAM_COLORS_LIGHT[home.key]}, transparent)`,
+        }}
+      />
+      <div
+        className="pointer-events-none absolute inset-y-0 right-0 w-1/2 opacity-20"
+        style={{
+          background: `linear-gradient(to left, ${TEAM_COLORS_LIGHT[away.key]}, transparent)`,
+        }}
+      />
 
       <div className="relative flex flex-col items-center gap-1 border-b border-white/8 px-4 py-4">
         <div className="flex items-center gap-2">
@@ -45,65 +61,67 @@ export function LiveScoreboard({
         className="relative grid grid-cols-[1fr_auto_1fr] items-start gap-3 px-4 py-5 sm:px-5"
         role="status"
         aria-live="polite"
-        aria-label={`${teamA} ${scoreA}, ${teamB} ${scoreB}`}
+        aria-label={`${home.name} ${scoreHome}, ${away.name} ${scoreAway}`}
       >
-        <TeamSide
-          team={teamA}
-          accent="bg-sky-400"
-          text="text-sky-300"
-          scorers={scorersA}
-        />
+        <TeamSide side={home} scorers={scorersHome} />
 
         <p className="px-1 font-mono text-5xl leading-none font-black tabular-nums sm:text-6xl">
-          {scoreA}
+          {scoreHome}
           <span className="mx-1 text-white/28">:</span>
-          {scoreB}
+          {scoreAway}
         </p>
 
-        <TeamSide
-          team={teamB}
-          accent="bg-rose-400"
-          text="text-rose-300"
-          scorers={scorersB}
-        />
+        <TeamSide side={away} scorers={scorersAway} />
       </div>
+
+      {queue.length > 0 && (
+        <div className="relative flex flex-wrap items-center justify-center gap-2 border-t border-white/8 px-4 py-2.5">
+          <span className="text-[10px] font-semibold tracking-[0.2em] text-white/40 uppercase">
+            En la fila
+          </span>
+          {queue.map((team, i) => (
+            <span
+              key={team.key}
+              className="inline-flex items-center gap-1.5 rounded-full bg-white/8 px-2.5 py-0.5 text-[11px] font-semibold"
+            >
+              <span className="font-mono text-white/40 tabular-nums">
+                {i + 1}
+              </span>
+              <span
+                className="size-1.5 rounded-full"
+                style={{ backgroundColor: TEAM_COLORS_LIGHT[team.key] }}
+              />
+              <span className="max-w-28 truncate">{team.name}</span>
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
 
-function TeamSide({
-  team,
-  scorers,
-  accent,
-  text,
-}: {
-  team: string;
-  scorers: string[];
-  accent: string;
-  text: string;
-}) {
+function TeamSide({ side, scorers }: { side: LiveSide; scorers: string[] }) {
+  const color = TEAM_COLORS_LIGHT[side.key];
   return (
     <div className="min-w-0 text-center">
       <p
-        className={cn(
-          "truncate text-sm font-bold tracking-wide uppercase",
-          text,
-        )}
+        className="truncate text-sm font-bold tracking-wide uppercase"
+        style={{ color }}
       >
-        {team}
+        {side.name}
       </p>
       <span
-        className={cn("mx-auto mt-1 block h-0.5 w-8 rounded-full", accent)}
+        className="mx-auto mt-1 block h-0.5 w-8 rounded-full"
+        style={{ backgroundColor: color }}
       />
-      {scorers.length > 0 ? (
-        <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-white/58">
-          {scorers.join(", ")}
-        </p>
-      ) : (
-        <p className="mt-1.5 line-clamp-2 text-[10px] leading-snug text-white/36">
-          Sin goleadores registrados
-        </p>
-      )}
+      <p
+        className={cn(
+          "mt-1.5 line-clamp-2 text-[10px] leading-snug",
+          scorers.length > 0 ? "text-white/58" : "text-white/36",
+        )}
+      >
+        {scorers.length > 0 ? scorers.join(", ") : "Sin goleadores registrados"}
+      </p>
     </div>
   );
 }

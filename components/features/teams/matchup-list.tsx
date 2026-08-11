@@ -1,7 +1,8 @@
 "use client";
 
 import { positionGroup, type PositionGroup } from "@/lib/constants";
-import type { Lineup } from "@/lib/team-balancer";
+import type { TeamSplit } from "@/lib/team-balancer";
+import { TEAM_COLORS_LIGHT, teamName, type TeamKey } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import * as React from "react";
 
@@ -12,10 +13,19 @@ const LINE_LABEL: Record<PositionGroup, string> = {
   MID: "Medio",
   FWD: "Ataque",
 };
-const TEAM_A = "#38bdf8"; // sky-400
-const TEAM_B = "#fb7185"; // rose-400
+const listColor = (key: string) =>
+  TEAM_COLORS_LIGHT[key as TeamKey] ?? TEAM_COLORS_LIGHT.A;
 
-function byLine(lineups: Lineup[]) {
+// Clases estáticas (Tailwind no genera nada interpolado en runtime).
+const GRID_COLS: Record<number, string> = {
+  2: "sm:grid-cols-2",
+  3: "sm:grid-cols-2 lg:grid-cols-3",
+  4: "sm:grid-cols-2 lg:grid-cols-4",
+  5: "sm:grid-cols-3 lg:grid-cols-5",
+  6: "sm:grid-cols-3 lg:grid-cols-6",
+};
+
+function byLine(lineups: TeamSplit["lineups"]) {
   return ORDER.map((g) => ({
     group: g,
     items: lineups.filter((l) => positionGroup(l.role) === g),
@@ -24,20 +34,21 @@ function byLine(lineups: Lineup[]) {
 
 function PlayerRow({
   lineup,
-  side,
+  align,
   color,
 }: {
-  lineup: Lineup;
-  side: "A" | "B";
+  lineup: TeamSplit["lineups"][number];
+  align: "left" | "right";
   color: string;
 }) {
   const { player, role } = lineup;
-  // Badges hug the center divider: A puts it on the right, B on the left.
+  // Los badges se pegan al divisor central: a la derecha si la columna alinea
+  // a la derecha, a la izquierda si no.
   return (
     <div
       className={cn(
         "flex items-center gap-2",
-        side === "A" ? "flex-row-reverse text-right" : "text-left",
+        align === "right" ? "flex-row-reverse text-right" : "text-left",
       )}
     >
       <span
@@ -56,17 +67,45 @@ function PlayerRow({
   );
 }
 
-function TeamColumn({ lineups, side }: { lineups: Lineup[]; side: "A" | "B" }) {
-  const color = side === "A" ? TEAM_A : TEAM_B;
+function TeamColumn({
+  team,
+  name,
+  align,
+  /** Con 3+ equipos cada columna lleva su propio encabezado. */
+  withHeader,
+}: {
+  team: TeamSplit;
+  name: string;
+  align: "left" | "right";
+  withHeader: boolean;
+}) {
+  const color = listColor(team.key);
   return (
     <div className="space-y-3.5">
-      {byLine(lineups).map(({ group, items }) => (
+      {withHeader ? (
+        <div className="flex items-center gap-2 border-b border-white/10 pb-2">
+          <span
+            className="size-2 shrink-0 rounded-full"
+            style={{ backgroundColor: color }}
+          />
+          <span
+            className="font-display min-w-0 flex-1 truncate text-sm font-black uppercase"
+            style={{ color }}
+          >
+            {name}
+          </span>
+          <span className="font-mono text-[10px] font-semibold text-white/35 tabular-nums">
+            OVR {team.rating}
+          </span>
+        </div>
+      ) : null}
+      {byLine(team.lineups).map(({ group, items }) => (
         <div key={group} className="space-y-1.5">
           {/* Line label divider, so it's clear where each player lines up. */}
           <div
             className={cn(
               "flex items-center gap-2",
-              side === "A" && "flex-row-reverse",
+              align === "right" && "flex-row-reverse",
             )}
           >
             <span className="text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
@@ -75,7 +114,12 @@ function TeamColumn({ lineups, side }: { lineups: Lineup[]; side: "A" | "B" }) {
             <span className="h-px flex-1 bg-white/[0.06]" />
           </div>
           {items.map((l) => (
-            <PlayerRow key={l.player.id} lineup={l} side={side} color={color} />
+            <PlayerRow
+              key={l.player.id}
+              lineup={l}
+              align={align}
+              color={color}
+            />
           ))}
         </div>
       ))}
@@ -85,17 +129,11 @@ function TeamColumn({ lineups, side }: { lineups: Lineup[]; side: "A" | "B" }) {
 
 export const MatchupList = React.forwardRef<
   HTMLDivElement,
-  {
-    teamA: Lineup[];
-    teamB: Lineup[];
-    ratingA: number;
-    ratingB: number;
-    nameA?: string;
-    nameB?: string;
-  }
->(function MatchupList({ teamA, teamB, ratingA, ratingB, nameA, nameB }, ref) {
-  const teamAName = nameA?.trim() || "Equipo A";
-  const teamBName = nameB?.trim() || "Equipo B";
+  { teams: TeamSplit[]; names: string[] }
+>(function MatchupList({ teams, names }, ref) {
+  const isDuel = teams.length === 2;
+  const label = (i: number) => teamName(names, teams[i].key);
+
   return (
     <div
       ref={ref}
@@ -143,41 +181,75 @@ export const MatchupList = React.forwardRef<
           La Reta · Convocatoria
         </p>
 
-        {/* Team names (rating de-emphasized) */}
-        <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
-          <div className="min-w-0 text-right">
-            <p
-              className="font-display truncate text-xl leading-tight font-black"
-              style={{ color: TEAM_A }}
-            >
-              {teamAName}
-            </p>
-            <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
-              OVR {ratingA}
-            </p>
+        {isDuel ? (
+          // Duelo clásico: nombres enfrentados con el VS al centro.
+          <div className="mt-4 grid grid-cols-[1fr_auto_1fr] items-center gap-3">
+            <div className="min-w-0 text-right">
+              <p
+                className="font-display truncate text-xl leading-tight font-black"
+                style={{ color: listColor(teams[0].key) }}
+              >
+                {label(0)}
+              </p>
+              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+                OVR {teams[0].rating}
+              </p>
+            </div>
+            <span className="font-display rounded-md border border-white/25 px-3 py-1 text-sm font-black tracking-widest text-white/80">
+              VS
+            </span>
+            <div className="min-w-0 text-left">
+              <p
+                className="font-display truncate text-xl leading-tight font-black"
+                style={{ color: listColor(teams[1].key) }}
+              >
+                {label(1)}
+              </p>
+              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+                OVR {teams[1].rating}
+              </p>
+            </div>
           </div>
-          <span className="font-display rounded-md border border-white/25 px-3 py-1 text-sm font-black tracking-widest text-white/80">
-            VS
-          </span>
-          <div className="min-w-0 text-left">
-            <p
-              className="font-display truncate text-xl leading-tight font-black"
-              style={{ color: TEAM_B }}
-            >
-              {teamBName}
-            </p>
-            <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
-              OVR {ratingB}
-            </p>
-          </div>
-        </div>
+        ) : (
+          <p className="font-display mt-3 text-center text-[11px] font-bold tracking-[0.2em] text-white/60 uppercase">
+            {teams.length} equipos · rotación
+          </p>
+        )}
 
-        {/* Two-column lineup with a center divider */}
-        <div className="mt-6 grid grid-cols-[1fr_1px_1fr] gap-x-4">
-          <TeamColumn lineups={teamA} side="A" />
-          <div className="bg-white/[0.08]" />
-          <TeamColumn lineups={teamB} side="B" />
-        </div>
+        {isDuel ? (
+          <div className="mt-6 grid grid-cols-[1fr_1px_1fr] gap-x-4">
+            <TeamColumn
+              team={teams[0]}
+              name={label(0)}
+              align="right"
+              withHeader={false}
+            />
+            <div className="bg-white/[0.08]" />
+            <TeamColumn
+              team={teams[1]}
+              name={label(1)}
+              align="left"
+              withHeader={false}
+            />
+          </div>
+        ) : (
+          <div
+            className={cn(
+              "mt-6 grid grid-cols-1 gap-x-5 gap-y-7",
+              GRID_COLS[teams.length] ?? "sm:grid-cols-2",
+            )}
+          >
+            {teams.map((team, i) => (
+              <TeamColumn
+                key={team.key}
+                team={team}
+                name={label(i)}
+                align="left"
+                withHeader
+              />
+            ))}
+          </div>
+        )}
 
         <p className="font-display mt-6 text-center text-[10px] tracking-[0.25em] text-white/35 uppercase">
           reta fútbol

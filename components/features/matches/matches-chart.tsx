@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/chart";
 import { formatShortDate } from "@/lib/dates";
 import type { MatchWithScorers } from "@/lib/queries";
+import { matchTeams } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import { Bar, BarChart, CartesianGrid, ReferenceLine, XAxis } from "recharts";
 
@@ -41,7 +42,8 @@ export function MatchesChart({
     .reverse()
     .map((m) => ({
       label: formatShortDate(m.playedAt),
-      total: m.scoreA + m.scoreB,
+      // Suma de todos los equipos: con 3+ el par A/B no es el total.
+      total: matchTeams(m).reduce((n, t) => n + t.score, 0),
     }));
 
   const avg = data.length

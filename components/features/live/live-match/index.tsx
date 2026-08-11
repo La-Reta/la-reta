@@ -15,17 +15,18 @@ import {
 import { Button } from "@/components/ui/button";
 import { formatApiDate } from "@/lib/dates";
 import { isGuest } from "@/lib/guests";
+import { initialPairing, rotate } from "@/lib/live-rotation";
 import {
   currentGeneratedRetaIdAtom,
   EMPTY_LIVE_MATCH,
   guestsAtom,
   liveMatchAtom,
-  teamNameAAtom,
-  teamNameBAtom,
+  teamCountAtom,
+  teamNamesAtom,
 } from "@/lib/state/atoms";
-import { cn } from "@/lib/utils";
+import { TEAM_COLORS, teamKeys, teamName, type TeamKey } from "@/lib/teams";
 import { useAtom, useAtomValue } from "jotai";
-import { FlagIcon, PlayIcon, TrashIcon } from "lucide-react";
+import { FlagIcon, PlayIcon, RepeatIcon, TrashIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -49,10 +50,10 @@ import { useLiveMatchClock } from "./use-live-match-clock";
 export function LiveMatch({ players }: { players: LivePlayer[] }) {
   const router = useRouter();
   const [live, setLive] = useAtom(liveMatchAtom);
-  // Team names are shared with the "armar equipos" flow (persisted), so a
-  // matchup generated there lands here prefilled.
-  const [nameA, setNameA] = useAtom(teamNameAAtom);
-  const [nameB, setNameB] = useAtom(teamNameBAtom);
+  // Nombres y número de equipos se comparten con "armar equipos" (persistidos),
+  // así que una reta generada allá llega aquí ya configurada.
+  const [names, setNames] = useAtom(teamNamesAtom);
+  const [teamCount, setTeamCount] = useAtom(teamCountAtom);
   const [generatedRetaId, setGeneratedRetaId] = useAtom(
     currentGeneratedRetaIdAtom,
   );
@@ -76,11 +77,19 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
     [pool],
   );
 
-  const scoreA = countGoalsFor(live.goals, "A");
-  const scoreB = countGoalsFor(live.goals, "B");
+  const sideOf = React.useCallback(
+    (key: TeamKey) =>
+      live.teams.find((t) => t.key === key) ?? { key, name: `Equipo ${key}` },
+    [live.teams],
+  );
+  const home = sideOf(live.home);
+  const away = sideOf(live.away);
 
-  const scorersA = getScorersSummary(live.goals, "A", playersById);
-  const scorersB = getScorersSummary(live.goals, "B", playersById);
+  const scoreHome = countGoalsFor(live.goals, live.home);
+  const scoreAway = countGoalsFor(live.goals, live.away);
+
+  const scorersHome = getScorersSummary(live.goals, live.home, playersById);
+  const scorersAway = getScorersSummary(live.goals, live.away, playersById);
 
   const filteredPlayers = React.useMemo(() => {
     if (!deferredFilter) return pool;
@@ -90,28 +99,39 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   }, [pool, deferredFilter]);
 
   const attrGoal = live.goals.find((goal) => goal.id === attrId);
-  const attrTeam = attrGoal
-    ? attrGoal.team === "A"
-      ? live.teamA
-      : live.teamB
-    : "";
+  const attrTeam = attrGoal ? sideOf(attrGoal.team).name : "";
 
+  function setName(index: number, value: string) {
+    setNames((prev) => {
+      const next = [...prev];
+      while (next.length <= index) next.push("");
+      next[index] = value;
+      return next;
+    });
+  }
+
+  /** Intercambia los dos primeros equipos (quién arranca de local). */
   function swapTeams() {
-    setNameA(nameB);
-    setNameB(nameA);
+    setNames((prev) => {
+      const next = [...prev];
+      while (next.length < 2) next.push("");
+      [next[0], next[1]] = [next[1], next[0]];
+      return next;
+    });
   }
 
   function start() {
+    const keys = teamKeys(teamCount);
     setLive({
       active: true,
-      teamA: nameA.trim() || "Equipo A",
-      teamB: nameB.trim() || "Equipo B",
+      teams: keys.map((key) => ({ key, name: teamName(names, key) })),
+      ...initialPairing(keys),
       startedAt: Date.now(),
       goals: [],
     });
   }
 
-  function addGoal(team: "A" | "B") {
+  function addGoal(team: TeamKey) {
     const goal = createGoalEvent(team, live.goals.length);
     setLive((state) => ({
       ...state,
@@ -121,7 +141,7 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
     setFilter("");
   }
 
-  function removeLast(team: "A" | "B") {
+  function removeLast(team: TeamKey) {
     setLive((state) => {
       const lastIdx = [...state.goals]
         .map((goal, index) => ({ goal, index }))
@@ -160,45 +180,75 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
     setFilter("");
   }
 
+  /** Guarda el partido actual en el registro. Devuelve si salió bien. */
+  async function saveCurrent() {
+    const durationSec = live.startedAt
+      ? Math.floor((Date.now() - live.startedAt) / 1000)
+      : null;
+    // El partido siempre se guarda a dos lados: A = local, B = visitante.
+    // `teamAKey`/`teamBKey` dicen qué equipos de la reta eran.
+    const scorers = tallyGoalsByPlayer(live.goals).map((s) => {
+      const team = s.team === live.home ? ("A" as const) : ("B" as const);
+      return isGuest({ id: s.playerId })
+        ? {
+            playerId: null,
+            guestName: playersById.get(s.playerId) ?? "Invitado",
+            goals: s.goals,
+            team,
+          }
+        : { playerId: s.playerId, goals: s.goals, team };
+    });
+
+    const res = await createMatch({
+      playedAt: formatApiDate(live.startedAt ?? Date.now()),
+      teamAName: home.name,
+      teamBName: away.name,
+      teamAKey: live.home,
+      teamBKey: live.away,
+      scoreA: scoreHome,
+      scoreB: scoreAway,
+      balance: 50,
+      durationSec,
+      notes: "",
+      generatedRetaId,
+      scorers,
+    });
+
+    if (!res.ok) toast.error(res.error);
+    return res.ok;
+  }
+
   function finalize() {
     startTransition(async () => {
-      const durationSec = live.startedAt
-        ? Math.floor((Date.now() - live.startedAt) / 1000)
-        : null;
-      // Guests (negative id) go to the DB as null playerId + their name.
-      const scorers = tallyGoalsByPlayer(live.goals).map((s) =>
-        isGuest({ id: s.playerId })
-          ? {
-              playerId: null,
-              guestName: playersById.get(s.playerId) ?? "Invitado",
-              goals: s.goals,
-              team: s.team,
-            }
-          : { playerId: s.playerId, goals: s.goals, team: s.team },
+      if (!(await saveCurrent())) return;
+      toast.success("Partido finalizado y guardado en el registro");
+      setLive(EMPTY_LIVE_MATCH);
+      setGeneratedRetaId(null);
+      router.push("/matches");
+      router.refresh();
+    });
+  }
+
+  /** Guarda el partido y arranca el siguiente de la rotación (gana y se queda). */
+  function nextGame() {
+    startTransition(async () => {
+      if (!(await saveCurrent())) return;
+      const next = rotate(
+        { home: live.home, away: live.away, queue: live.queue },
+        scoreHome,
+        scoreAway,
       );
-      const res = await createMatch({
-        playedAt: formatApiDate(live.startedAt ?? Date.now()),
-        teamAName: live.teamA,
-        teamBName: live.teamB,
-        scoreA,
-        scoreB,
-        balance: 50,
-        durationSec,
-        notes: "",
-        generatedRetaId,
-        scorers,
-      });
-
-      if (res.ok) {
-        toast.success("Partido finalizado y guardado en el registro");
-        setLive(EMPTY_LIVE_MATCH);
-        setGeneratedRetaId(null);
-        router.push("/matches");
-        router.refresh();
-        return;
-      }
-
-      toast.error(res.error);
+      setLive((state) => ({
+        ...state,
+        ...next,
+        startedAt: Date.now(),
+        goals: [],
+      }));
+      setAttrId(null);
+      toast.success(
+        `Guardado. Ahora: ${sideOf(next.home).name} vs ${sideOf(next.away).name}`,
+      );
+      router.refresh();
     });
   }
 
@@ -211,49 +261,46 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
   if (!live.active) {
     return (
       <StartMatchForm
-        teamA={nameA}
-        teamB={nameB}
-        onTeamAChange={setNameA}
-        onTeamBChange={setNameB}
+        count={teamCount}
+        names={names}
+        onCountChange={setTeamCount}
+        onNameChange={setName}
         onSwapTeams={swapTeams}
         onStart={start}
       />
     );
   }
 
+  const hasRotation = live.queue.length > 0;
+
   return (
     <div className="mx-auto max-w-4xl space-y-5">
       <LiveScoreboard
-        teamA={live.teamA}
-        teamB={live.teamB}
-        scoreA={scoreA}
-        scoreB={scoreB}
+        home={home}
+        away={away}
+        scoreHome={scoreHome}
+        scoreAway={scoreAway}
         elapsedSec={elapsedSec}
-        scorersA={scorersA}
-        scorersB={scorersB}
+        scorersHome={scorersHome}
+        scorersAway={scorersAway}
+        queue={live.queue.map(sideOf)}
       />
 
       <div className="grid gap-3 sm:grid-cols-2">
-        {(["A", "B"] as const).map((team) => {
-          const name = team === "A" ? live.teamA : live.teamB;
-          const score = team === "A" ? scoreA : scoreB;
-
+        {[home, away].map((side) => {
+          const score = side.key === live.home ? scoreHome : scoreAway;
           return (
             <Button
-              key={team}
-              className={cn(
-                "h-24 flex-col gap-1 rounded-xl text-white shadow-sm transition-transform active:scale-[0.99]",
-                team === "A"
-                  ? "bg-sky-600 hover:bg-sky-700 dark:bg-sky-500 dark:hover:bg-sky-400"
-                  : "bg-rose-600 hover:bg-rose-700 dark:bg-rose-500 dark:hover:bg-rose-400",
-              )}
-              onClick={() => addGoal(team)}
-              aria-label={`Gol de ${name}`}
+              key={side.key}
+              className="h-24 flex-col gap-1 rounded-xl text-white shadow-sm transition-transform hover:brightness-110 active:scale-[0.99]"
+              style={{ backgroundColor: TEAM_COLORS[side.key] }}
+              onClick={() => addGoal(side.key)}
+              aria-label={`Gol de ${side.name}`}
             >
               <PlayIcon className="size-5 rotate-90" />
               <span className="font-bold">Agregar gol</span>
               <span className="max-w-full truncate text-xs font-medium opacity-90">
-                {name}
+                {side.name}
               </span>
               <span className="text-[11px] opacity-75">
                 {score === 0
@@ -267,8 +314,8 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
 
       <GoalTimeline
         goals={live.goals}
-        teamA={live.teamA}
-        teamB={live.teamB}
+        home={home}
+        away={away}
         getPlayerName={(id) => getPlayerName(playersById, id)}
         formatMinute={(at) => formatGoalMinute(at, live.startedAt)}
         formatClock={formatGoalClock}
@@ -278,12 +325,48 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
       />
 
       <div className="flex flex-col gap-2 sm:flex-row">
+        {hasRotation && (
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button size="lg" className="flex-1" disabled={pending}>
+                  <RepeatIcon />
+                  Guardar y siguiente
+                </Button>
+              }
+            />
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>Cerrar este partido</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {home.name} {scoreHome} - {scoreAway} {away.name}. Se guarda
+                  en el registro y entra {sideOf(live.queue[0]).name}: gana y se
+                  queda, empate y se va el local.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel disabled={pending}>
+                  Seguir jugando
+                </AlertDialogCancel>
+                <AlertDialogAction onClick={nextGame} disabled={pending}>
+                  {pending ? "Guardando..." : "Siguiente"}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+        )}
+
         <AlertDialog>
           <AlertDialogTrigger
             render={
-              <Button size="lg" className="flex-1" disabled={pending}>
+              <Button
+                size="lg"
+                className="flex-1"
+                variant={hasRotation ? "outline" : "default"}
+                disabled={pending}
+              >
                 <FlagIcon />
-                Finalizar partido
+                {hasRotation ? "Terminar la reta" : "Finalizar partido"}
               </Button>
             }
           />
@@ -291,8 +374,9 @@ export function LiveMatch({ players }: { players: LivePlayer[] }) {
             <AlertDialogHeader>
               <AlertDialogTitle>Finalizar y guardar</AlertDialogTitle>
               <AlertDialogDescription>
-                {live.teamA} {scoreA} - {scoreB} {live.teamB}. Se guardará en el
-                registro de partidos con duración y goleadores.
+                {home.name} {scoreHome} - {scoreAway} {away.name}. Se guardará
+                en el registro de partidos con duración y goleadores
+                {hasRotation ? " y se cerrará la rotación." : "."}
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>

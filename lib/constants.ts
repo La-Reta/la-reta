@@ -67,7 +67,12 @@ export const GROUP_COLOR: Record<PositionGroup, string> = {
   FWD: "#f43f5e", // rose
 };
 
-/** Full Spanish name of each position, for the pitch legend / tooltips. */
+/**
+ * Nombre de cada posición como se dice en México (no en España): "contención"
+ * en vez de mediocentro defensivo, "volante ofensivo" en vez de mediapunta,
+ * "delantero centro" para el nueve. Se usa en los selects de posición
+ * principal/secundaria, la leyenda de la cancha y los tooltips.
+ */
 export const POSITION_NAME: Record<Position, string> = {
   GK: "Portero",
   RB: "Lateral derecho",
@@ -75,15 +80,15 @@ export const POSITION_NAME: Record<Position, string> = {
   CB: "Defensa central",
   LB: "Lateral izquierdo",
   LWB: "Carrilero izquierdo",
-  CDM: "Mediocentro defensivo",
-  CM: "Mediocentro",
-  CAM: "Mediapunta",
+  CDM: "Contención",
+  CM: "Volante central",
+  CAM: "Volante ofensivo",
   RM: "Volante derecho",
   LM: "Volante izquierdo",
   RW: "Extremo derecho",
   LW: "Extremo izquierdo",
-  CF: "Delantero centro",
-  ST: "Delantero",
+  CF: "Segundo delantero",
+  ST: "Delantero centro",
 };
 
 /**

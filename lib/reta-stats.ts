@@ -4,11 +4,15 @@ export type PairStat = { key: string; a: string; b: string; count: number };
 export type MatchupStat = {
   retaId: number;
   count: number;
-  teamA: string[];
-  teamB: string[];
+  /** Un arreglo de nombres por equipo (2 … 6 lados). */
+  sides: string[][];
 };
 export type PlayerStat = { playerId: number; name: string; count: number };
 export type DayStat = { date: string; count: number };
+/** Cuántas retas se generaron con 2, 3, 4 … equipos. */
+export type FormatStat = { teams: number; count: number };
+/** Diferencia (spread de OVR) de cada generación, en orden cronológico. */
+export type DiffPoint = { date: string; diff: number; teams: number };
 
 export type RetaStats = {
   total: number;
@@ -20,6 +24,8 @@ export type RetaStats = {
   repeatedMatchups: MatchupStat[];
   topPlayers: PlayerStat[];
   perDay: DayStat[];
+  byFormat: FormatStat[];
+  diffTrend: DiffPoint[];
 };
 
 /** Unordered same-team pairs of one side, keyed by sorted ids. */
@@ -45,10 +51,22 @@ function dayKey(createdAt: Date | string): string {
     : new Date(createdAt).toISOString().slice(0, 10);
 }
 
+/** Agrupa a los jugadores de una reta por la letra de su equipo, en orden. */
+function sidesOf(reta: GeneratedRetaWithPlayers) {
+  const byTeam = new Map<string, GeneratedRetaWithPlayers["players"]>();
+  for (const p of reta.players) {
+    byTeam.set(p.team, [...(byTeam.get(p.team) ?? []), p]);
+  }
+  return [...byTeam.entries()]
+    .sort((a, b) => a[0].localeCompare(b[0]))
+    .map(([, list]) => list);
+}
+
 /**
  * Aggregates generated retas into the measurements shown on the registro view:
- * repetition of splits, most frequent same-team duos, most convened players and
- * generations over time. Pure — no DB, so it's cheap to unit-check.
+ * repetition of splits, most frequent same-team duos, most convened players,
+ * generations over time, formato (2 / 3 / 4 equipos) y qué tan parejas salen.
+ * Pure — no DB, so it's cheap to unit-check. Funciona igual con 2 o N equipos.
  */
 export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
   const total = retas.length;
@@ -57,6 +75,8 @@ export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
   const pairs = new Map<string, PairStat>();
   const players = new Map<number, PlayerStat>();
   const perDayMap = new Map<string, number>();
+  const formatMap = new Map<number, number>();
+  const diffTrend: DiffPoint[] = [];
   let diffSum = 0;
 
   for (const reta of retas) {
@@ -66,14 +86,18 @@ export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
     const day = dayKey(reta.createdAt);
     perDayMap.set(day, (perDayMap.get(day) ?? 0) + 1);
 
+    const sides = sidesOf(reta);
+    const teamCount = Math.max(2, sides.length);
+    formatMap.set(teamCount, (formatMap.get(teamCount) ?? 0) + 1);
+    diffTrend.push({ date: day, diff: reta.diff, teams: teamCount });
+
     // Guests (occasional, no stable id) don't count toward duos / play-counts.
-    const sideA = reta.players
-      .filter((p) => p.team === "A" && !p.isGuest)
-      .map((p) => ({ playerId: p.playerId as number, name: p.name }));
-    const sideB = reta.players
-      .filter((p) => p.team === "B" && !p.isGuest)
-      .map((p) => ({ playerId: p.playerId as number, name: p.name }));
-    for (const p of [...sideA, ...sideB]) {
+    const rosterSides = sides.map((side) =>
+      side
+        .filter((p) => !p.isGuest)
+        .map((p) => ({ playerId: p.playerId as number, name: p.name })),
+    );
+    for (const p of rosterSides.flat()) {
       const cur = players.get(p.playerId) ?? {
         playerId: p.playerId,
         name: p.name,
@@ -82,7 +106,7 @@ export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
       cur.count += 1;
       players.set(p.playerId, cur);
     }
-    for (const p of [...sidePairs(sideA), ...sidePairs(sideB)]) {
+    for (const p of rosterSides.flatMap(sidePairs)) {
       const cur = pairs.get(p.key) ?? { ...p, count: 0 };
       cur.count += 1;
       pairs.set(p.key, cur);
@@ -101,8 +125,7 @@ export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
       return {
         retaId: sample.id,
         count,
-        teamA: sample.players.filter((p) => p.team === "A").map((p) => p.name),
-        teamB: sample.players.filter((p) => p.team === "B").map((p) => p.name),
+        sides: sidesOf(sample).map((side) => side.map((p) => p.name)),
       };
     });
 
@@ -123,5 +146,10 @@ export function computeRetaStats(retas: GeneratedRetaWithPlayers[]): RetaStats {
     perDay: [...perDayMap.entries()]
       .sort((a, b) => a[0].localeCompare(b[0]))
       .map(([date, count]) => ({ date, count })),
+    byFormat: [...formatMap.entries()]
+      .sort((a, b) => a[0] - b[0])
+      .map(([teams, count]) => ({ teams, count })),
+    // `retas` llega de más nueva a más vieja; el gráfico quiere cronológico.
+    diffTrend: diffTrend.reverse(),
   };
 }

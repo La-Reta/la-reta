@@ -21,7 +21,7 @@ export default async function LivePage() {
     <div className="container space-y-6 lg:mx-auto">
       <PageHeader
         title="Marcador en vivo"
-        description="Lleva el marcador durante el partido. Al finalizar se guarda solo en el registro de partidos."
+        description="Lleva el marcador durante el partido. Al finalizar se guarda solo en el registro de partidos. Con 3 o más equipos, el que gana se queda y entra el siguiente."
       />
       {unlocked ? <LiveMatch players={list} /> : <LiveLock />}
     </div>

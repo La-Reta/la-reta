@@ -1,3 +1,4 @@
+import { BalanceTrendChart } from "@/components/features/teams/registro/balance-trend-chart";
 import { GenerationsChart } from "@/components/features/teams/registro/generations-chart";
 import {
   RetaToMatchList,
@@ -12,16 +13,19 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
-import { formatApiDate, formatCompactDate } from "@/lib/dates";
-import { getGeneratedRetas } from "@/lib/queries";
+import { formatApiDate, formatCompactDate, formatTime } from "@/lib/dates";
+import { getGeneratedRetas, retaTeams } from "@/lib/queries";
 import { computeRetaStats, type RetaStats } from "@/lib/reta-stats";
 import { cn } from "@/lib/utils";
+import type { TeamKey } from "@/lib/teams";
 import {
   ArrowLeftIcon,
   CalendarRangeIcon,
   CopyIcon,
   HandshakeIcon,
   LayersIcon,
+  ActivityIcon,
+  UsersIcon,
   RepeatIcon,
   ScaleIcon,
   ShuffleIcon,
@@ -63,16 +67,13 @@ export default async function RetaRegistroPage() {
   // formatted here (server) to avoid a client hydration mismatch.
   const retaItems: RetaToMatchItem[] = retas.slice(0, 12).map((r) => ({
     id: r.id,
-    teamAName: r.teamAName,
-    teamBName: r.teamBName,
-    ratingA: r.ratingA,
-    ratingB: r.ratingB,
-    dateLabel: formatCompactDate(r.createdAt),
+    dateLabel: `${formatCompactDate(r.createdAt)} ${formatTime(r.createdAt)}`,
     playedAt: formatApiDate(r.createdAt),
+    teams: retaTeams(r),
     players: r.players.map((p) => ({
       playerId: p.playerId,
       guestName: p.isGuest ? p.name : null,
-      team: p.team === "A" || p.team === "B" ? p.team : null,
+      team: p.team as TeamKey,
       name: p.name,
     })),
   }));
@@ -121,22 +122,44 @@ export default async function RetaRegistroPage() {
             />
           </div>
 
-          <Card size="sm">
-            <CardHeader className="border-b">
-              <CardTitle className="flex items-center gap-2 text-base">
-                <CardIcon>
-                  <CalendarRangeIcon />
-                </CardIcon>
-                Generaciones por día
-              </CardTitle>
-              <CardDescription>
-                Últimos {Math.min(14, stats.perDay.length)} días con actividad
-              </CardDescription>
-            </CardHeader>
-            <CardContent className="pt-4">
-              <GenerationsChart perDay={stats.perDay} />
-            </CardContent>
-          </Card>
+          <div className="grid gap-6 lg:grid-cols-2">
+            <Card size="sm">
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CardIcon>
+                    <CalendarRangeIcon />
+                  </CardIcon>
+                  Generaciones por día
+                </CardTitle>
+                <CardDescription>
+                  Últimos {Math.min(14, stats.perDay.length)} días con actividad
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <GenerationsChart perDay={stats.perDay} />
+              </CardContent>
+            </Card>
+
+            <Card size="sm">
+              <CardHeader className="border-b">
+                <CardTitle className="flex items-center gap-2 text-base">
+                  <CardIcon>
+                    <ActivityIcon />
+                  </CardIcon>
+                  Qué tan parejas salen
+                </CardTitle>
+                <CardDescription>
+                  Diferencia de OVR entre el equipo más fuerte y el más débil ·
+                  media {stats.avgDiff}
+                </CardDescription>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <BalanceTrendChart points={stats.diffTrend} />
+              </CardContent>
+            </Card>
+          </div>
+
+          <FormatBreakdown stats={stats} />
 
           <div className="grid gap-6 lg:grid-cols-2">
             <TopPairs stats={stats} />
@@ -314,12 +337,59 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
             <span className="shrink-0 self-start rounded-full bg-amber-500/15 px-2.5 py-0.5 font-mono text-xs font-bold text-amber-600 tabular-nums dark:text-amber-400">
               {m.count}×
             </span>
-            <div className="grid min-w-0 flex-1 grid-cols-[1fr_auto_1fr] items-center gap-2 text-xs">
-              <span className="truncate text-right">{m.teamA.join(", ")}</span>
-              <span className="text-muted-foreground font-display font-bold">
-                VS
+            <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
+              {m.sides.map((side, i) => (
+                <span key={i} className="flex min-w-0 items-center gap-2">
+                  {i > 0 && (
+                    <span className="text-muted-foreground font-display font-bold">
+                      VS
+                    </span>
+                  )}
+                  <span className="truncate">{side.join(", ")}</span>
+                </span>
+              ))}
+            </div>
+          </div>
+        ))}
+      </CardContent>
+    </Card>
+  );
+}
+
+/**
+ * Cuántas retas se armaron con 2, 3, 4 … equipos. Son dos o tres categorías, así
+ * que una barra etiquetada lee mejor (y cuesta menos) que un gráfico completo.
+ */
+function FormatBreakdown({ stats }: { stats: RetaStats }) {
+  if (stats.byFormat.length < 2) return null;
+  const max = Math.max(...stats.byFormat.map((f) => f.count));
+  return (
+    <Card size="sm">
+      <CardHeader className="border-b">
+        <CardTitle className="flex items-center gap-2 text-base">
+          <CardIcon>
+            <UsersIcon />
+          </CardIcon>
+          Formato de la reta
+        </CardTitle>
+        <CardDescription>
+          Cuántas generaciones se armaron con cada número de equipos
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="space-y-3 pt-4">
+        {stats.byFormat.map((f) => (
+          <div key={f.teams} className="space-y-1.5">
+            <div className="flex items-center justify-between gap-2 text-sm">
+              <span className="font-medium">{f.teams} equipos</span>
+              <span className="text-muted-foreground font-mono text-xs font-semibold tabular-nums">
+                {f.count} · {Math.round((f.count / stats.total) * 100)}%
               </span>
-              <span className="truncate">{m.teamB.join(", ")}</span>
+            </div>
+            <div className="bg-muted h-1.5 overflow-hidden rounded-full">
+              <div
+                className="bg-primary h-full rounded-full"
+                style={{ width: `${Math.round((f.count / max) * 100)}%` }}
+              />
             </div>
           </div>
         ))}

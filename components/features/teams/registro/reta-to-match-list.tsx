@@ -3,6 +3,7 @@
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import { matchPrefillAtom } from "@/lib/state/atoms";
+import { pairsOf, TEAM_COLORS, type TeamKey } from "@/lib/teams";
 import { useSetAtom } from "jotai";
 import { ClipboardListIcon, SendIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -10,16 +11,14 @@ import { useRouter } from "next/navigation";
 /** One past reta, trimmed to what the prefill needs (built server-side). */
 export type RetaToMatchItem = {
   id: number;
-  teamAName: string;
-  teamBName: string;
-  ratingA: number;
-  ratingB: number;
   dateLabel: string;
   playedAt: string;
+  teams: { key: TeamKey; name: string; rating: number }[];
   players: {
     playerId: number | null;
     guestName: string | null;
-    team: "A" | "B" | null;
+    /** Letra del equipo dentro de la reta ("A", "B", "C" …). */
+    team: TeamKey | null;
     name: string;
   }[];
 };
@@ -27,25 +26,31 @@ export type RetaToMatchItem = {
 /**
  * Lets the user take a past generated reta straight into the match form
  * (/matches) with team names + attendance prefilled, guests included. Nothing is
- * submitted — the form loads the data so details can be adjusted first. Each row
- * reads as a mini scoreboard so the matchup identity carries the section.
+ * submitted — the form loads the data so details can be adjusted first. Con 3+
+ * equipos hay un botón por duelo posible, porque un partido siempre es de dos.
  */
 export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
   const router = useRouter();
   const setPrefill = useSetAtom(matchPrefillAtom);
 
-  function sendToMatches(reta: RetaToMatchItem) {
+  function sendToMatches(reta: RetaToMatchItem, aKey: TeamKey, bKey: TeamKey) {
+    const teamOf = (key: TeamKey) => reta.teams.find((t) => t.key === key);
     setPrefill({
-      teamAName: reta.teamAName,
-      teamBName: reta.teamBName,
+      teamAName: teamOf(aKey)?.name ?? `Equipo ${aKey}`,
+      teamBName: teamOf(bKey)?.name ?? `Equipo ${bKey}`,
       playedAt: reta.playedAt,
       generatedRetaId: reta.id,
-      scorers: reta.players.map((p) => ({
-        playerId: p.playerId,
-        guestName: p.playerId == null ? (p.guestName ?? p.name) : undefined,
-        team: p.team,
-        goals: 0,
-      })),
+      teamAKey: aKey,
+      teamBKey: bKey,
+      // Solo los dos equipos que juegan; su letra se traduce a lado A/B.
+      scorers: reta.players
+        .filter((p) => p.team === aKey || p.team === bKey)
+        .map((p) => ({
+          playerId: p.playerId,
+          guestName: p.playerId == null ? (p.guestName ?? p.name) : undefined,
+          team: p.team === aKey ? ("A" as const) : ("B" as const),
+          goals: 0,
+        })),
     });
     router.push("/matches");
   }
@@ -79,34 +84,45 @@ export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
             >
               <div className="min-w-0 flex-1">
                 <p className="text-muted-foreground mb-1 text-center text-[10px] font-semibold tracking-wider uppercase tabular-nums sm:text-left">
-                  {reta.dateLabel} · {reta.players.length} jugadores
+                  {reta.dateLabel} · {reta.teams.length} equipos ·{" "}
+                  {reta.players.length} jugadores
                 </p>
-                <div className="flex items-center justify-center gap-2 sm:justify-start sm:gap-3">
-                  <span className="font-display min-w-0 flex-1 truncate text-right text-sm font-bold uppercase sm:flex-none sm:text-base">
-                    {reta.teamAName}
-                  </span>
-                  <span className="font-mono text-sm font-bold tabular-nums text-sky-500">
-                    {reta.ratingA}
-                  </span>
-                  <span className="text-muted-foreground font-display text-[11px] font-bold">
-                    VS
-                  </span>
-                  <span className="font-mono text-sm font-bold tabular-nums text-rose-500">
-                    {reta.ratingB}
-                  </span>
-                  <span className="font-display min-w-0 flex-1 truncate text-sm font-bold uppercase sm:flex-none sm:text-base">
-                    {reta.teamBName}
-                  </span>
+                <div className="flex flex-wrap items-center justify-center gap-x-3 gap-y-1 sm:justify-start">
+                  {reta.teams.map((team, i) => (
+                    <span key={team.key} className="flex items-center gap-2">
+                      {i > 0 && (
+                        <span className="text-muted-foreground font-display text-[11px] font-bold">
+                          VS
+                        </span>
+                      )}
+                      <span className="font-display max-w-36 truncate text-sm font-bold uppercase sm:text-base">
+                        {team.name}
+                      </span>
+                      <span
+                        className="font-mono text-sm font-bold tabular-nums"
+                        style={{ color: TEAM_COLORS[team.key] }}
+                      >
+                        {team.rating}
+                      </span>
+                    </span>
+                  ))}
                 </div>
               </div>
-              <Button
-                variant="outline"
-                className="w-full shrink-0 sm:w-auto"
-                onClick={() => sendToMatches(reta)}
-              >
-                <SendIcon className="transition-transform group-hover:translate-x-0.5" />
-                Llevar a partidos
-              </Button>
+              <div className="flex shrink-0 flex-wrap justify-center gap-2">
+                {pairsOf(reta.teams).map(([a, b]) => (
+                  <Button
+                    key={`${a.key}${b.key}`}
+                    variant="outline"
+                    className="w-full sm:w-auto"
+                    onClick={() => sendToMatches(reta, a.key, b.key)}
+                  >
+                    <SendIcon className="transition-transform group-hover:translate-x-0.5" />
+                    {reta.teams.length === 2
+                      ? "Llevar a partidos"
+                      : `${a.name} vs ${b.name}`}
+                  </Button>
+                ))}
+              </div>
             </li>
           ))}
         </ul>

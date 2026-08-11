@@ -13,7 +13,7 @@ import { SpeedInsights } from "@vercel/speed-insights/next";
 const cloudflareWebAnalyticsToken =
   process.env.NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN;
 
-const inter = Inter({subsets:['latin'],variable:'--font-sans'});
+const inter = Inter({ subsets: ["latin"], variable: "--font-sans" });
 
 // Condensed display face for matchday/scoreboard headings.
 const oswald = Oswald({
@@ -117,7 +117,14 @@ export default function RootLayout({
           <ClerkProvider>
             <Providers>
               <AppShell>{children}</AppShell>
-              <Toaster richColors position="top-center" />
+              {/* El header es sticky (h-12): sin este offset los toasts caen
+                  encima de él y tapan el título y el botón de sesión. */}
+              <Toaster
+                richColors
+                position="top-center"
+                offset={{ top: "4rem" }}
+                mobileOffset={{ top: "4rem" }}
+              />
             </Providers>
             {cloudflareWebAnalyticsToken ? (
               <Script

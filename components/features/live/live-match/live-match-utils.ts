@@ -1,7 +1,8 @@
 import { formatTime } from "@/lib/dates";
+import type { TeamKey } from "@/lib/teams";
 import type { LiveGoal } from "./types";
 
-export function countGoalsFor(goals: LiveGoal[], team: "A" | "B") {
+export function countGoalsFor(goals: LiveGoal[], team: TeamKey) {
   return goals.filter((goal) => goal.team === team).length;
 }
 
@@ -19,7 +20,7 @@ function shortName(fullName: string) {
 
 export function getScorersSummary(
   goals: LiveGoal[],
-  team: "A" | "B",
+  team: TeamKey,
   playersById: Map<number, string>,
 ) {
   const tally = new Map<number, number>();
@@ -47,7 +48,7 @@ export function formatGoalClock(at: number) {
 export function tallyGoalsByPlayer(goals: LiveGoal[]) {
   const tally = new Map<
     string,
-    { playerId: number; team: "A" | "B"; goals: number }
+    { playerId: number; team: TeamKey; goals: number }
   >();
 
   for (const goal of goals) {
@@ -64,7 +65,7 @@ export function tallyGoalsByPlayer(goals: LiveGoal[]) {
   return [...tally.values()];
 }
 
-export function createGoalEvent(team: "A" | "B", currentCount: number) {
+export function createGoalEvent(team: TeamKey, currentCount: number) {
   const at = Date.now();
   const id =
     typeof crypto !== "undefined" && crypto.randomUUID

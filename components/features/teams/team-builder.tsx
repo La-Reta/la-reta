@@ -24,26 +24,27 @@ import {
   currentGeneratedRetaIdAtom,
   guestsAtom,
   selectedIdsAtom,
-  teamNameAAtom,
-  teamNameBAtom,
+  teamCountAtom,
+  teamNamesAtom,
 } from "@/lib/state/atoms";
 import {
   balanceTeamsVaried,
   swapPlayers,
   type BalancedTeams,
-  type Lineup,
+  type TeamSplit,
 } from "@/lib/team-balancer";
+import { MAX_TEAMS, teamName } from "@/lib/teams";
 import { useAtom, useSetAtom } from "jotai";
 import { ScaleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 
-const sideRows = (lineups: Lineup[], team: "A" | "B") =>
-  lineups.map((l) => ({
+const teamRows = (team: TeamSplit) =>
+  team.lineups.map((l) => ({
     // Guests (negative id) aren't in the roster → null id + their name inline.
     playerId: isGuest(l.player) ? null : l.player.id,
     guestName: isGuest(l.player) ? l.player.name : undefined,
-    team,
+    team: team.key,
     role: l.role,
     overall: l.player.overall,
   }));
@@ -60,8 +61,8 @@ export function TeamBuilder({
   const [guests, setGuests] = useAtom(guestsAtom);
   const [result, setResult] = React.useState<BalancedTeams | null>(null);
   const [view, setView] = React.useState<MatchupView>("board");
-  const [nameA, setNameA] = useAtom(teamNameAAtom);
-  const [nameB, setNameB] = useAtom(teamNameBAtom);
+  const [names, setNames] = useAtom(teamNamesAtom);
+  const [teamCount, setTeamCount] = useAtom(teamCountAtom);
   const setCurrentRetaId = useSetAtom(currentGeneratedRetaIdAtom);
   const [mounted, setMounted] = React.useState(false);
   // Splits generated this session, so consecutive regenerations vary even
@@ -84,11 +85,24 @@ export function TeamBuilder({
     .map((id) => byId.get(id))
     .filter((p): p is Player => Boolean(p));
 
+  // Nunca más equipos que convocados: cada equipo necesita al menos un jugador.
+  const maxTeams = Math.max(2, Math.min(MAX_TEAMS, selectedPlayers.length));
+  const effectiveCount = Math.min(teamCount, maxTeams);
+
   function toggle(id: number) {
     setResult(null);
     setSelected((prev) =>
       prev.includes(id) ? prev.filter((x) => x !== id) : [...prev, id],
     );
+  }
+
+  function setName(index: number, value: string) {
+    setNames((prev) => {
+      const next = [...prev];
+      while (next.length <= index) next.push("");
+      next[index] = value;
+      return next;
+    });
   }
 
   function addGuest(input: {
@@ -110,7 +124,9 @@ export function TeamBuilder({
     // Rebuild the guest (recomputing stats from overall) but keep its id so it
     // stays selected and its board/live references don't break.
     setGuests((prev) =>
-      prev.map((g) => (g.id === id ? { ...makeGuestPlayer(input, prev), id } : g)),
+      prev.map((g) =>
+        g.id === id ? { ...makeGuestPlayer(input, prev), id } : g,
+      ),
     );
   }
 
@@ -123,27 +139,28 @@ export function TeamBuilder({
   function generate() {
     if (selectedPlayers.length < 2) return;
 
-    const teams = balanceTeamsVaried(selectedPlayers, [
-      ...sessionSplits,
-      ...recentSplits,
-    ]);
+    const teams = balanceTeamsVaried(
+      selectedPlayers,
+      [...sessionSplits, ...recentSplits],
+      effectiveCount,
+    );
     setResult(teams);
 
-    const teamAIds = teams.teamA.map((l) => l.player.id);
-    const teamBIds = teams.teamB.map((l) => l.player.id);
-    setSessionSplits((prev) => [{ teamAIds, teamBIds }, ...prev].slice(0, 30));
+    const sides = teams.teams.map((t) => t.lineups.map((l) => l.player.id));
+    setSessionSplits((prev) => [{ sides }, ...prev].slice(0, 30));
 
     // Persist the generation (fire-and-forget) and remember its id for the live
     // flow. A failed save just leaves the matchup unlinked — non-blocking.
     setCurrentRetaId(null);
     startSave(async () => {
       const res = await saveGeneratedReta({
-        teamAName: nameA,
-        teamBName: nameB,
-        ratingA: teams.ratingA,
-        ratingB: teams.ratingB,
+        teams: teams.teams.map((t) => ({
+          key: t.key,
+          name: teamName(names, t.key),
+          rating: t.rating,
+        })),
         diff: teams.diff,
-        players: [...sideRows(teams.teamA, "A"), ...sideRows(teams.teamB, "B")],
+        players: teams.teams.flatMap(teamRows),
       });
       if (res.ok) setCurrentRetaId(res.id);
     });
@@ -173,6 +190,12 @@ export function TeamBuilder({
         allSelected={allSelected}
         hasSelection={selected.length > 0}
         hasResult={result !== null}
+        teamCount={effectiveCount}
+        maxTeams={maxTeams}
+        onTeamCountChange={(n) => {
+          setResult(null);
+          setTeamCount(n);
+        }}
         onToggleAll={toggleAll}
         onClear={clear}
         onGenerate={generate}
@@ -181,19 +204,13 @@ export function TeamBuilder({
         onRegistro={() => router.push("/teams/registro")}
       />
 
-      <TeamNameInputs
-        nameA={nameA}
-        nameB={nameB}
-        onNameAChange={setNameA}
-        onNameBChange={setNameB}
-      />
+      <TeamNameInputs count={effectiveCount} names={names} onChange={setName} />
 
       {result ? (
         <Matchup
           result={result}
           view={view}
-          nameA={nameA}
-          nameB={nameB}
+          names={names}
           onViewChange={setView}
           hasResult={result !== null}
           // ponytail: swap edita solo el tablero en memoria; la reta ya guardada
@@ -210,7 +227,8 @@ export function TeamBuilder({
             </EmptyMedia>
             <EmptyTitle>Aún no hay equipos</EmptyTitle>
             <EmptyDescription>
-              Convoca al menos 2 jugadores y genera dos equipos parejos.
+              Convoca al menos 2 jugadores y genera {effectiveCount} equipos
+              parejos.
             </EmptyDescription>
           </EmptyHeader>
         </Empty>

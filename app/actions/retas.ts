@@ -3,20 +3,19 @@
 import { db, generatedRetaPlayers, generatedRetas } from "@/lib/db";
 import type { Position } from "@/lib/constants";
 import { splitSignature } from "@/lib/team-balancer";
+import { defaultTeamName, type TeamKey } from "@/lib/teams";
 import { revalidatePath } from "next/cache";
 
 type Result = { ok: true; id: number } | { ok: false; error: string };
 
 export type GeneratedRetaInput = {
-  teamAName: string;
-  teamBName: string;
-  ratingA: number;
-  ratingB: number;
+  /** Un elemento por equipo (2 … 6), en orden A, B, C … */
+  teams: { key: TeamKey; name: string; rating: number }[];
   diff: number;
   players: {
     playerId: number | null;
     guestName?: string;
-    team: "A" | "B";
+    team: TeamKey;
     role: Position;
     overall: number;
   }[];
@@ -25,7 +24,9 @@ export type GeneratedRetaInput = {
 /**
  * Persists one "Generar equipos" run: the split fingerprint plus every player's
  * side/role/OVR snapshot. Returns the new reta id so the live flow can link the
- * eventual match back to it.
+ * eventual match back to it. Guarda los N equipos en `teams` y, por
+ * compatibilidad con las lecturas viejas, los dos primeros también en las
+ * columnas team_a_* / team_b_*.
  */
 export async function saveGeneratedReta(
   input: GeneratedRetaInput,
@@ -34,23 +35,32 @@ export async function saveGeneratedReta(
     if (input.players.length < 2) {
       return { ok: false, error: "Se necesitan al menos 2 jugadores." };
     }
+    if (input.teams.length < 2) {
+      return { ok: false, error: "Se necesitan al menos 2 equipos." };
+    }
+    const teams = input.teams.map((t) => ({
+      key: t.key,
+      name: t.name?.trim() || defaultTeamName(t.key),
+      rating: t.rating,
+    }));
+
     // Signature fingerprints the split by roster ids; guests (null id) are
     // occasional, so they're left out of the repetition/variety tracking.
-    const realIds = (team: "A" | "B") =>
+    const sides = teams.map((t) =>
       input.players
-        .filter((p) => p.team === team && p.playerId != null)
-        .map((p) => p.playerId as number);
-    const aIds = realIds("A");
-    const bIds = realIds("B");
+        .filter((p) => p.team === t.key && p.playerId != null)
+        .map((p) => p.playerId as number),
+    );
 
     const [reta] = await db
       .insert(generatedRetas)
       .values({
-        signature: splitSignature(aIds, bIds),
-        teamAName: input.teamAName?.trim() || "Equipo A",
-        teamBName: input.teamBName?.trim() || "Equipo B",
-        ratingA: input.ratingA,
-        ratingB: input.ratingB,
+        signature: splitSignature(sides),
+        teams,
+        teamAName: teams[0].name,
+        teamBName: teams[1].name,
+        ratingA: teams[0].rating,
+        ratingB: teams[1].rating,
         diff: input.diff,
       })
       .returning({ id: generatedRetas.id });

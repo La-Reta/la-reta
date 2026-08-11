@@ -127,8 +127,13 @@ export function VotingPanel({
                     <span
                       className={cn(
                         "size-1.5 shrink-0 rounded-full",
-                        teamDot(c.team),
+                        teamDot(c.team) ? "" : "bg-muted-foreground",
                       )}
+                      style={
+                        teamDot(c.team)
+                          ? { backgroundColor: teamDot(c.team)! }
+                          : undefined
+                      }
                     />
                     <span className="min-w-0 flex-1 truncate text-sm">
                       {c.name}

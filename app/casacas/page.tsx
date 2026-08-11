@@ -26,6 +26,7 @@ export default async function CasacasPage() {
         players={players}
         assignments={assignments}
         canManage={admin || Boolean(userId)}
+        admin={admin}
       />
     </div>
   );

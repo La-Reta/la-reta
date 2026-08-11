@@ -39,10 +39,12 @@ export function CasacasClient({
   players,
   assignments,
   canManage,
+  admin = false,
 }: {
   players: Player[];
   assignments: CasacaAssignmentRow[];
   canManage: boolean;
+  admin?: boolean;
 }) {
   const wheel = useCasacaWheel({ players, assignments, canManage });
 
@@ -51,7 +53,7 @@ export function CasacasClient({
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <WheelPanel wheel={wheel} />
-      <CasacaHistory assignments={assignments} />
+      <CasacaHistory assignments={assignments} admin={admin} />
       <WinnerDialog winner={wheel.winner} onClose={wheel.dismissWinner} />
     </div>
   );
