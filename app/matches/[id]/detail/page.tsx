@@ -221,14 +221,16 @@ function TeamRosterCard({
     <Card size="sm" className="overflow-hidden">
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-2">
-          <CardTitle className="flex items-center gap-2 text-sm">
+          <CardTitle className="flex min-w-0 items-center gap-2 text-sm">
             <span
-              className="bg-primary size-2 rounded-full"
+              className="bg-primary size-2 shrink-0 rounded-full"
               style={color ? { backgroundColor: color } : undefined}
             />
-            {title}
+            <span className="truncate">{title}</span>
           </CardTitle>
-          <Badge variant="secondary">{scorers.length} jugadores</Badge>
+          <Badge variant="secondary" className="shrink-0 tabular-nums">
+            {scorers.length}
+          </Badge>
         </div>
       </CardHeader>
       <CardContent className="pt-3">
@@ -237,24 +239,24 @@ function TeamRosterCard({
             Sin jugadores asignados.
           </p>
         ) : (
-          <ul className="space-y-2.5">
+          <ul className="space-y-1.5">
             {ranked.map((scorer, idx) => (
               <li
                 key={`${title}-${scorer.playerId ?? `guest-${idx}`}`}
                 className="space-y-1.5"
               >
-                <div className="flex items-center gap-2.5">
-                  <span className="text-muted-foreground w-4 shrink-0 text-center font-mono text-xs font-semibold tabular-nums">
+                <div className="flex items-center gap-2">
+                  <span className="text-muted-foreground w-3 shrink-0 text-center font-mono text-[11px] font-semibold tabular-nums">
                     {idx + 1}
                   </span>
                   {scorer.isGuest ? (
-                    <span className="flex min-w-0 flex-1 items-center gap-1.5">
-                      <span className="truncate text-sm font-medium">
-                        {scorer.name}
+                    // El "inv." va después del nombre y no le roba ancho: la
+                    // tarjeta es angosta y el nombre es lo que importa.
+                    <span className="min-w-0 flex-1 truncate text-sm font-medium">
+                      {scorer.name}
+                      <span className="text-muted-foreground ml-1 text-[10px] font-normal">
+                        inv.
                       </span>
-                      <Badge variant="outline" className="shrink-0 text-[10px]">
-                        invitado
-                      </Badge>
                     </span>
                   ) : (
                     <Link
@@ -264,29 +266,39 @@ function TeamRosterCard({
                       {scorer.name}
                     </Link>
                   )}
-                  <span className="flex shrink-0 items-center gap-1.5">
-                    <Badge variant={scorer.goals > 0 ? "default" : "secondary"}>
-                      {scorer.goals} gol{scorer.goals === 1 ? "" : "es"}
-                    </Badge>
+                  {/* Solo se muestran los números que existen: una lista llena
+                      de "0 goles" es ruido y se come el ancho del nombre. */}
+                  <span className="text-muted-foreground flex shrink-0 items-center gap-1.5 font-mono text-xs tabular-nums">
+                    {scorer.goals > 0 ? (
+                      <span className="text-foreground font-bold">
+                        {scorer.goals}
+                        <span className="text-muted-foreground ml-0.5 font-normal">
+                          G
+                        </span>
+                      </span>
+                    ) : null}
                     {scorer.assists > 0 ? (
-                      <Badge variant="outline" className="text-[10px]">
-                        {scorer.assists} asis.
-                      </Badge>
+                      <span>
+                        {scorer.assists}
+                        <span className="ml-0.5">A</span>
+                      </span>
+                    ) : null}
+                    {scorer.goals === 0 && scorer.assists === 0 ? (
+                      <span className="text-muted-foreground/60">—</span>
                     ) : null}
                   </span>
                 </div>
-                <div className="bg-muted ml-[1.625rem] h-1.5 overflow-hidden rounded-full">
-                  <div
-                    className="bg-primary h-full rounded-full"
-                    style={{
-                      backgroundColor: color,
-                      width:
-                        scorer.goals > 0
-                          ? `${(scorer.goals / maxGoals) * 100}%`
-                          : "0%",
-                    }}
-                  />
-                </div>
+                {scorer.goals > 0 ? (
+                  <div className="bg-muted ml-5 h-1 overflow-hidden rounded-full">
+                    <div
+                      className="bg-primary h-full rounded-full"
+                      style={{
+                        backgroundColor: color,
+                        width: `${(scorer.goals / maxGoals) * 100}%`,
+                      }}
+                    />
+                  </div>
+                ) : null}
               </li>
             ))}
           </ul>
@@ -350,6 +362,9 @@ export default async function MatchDetailPage({
   const unassignedScorers = match.scorers.filter(
     (scorer) => !teams.some((t) => t.key === scorer.team),
   );
+  // Distancia entre el primero y el segundo, sean 2 o 6 equipos.
+  const ranked = [...teams].sort((a, b) => b.score - a.score);
+  const scoreGap = ranked.length > 1 ? ranked[0].score - ranked[1].score : 0;
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
 
@@ -481,7 +496,7 @@ export default async function MatchDetailPage({
               No se registraron jugadores ni goleadores para este partido.
             </p>
           ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
               {teamSquads.map((team) => (
                 <TeamRosterCard
                   key={team.key}
@@ -518,8 +533,8 @@ export default async function MatchDetailPage({
                     : "Partido empatado"}
                 </p>
                 <p className="text-muted-foreground mt-1 text-xs">
-                  Diferencia de {Math.abs(match.scoreA - match.scoreB)} gol
-                  {Math.abs(match.scoreA - match.scoreB) === 1 ? "" : "es"}.
+                  Diferencia de {scoreGap} gol{scoreGap === 1 ? "" : "es"} con
+                  el siguiente.
                 </p>
               </div>
             </div>
