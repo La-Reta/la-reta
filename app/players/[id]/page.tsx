@@ -98,13 +98,18 @@ export default async function PlayerDetailPage({
 
   return (
     <div className="mx-auto max-w-5xl space-y-6 xl:max-w-6xl 2xl:max-w-[90rem]">
-      <Button variant="secondary" render={<Link href="/players" />}>
-        <ArrowLeftIcon />
-        Jugadores
-      </Button>
-
       <div className="grid gap-8 md:grid-cols-[260px_1fr] md:items-start 2xl:grid-cols-[300px_1fr]">
-        <div className="mx-auto w-full max-w-[260px] md:sticky md:top-16 2xl:max-w-[300px]">
+        {/* El botón de regresar vive dentro de la columna pegajosa, así que se
+            queda a la vista junto con la carta mientras se hace scroll. */}
+        <div className="mx-auto w-full max-w-[260px] space-y-3 md:sticky md:top-16 2xl:max-w-[300px]">
+          <Button
+            variant="secondary"
+            className="w-full"
+            render={<Link href="/players" />}
+          >
+            <ArrowLeftIcon />
+            Jugadores
+          </Button>
           <FifaCard player={player} />
         </div>
 
@@ -149,7 +154,10 @@ export default async function PlayerDetailPage({
             {admin && <DeletePlayerButton id={player.id} name={player.name} />}
           </div>
 
-          {userId && !player.clerkUserId && !isOwner && ownedPlayerId !== null ? (
+          {userId &&
+          !player.clerkUserId &&
+          !isOwner &&
+          ownedPlayerId !== null ? (
             <p className="text-muted-foreground text-xs">
               Ya tienes un perfil vinculado a tu cuenta.{" "}
               <Link

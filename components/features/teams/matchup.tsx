@@ -3,8 +3,6 @@
 import {
   EXPORT_BOARD_WIDTH,
   EXPORT_LIST_WIDTH,
-  TEAM_A,
-  TEAM_B,
 } from "@/components/features/teams/constants";
 import type { MatchupView } from "@/components/features/teams/control-bar";
 import { MatchupList } from "@/components/features/teams/matchup-list";
@@ -13,41 +11,66 @@ import { TeamSheet } from "@/components/features/teams/team-sheet";
 import { useMatchupDownload } from "@/components/features/teams/use-matchup-download";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import type { BalancedTeams } from "@/lib/team-balancer";
+import type { BalancedTeams, TeamSplit } from "@/lib/team-balancer";
+import {
+  TEAM_COLORS,
+  TEAM_COLORS_LIGHT,
+  teamName,
+  type TeamKey,
+} from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import { DownloadIcon, InfoIcon, LayoutGridIcon, ListIcon } from "lucide-react";
+import * as React from "react";
 import { ViewTab } from "./view-tab";
 
 export function Matchup({
   result,
   view,
-  nameA,
-  nameB,
+  names,
   hasResult,
   onViewChange,
   onSwap,
 }: {
   result: BalancedTeams;
   view: MatchupView;
-  nameA: string;
-  nameB: string;
+  /** Nombres por índice de equipo (A, B, C …). */
+  names: string[];
   hasResult: boolean;
   onViewChange: (view: MatchupView) => void;
   onSwap?: (fromId: number, toId: number) => void;
 }) {
-  const { ratingA, ratingB, diff, teamA, teamB } = result;
+  const { teams, diff } = result;
   const { pitchRef, exportPitchRef, listRef, exportListRef, busy, download } =
     useMatchupDownload(view);
 
+  // El tablero es de dos lados; con 3+ equipos se elige qué par se dibuja.
+  const [pair, setPair] = React.useState<[TeamKey, TeamKey] | null>(null);
+  const keys = teams.map((t) => t.key);
+  const pairIsValid =
+    pair != null &&
+    pair[0] !== pair[1] &&
+    keys.includes(pair[0]) &&
+    keys.includes(pair[1]);
+  const [aKey, bKey] = pairIsValid ? pair : [keys[0], keys[1]];
+  const teamA = teams.find((t) => t.key === aKey)!;
+  const teamB = teams.find((t) => t.key === bKey)!;
+
+  const label = (team: TeamSplit) => teamName(names, team.key);
+  const pitchProps = {
+    teamA: teamA.lineups,
+    teamB: teamB.lineups,
+    ratingA: teamA.rating,
+    ratingB: teamB.rating,
+    nameA: label(teamA),
+    nameB: label(teamB),
+    colorA: TEAM_COLORS_LIGHT[teamA.key],
+    colorB: TEAM_COLORS_LIGHT[teamB.key],
+  };
+
   return (
     <section className="ring-foreground/10 overflow-hidden rounded-xl ring-1">
-      <ScoreboardHeader
-        ratingA={ratingA}
-        ratingB={ratingB}
-        countA={teamA.length}
-        countB={teamB.length}
-      />
-      <BalanceMeter ratingA={ratingA} ratingB={ratingB} diff={diff} />
+      <ScoreboardHeader teams={teams} names={names} />
+      <BalanceMeter teams={teams} diff={diff} />
 
       {/* Alineación: tablero o lista */}
       <div className="bg-card space-y-3 px-4 py-4">
@@ -86,44 +109,27 @@ export function Matchup({
 
         {view === "list" ? (
           <>
-            <MatchupList
-              ref={listRef}
-              teamA={teamA}
-              teamB={teamB}
-              ratingA={ratingA}
-              ratingB={ratingB}
-              nameA={nameA}
-              nameB={nameB}
-            />
+            <MatchupList ref={listRef} teams={teams} names={names} />
             <div
               aria-hidden="true"
               className="pointer-events-none fixed top-0"
               style={{ left: -10000, width: EXPORT_LIST_WIDTH }}
             >
-              <MatchupList
-                ref={exportListRef}
-                teamA={teamA}
-                teamB={teamB}
-                ratingA={ratingA}
-                ratingB={ratingB}
-                nameA={nameA}
-                nameB={nameB}
-              />
+              <MatchupList ref={exportListRef} teams={teams} names={names} />
             </div>
             <ExportSizeHint />
           </>
         ) : (
           <>
-            <MatchupPitch
-              ref={pitchRef}
-              teamA={teamA}
-              teamB={teamB}
-              ratingA={ratingA}
-              ratingB={ratingB}
-              nameA={nameA}
-              nameB={nameB}
-              onSwap={onSwap}
-            />
+            {teams.length > 2 && (
+              <PairPicker
+                teams={teams}
+                names={names}
+                active={[aKey, bKey]}
+                onPick={(a, b) => setPair([a, b])}
+              />
+            )}
+            <MatchupPitch ref={pitchRef} {...pitchProps} onSwap={onSwap} />
             {onSwap ? (
               <p className="text-muted-foreground text-center text-xs">
                 Arrastra una ficha sobre otra para intercambiarlas.
@@ -134,15 +140,7 @@ export function Matchup({
               className="pointer-events-none fixed top-0"
               style={{ left: -10000, width: EXPORT_BOARD_WIDTH }}
             >
-              <MatchupPitch
-                ref={exportPitchRef}
-                teamA={teamA}
-                teamB={teamB}
-                ratingA={ratingA}
-                ratingB={ratingB}
-                nameA={nameA}
-                nameB={nameB}
-              />
+              <MatchupPitch ref={exportPitchRef} {...pitchProps} />
             </div>
             <ExportSizeHint />
           </>
@@ -152,80 +150,102 @@ export function Matchup({
       {/* Team sheets (solo en modo tablero; la lista ya los muestra) */}
       {view === "board" && (
         <div className="bg-border grid gap-px md:grid-cols-2">
-          <TeamSheet
-            team={nameA.trim() || "Equipo A"}
-            color={TEAM_A}
-            lineups={teamA}
-            rating={ratingA}
-          />
-          <TeamSheet
-            team={nameB.trim() || "Equipo B"}
-            color={TEAM_B}
-            lineups={teamB}
-            rating={ratingB}
-          />
+          {teams.map((team) => (
+            <TeamSheet
+              key={team.key}
+              team={label(team)}
+              color={TEAM_COLORS[team.key]}
+              lineups={team.lineups}
+              rating={team.rating}
+            />
+          ))}
         </div>
       )}
     </section>
   );
 }
 
-function ScoreboardHeader({
-  ratingA,
-  ratingB,
-  countA,
-  countB,
+/** Todos los emparejamientos posibles; el tablero dibuja el elegido. */
+function PairPicker({
+  teams,
+  names,
+  active,
+  onPick,
 }: {
-  ratingA: number;
-  ratingB: number;
-  countA: number;
-  countB: number;
+  teams: TeamSplit[];
+  names: string[];
+  active: [TeamKey, TeamKey];
+  onPick: (a: TeamKey, b: TeamKey) => void;
 }) {
+  const pairs: [TeamSplit, TeamSplit][] = [];
+  for (let i = 0; i < teams.length; i++)
+    for (let j = i + 1; j < teams.length; j++) pairs.push([teams[i], teams[j]]);
+
   return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 bg-neutral-950 px-5 py-6 text-white">
-      <div className="text-right">
-        <p
-          className="font-display text-xs font-semibold tracking-[0.2em] uppercase"
-          style={{ color: TEAM_A }}
-        >
-          Equipo A
-        </p>
-        <p className="font-mono text-5xl leading-none font-black tabular-nums">
-          {ratingA}
-        </p>
-        <p className="mt-1 text-[11px] text-white/50">
-          {countA} jugadores · OVR prom.
-        </p>
-      </div>
-      <span className="font-display text-2xl font-black text-white/30">VS</span>
-      <div className="text-left">
-        <p
-          className="font-display text-xs font-semibold tracking-[0.2em] uppercase"
-          style={{ color: TEAM_B }}
-        >
-          Equipo B
-        </p>
-        <p className="font-mono text-5xl leading-none font-black tabular-nums">
-          {ratingB}
-        </p>
-        <p className="mt-1 text-[11px] text-white/50">
-          {countB} jugadores · OVR prom.
-        </p>
-      </div>
+    <div className="flex flex-wrap items-center gap-1.5">
+      <span className="text-muted-foreground mr-1 text-xs">Ver duelo:</span>
+      {pairs.map(([a, b]) => {
+        const on = active[0] === a.key && active[1] === b.key;
+        return (
+          <button
+            key={`${a.key}${b.key}`}
+            type="button"
+            onClick={() => onPick(a.key, b.key)}
+            aria-pressed={on}
+            className={cn(
+              "rounded-lg border px-2 py-1 text-xs font-medium transition-colors",
+              on
+                ? "bg-foreground text-background border-transparent"
+                : "hover:bg-muted",
+            )}
+          >
+            {teamName(names, a.key)} vs {teamName(names, b.key)}
+          </button>
+        );
+      })}
     </div>
   );
 }
 
-function BalanceMeter({
-  ratingA,
-  ratingB,
-  diff,
+function ScoreboardHeader({
+  teams,
+  names,
 }: {
-  ratingA: number;
-  ratingB: number;
-  diff: number;
+  teams: TeamSplit[];
+  names: string[];
 }) {
-  const aPct = Math.round((ratingA / (ratingA + ratingB || 1)) * 100);
+  const duel = teams.length === 2;
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 bg-neutral-950 px-5 py-6 text-white">
+      {teams.map((team, i) => (
+        <React.Fragment key={team.key}>
+          {duel && i === 1 ? (
+            <span className="font-display text-2xl font-black text-white/30">
+              VS
+            </span>
+          ) : null}
+          <div className="min-w-24 text-center">
+            <p
+              className="font-display truncate text-xs font-semibold tracking-[0.2em] uppercase"
+              style={{ color: TEAM_COLORS_LIGHT[team.key] }}
+            >
+              {teamName(names, team.key)}
+            </p>
+            <p className="font-mono text-5xl leading-none font-black tabular-nums">
+              {team.rating}
+            </p>
+            <p className="mt-1 text-[11px] text-white/50">
+              {team.lineups.length} jugadores · OVR prom.
+            </p>
+          </div>
+        </React.Fragment>
+      ))}
+    </div>
+  );
+}
+
+function BalanceMeter({ teams, diff }: { teams: TeamSplit[]; diff: number }) {
+  const total = teams.reduce((a, t) => a + t.rating, 0) || 1;
   const verdict =
     diff <= 1.5
       ? { label: "Muy parejos ⚖️", className: "text-emerald-500" }
@@ -236,10 +256,23 @@ function BalanceMeter({
   return (
     <div className="bg-card space-y-1.5 px-5 py-4">
       <div className="relative flex h-2.5 overflow-hidden rounded-full">
-        <div style={{ width: `${aPct}%`, backgroundColor: TEAM_A }} />
-        <div style={{ width: `${100 - aPct}%`, backgroundColor: TEAM_B }} />
-        {/* center 50% tick */}
-        <span className="bg-background/80 absolute top-1/2 left-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2" />
+        {teams.map((team) => (
+          <div
+            key={team.key}
+            style={{
+              width: `${(team.rating / total) * 100}%`,
+              backgroundColor: TEAM_COLORS[team.key],
+            }}
+          />
+        ))}
+        {/* marca del reparto perfectamente parejo */}
+        {teams.slice(1).map((team, i) => (
+          <span
+            key={team.key}
+            className="bg-background/80 absolute top-1/2 h-4 w-0.5 -translate-x-1/2 -translate-y-1/2"
+            style={{ left: `${((i + 1) / teams.length) * 100}%` }}
+          />
+        ))}
       </div>
       <p className="text-muted-foreground text-center text-xs">
         Diferencia de nivel{" "}

@@ -2,6 +2,7 @@
 
 import * as React from "react";
 import { positionGroup, type PositionGroup } from "@/lib/constants";
+import { TEAM_COLORS_LIGHT } from "@/lib/teams";
 import { initials } from "@/lib/format";
 import { isGuest } from "@/lib/guests";
 import type { Lineup } from "@/lib/team-balancer";
@@ -154,11 +155,24 @@ export const MatchupPitch = React.forwardRef<
     ratingB: number;
     nameA?: string;
     nameB?: string;
+    /** Colores del par que se está mostrando (varían con 3+ equipos). */
+    colorA?: string;
+    colorB?: string;
     /** When set, tokens become draggable and dropping one on another swaps them. */
     onSwap?: (fromId: number, toId: number) => void;
   }
 >(function MatchupPitch(
-  { teamA, teamB, ratingA, ratingB, nameA, nameB, onSwap },
+  {
+    teamA,
+    teamB,
+    ratingA,
+    ratingB,
+    nameA,
+    nameB,
+    colorA = TEAM_COLORS_LIGHT.A,
+    colorB = TEAM_COLORS_LIGHT.B,
+    onSwap,
+  },
   ref,
 ) {
   const a = place(teamA, "A");
@@ -194,7 +208,10 @@ export const MatchupPitch = React.forwardRef<
       {/* Header */}
       <div className="absolute inset-x-0 top-0 flex items-center justify-between gap-2 bg-black/25 px-4 py-2.5">
         <div className="min-w-0 text-left leading-none">
-          <p className="font-display truncate text-2xl font-black tracking-tight text-sky-300 uppercase">
+          <p
+            className="font-display truncate text-2xl font-black tracking-tight uppercase"
+            style={{ color: colorA }}
+          >
             {teamAName}
           </p>
           <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 tabular-nums">
@@ -205,7 +222,10 @@ export const MatchupPitch = React.forwardRef<
           La Reta · VS
         </p>
         <div className="min-w-0 text-right leading-none">
-          <p className="font-display truncate text-2xl font-black tracking-tight text-rose-300 uppercase">
+          <p
+            className="font-display truncate text-2xl font-black tracking-tight uppercase"
+            style={{ color: colorB }}
+          >
             {teamBName}
           </p>
           <p className="font-mono text-[11px] font-semibold tracking-[0.18em] text-white/70 tabular-nums">
@@ -221,7 +241,7 @@ export const MatchupPitch = React.forwardRef<
           p={p}
           x={p.x}
           y={p.y}
-          color="#0ea5e9"
+          color={colorA}
           onSwap={onSwap}
         />
       ))}
@@ -231,7 +251,7 @@ export const MatchupPitch = React.forwardRef<
           p={p}
           x={p.x}
           y={p.y}
-          color="#f43f5e"
+          color={colorB}
           onSwap={onSwap}
         />
       ))}

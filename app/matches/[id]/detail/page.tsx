@@ -19,6 +19,7 @@ import {
   getMyMatchVotes,
   type Scorer,
 } from "@/lib/queries";
+import { matchTeams, TEAM_COLORS } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import { auth } from "@clerk/nextjs/server";
 import {
@@ -110,13 +111,13 @@ function TeamFigureCard({
   teamName,
   score,
   scorers,
-  tone,
+  color,
   cleanSheet,
 }: {
   teamName: string;
   score: number;
   scorers: Scorer[];
-  tone: "A" | "B";
+  color: string;
   cleanSheet: boolean;
 }) {
   const figure = topScorer(scorers);
@@ -135,10 +136,8 @@ function TeamFigureCard({
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2">
             <span
-              className={cn(
-                "size-2 rounded-full",
-                ROSTER_TONE[tone === "A" ? "sky" : "rose"],
-              )}
+              className="size-2 rounded-full"
+              style={{ backgroundColor: color }}
             />
             {teamName}
           </CardTitle>
@@ -203,22 +202,17 @@ function TeamFigureCard({
 }
 
 // Team accent for the roster bars/dot; unassigned falls back to primary.
-const ROSTER_TONE = {
-  sky: "bg-sky-500",
-  rose: "bg-rose-500",
-  muted: "bg-primary",
-} as const;
-
 function TeamRosterCard({
   title,
   scorers,
   maxGoals,
-  tone = "muted",
+  color,
 }: {
   title: string;
   scorers: Scorer[];
   maxGoals: number;
-  tone?: keyof typeof ROSTER_TONE;
+  /** Color del equipo; sin él (p. ej. "sin equipo") usa el primario. */
+  color?: string;
 }) {
   // Sorted by goals so the numbered rank reflects the scoring order.
   const ranked = [...scorers].sort((a, b) => b.goals - a.goals);
@@ -228,7 +222,10 @@ function TeamRosterCard({
       <CardHeader className="border-b">
         <div className="flex items-center justify-between gap-2">
           <CardTitle className="flex items-center gap-2 text-sm">
-            <span className={cn("size-2 rounded-full", ROSTER_TONE[tone])} />
+            <span
+              className="bg-primary size-2 rounded-full"
+              style={color ? { backgroundColor: color } : undefined}
+            />
             {title}
           </CardTitle>
           <Badge variant="secondary">{scorers.length} jugadores</Badge>
@@ -280,8 +277,9 @@ function TeamRosterCard({
                 </div>
                 <div className="bg-muted ml-[1.625rem] h-1.5 overflow-hidden rounded-full">
                   <div
-                    className={cn("h-full rounded-full", ROSTER_TONE[tone])}
+                    className="bg-primary h-full rounded-full"
                     style={{
+                      backgroundColor: color,
                       width:
                         scorer.goals > 0
                           ? `${(scorer.goals / maxGoals) * 100}%`
@@ -339,17 +337,18 @@ export default async function MatchDetailPage({
     });
   }
 
-  const totalGoals = match.scoreA + match.scoreB;
-  const winner =
-    match.scoreA === match.scoreB
-      ? null
-      : match.scoreA > match.scoreB
-        ? match.teamAName
-        : match.teamBName;
-  const teamAScorers = match.scorers.filter((scorer) => scorer.team === "A");
-  const teamBScorers = match.scorers.filter((scorer) => scorer.team === "B");
+  // Una reta puede haberse jugado con 3+ equipos: todo se deriva de la lista.
+  const teams = matchTeams(match);
+  const totalGoals = teams.reduce((n, t) => n + t.score, 0);
+  const best = Math.max(...teams.map((t) => t.score));
+  const leaders = teams.filter((t) => t.score === best);
+  const winner = leaders.length === 1 ? leaders[0].name : null;
+  const teamSquads = teams.map((team) => ({
+    ...team,
+    scorers: match.scorers.filter((scorer) => scorer.team === team.key),
+  }));
   const unassignedScorers = match.scorers.filter(
-    (scorer) => scorer.team !== "A" && scorer.team !== "B",
+    (scorer) => !teams.some((t) => t.key === scorer.team),
   );
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
@@ -385,10 +384,7 @@ export default async function MatchDetailPage({
 
       <MatchHero
         matchId={match.id}
-        teamAName={match.teamAName}
-        teamBName={match.teamBName}
-        scoreA={match.scoreA}
-        scoreB={match.scoreB}
+        teams={teams}
         dateLabel={formatShortDateOnly(match.playedAt)}
         winner={winner}
         photoUrl={match.photoUrl}
@@ -453,20 +449,17 @@ export default async function MatchDetailPage({
       <ScorersSection match={match} scored={scored} />
 
       <section className="grid gap-6 lg:grid-cols-2">
-        <TeamFigureCard
-          teamName={match.teamAName}
-          score={match.scoreA}
-          scorers={teamAScorers}
-          tone="A"
-          cleanSheet={match.scoreB === 0 && totalGoals > 0}
-        />
-        <TeamFigureCard
-          teamName={match.teamBName}
-          score={match.scoreB}
-          scorers={teamBScorers}
-          tone="B"
-          cleanSheet={match.scoreA === 0 && totalGoals > 0}
-        />
+        {teamSquads.map((team) => (
+          <TeamFigureCard
+            key={team.key}
+            teamName={team.name}
+            score={team.score}
+            scorers={team.scorers}
+            color={TEAM_COLORS[team.key]}
+            // Valla invicta: nadie más anotó en todo el partido.
+            cleanSheet={totalGoals > 0 && totalGoals === team.score}
+          />
+        ))}
       </section>
 
       {scorerChartData.length > 0 ? (
@@ -488,27 +481,16 @@ export default async function MatchDetailPage({
               No se registraron jugadores ni goleadores para este partido.
             </p>
           ) : (
-            <div
-              className={cn(
-                "grid grid-cols-1",
-                unassignedScorers.length > 0
-                  ? "lg:grid-cols-3"
-                  : "lg:grid-cols-2",
-                "gap-3",
-              )}
-            >
-              <TeamRosterCard
-                title={match.teamAName}
-                scorers={teamAScorers}
-                maxGoals={maxScorerGoals}
-                tone="sky"
-              />
-              <TeamRosterCard
-                title={match.teamBName}
-                scorers={teamBScorers}
-                maxGoals={maxScorerGoals}
-                tone="rose"
-              />
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {teamSquads.map((team) => (
+                <TeamRosterCard
+                  key={team.key}
+                  title={team.name}
+                  scorers={team.scorers}
+                  maxGoals={maxScorerGoals}
+                  color={TEAM_COLORS[team.key]}
+                />
+              ))}
               {unassignedScorers.length > 0 ? (
                 <TeamRosterCard
                   title="Sin equipo asignado"

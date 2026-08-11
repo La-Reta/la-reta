@@ -1,8 +1,10 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { TEAM_COLORS, type TeamKey } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import { MinusIcon, UserIcon, XIcon } from "lucide-react";
+import type { LiveSide } from "./live-scoreboard";
 import type { LiveGoal } from "./types";
 import {
   Tooltip,
@@ -12,8 +14,8 @@ import {
 
 export function GoalTimeline({
   goals,
-  teamA,
-  teamB,
+  home,
+  away,
   getPlayerName,
   formatMinute,
   formatClock,
@@ -22,17 +24,18 @@ export function GoalTimeline({
   onRemoveLast,
 }: {
   goals: LiveGoal[];
-  teamA: string;
-  teamB: string;
+  home: LiveSide;
+  away: LiveSide;
   getPlayerName: (id: number | null) => string;
   formatMinute: (at: number) => string;
   formatClock: (at: number) => string;
   onAssign: (id: string) => void;
   onRemove: (id: string) => void;
-  onRemoveLast: (team: "A" | "B") => void;
+  onRemoveLast: (team: TeamKey) => void;
 }) {
-  const scoreA = goals.filter((goal) => goal.team === "A").length;
-  const scoreB = goals.filter((goal) => goal.team === "B").length;
+  const scoreHome = goals.filter((goal) => goal.team === home.key).length;
+  const scoreAway = goals.filter((goal) => goal.team === away.key).length;
+  const sideOf = (key: TeamKey) => (key === home.key ? home : away);
 
   return (
     <div className="space-y-3">
@@ -51,19 +54,19 @@ export function GoalTimeline({
         <div className="grid grid-cols-2 gap-2">
           <Button
             variant="outline"
-            onClick={() => onRemoveLast("A")}
-            disabled={scoreA === 0}
+            onClick={() => onRemoveLast(home.key)}
+            disabled={scoreHome === 0}
           >
             <MinusIcon />
-            Último de {teamA}
+            Último de {home.name}
           </Button>
           <Button
             variant="outline"
-            onClick={() => onRemoveLast("B")}
-            disabled={scoreB === 0}
+            onClick={() => onRemoveLast(away.key)}
+            disabled={scoreAway === 0}
           >
             <MinusIcon />
-            Último de {teamB}
+            Último de {away.name}
           </Button>
         </div>
       </div>
@@ -81,12 +84,10 @@ export function GoalTimeline({
               className="border-foreground/8 flex items-center gap-3 border-b px-4 py-3 last:border-b-0"
             >
               <span
-                className={cn(
-                  "inline-flex min-w-10 justify-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase",
-                  goal.team === "A" ? "bg-sky-600" : "bg-rose-600",
-                )}
+                className="inline-flex min-w-10 justify-center rounded-md px-2 py-1 text-[10px] font-bold tracking-wide text-white uppercase"
+                style={{ backgroundColor: TEAM_COLORS[goal.team] }}
               >
-                {goal.team === "A" ? teamA : teamB}
+                {sideOf(goal.team).name}
               </span>
 
               <div className="flex min-w-0 flex-1 items-center gap-2 text-left">

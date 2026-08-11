@@ -143,6 +143,11 @@ export function MatchForm({
   const [generatedRetaId, setGeneratedRetaId] = React.useState<number | null>(
     null,
   );
+  // Qué equipos de esa reta son el lado A y el lado B (solo con 3+ equipos).
+  const [retaKeys, setRetaKeys] = React.useState<{
+    a: string | null;
+    b: string | null;
+  }>({ a: null, b: null });
 
   // Prefill (create only) from a reta handed off by /teams/registro. Read once
   // on mount, apply, and clear the atom — nothing is submitted automatically.
@@ -154,6 +159,7 @@ export function MatchForm({
     setTeamBName(prefill.teamBName || "Equipo B");
     if (prefill.playedAt) setPlayedAt(prefill.playedAt);
     setGeneratedRetaId(prefill.generatedRetaId ?? null);
+    setRetaKeys({ a: prefill.teamAKey ?? null, b: prefill.teamBKey ?? null });
     setScorers(
       prefill.scorers
         .filter((s) => s.playerId != null)
@@ -264,6 +270,8 @@ export function MatchForm({
           : null,
         notes,
         generatedRetaId,
+        teamAKey: retaKeys.a,
+        teamBKey: retaKeys.b,
         scorers: [
           ...scorers
             .filter((s) => s.playerId)
@@ -301,6 +309,7 @@ export function MatchForm({
           setScorers([]);
           setGuestScorers([]);
           setGeneratedRetaId(null);
+          setRetaKeys({ a: null, b: null });
           router.refresh();
         }
       } else {

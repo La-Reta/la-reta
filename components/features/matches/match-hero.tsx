@@ -5,40 +5,60 @@ import { uploadImage } from "@/app/actions/uploads";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { TEAM_COLORS_LIGHT, type MatchTeamRow } from "@/lib/teams";
+import { cn } from "@/lib/utils";
 import { ImagePlusIcon, Trash2Icon, TrophyIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-/** Teams · marcador · Team names, shared by the photo and no-photo layouts. */
+/**
+ * Teams · marcador · Team names, shared by the photo and no-photo layouts.
+ * Con 2 equipos es el duelo de siempre; con 3+ (una reta con rotación) se
+ * convierte en una fila de marcadores, uno por equipo.
+ */
 function Scoreboard({
-  teamAName,
-  teamBName,
-  scoreA,
-  scoreB,
+  teams,
   onPhoto,
 }: {
-  teamAName: string;
-  teamBName: string;
-  scoreA: number;
-  scoreB: number;
+  teams: MatchTeamRow[];
   onPhoto: boolean;
 }) {
-  return (
-    <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
-      <p className="truncate text-right text-sm font-bold sm:text-xl">
-        {teamAName}
-      </p>
-      <div className="flex items-center gap-2 font-mono text-3xl leading-none font-black tabular-nums sm:gap-3 sm:text-5xl">
-        <span>{scoreA}</span>
-        <span className={onPhoto ? "text-white/60" : "text-muted-foreground"}>
-          –
-        </span>
-        <span>{scoreB}</span>
+  if (teams.length === 2) {
+    return (
+      <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
+        <p className="truncate text-right text-sm font-bold sm:text-xl">
+          {teams[0].name}
+        </p>
+        <div className="flex items-center gap-2 font-mono text-3xl leading-none font-black tabular-nums sm:gap-3 sm:text-5xl">
+          <span>{teams[0].score}</span>
+          <span className={onPhoto ? "text-white/60" : "text-muted-foreground"}>
+            –
+          </span>
+          <span>{teams[1].score}</span>
+        </div>
+        <p className="truncate text-left text-sm font-bold sm:text-xl">
+          {teams[1].name}
+        </p>
       </div>
-      <p className="truncate text-left text-sm font-bold sm:text-xl">
-        {teamBName}
-      </p>
+    );
+  }
+
+  return (
+    <div className="flex flex-wrap items-end justify-center gap-x-6 gap-y-3 sm:gap-x-10">
+      {teams.map((team) => (
+        <div key={team.key} className="min-w-20 text-center">
+          <p
+            className="truncate text-xs font-bold tracking-wide uppercase sm:text-sm"
+            style={{ color: TEAM_COLORS_LIGHT[team.key] }}
+          >
+            {team.name}
+          </p>
+          <p className="font-mono text-3xl leading-none font-black tabular-nums sm:text-5xl">
+            {team.score}
+          </p>
+        </div>
+      ))}
     </div>
   );
 }
@@ -66,20 +86,15 @@ function ResultBadge({ winner }: { winner: string | null }) {
  */
 export function MatchHero({
   matchId,
-  teamAName,
-  teamBName,
-  scoreA,
-  scoreB,
+  teams,
   dateLabel,
   winner,
   photoUrl,
   admin,
 }: {
   matchId: number;
-  teamAName: string;
-  teamBName: string;
-  scoreA: number;
-  scoreB: number;
+  /** Los equipos del partido con sus goles (2 … 6). */
+  teams: MatchTeamRow[];
   dateLabel: string;
   winner: string | null;
   photoUrl: string | null;
@@ -149,7 +164,7 @@ export function MatchHero({
         {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           src={photoUrl!}
-          alt={`${teamAName} vs ${teamBName}`}
+          alt={teams.map((t) => t.name).join(" vs ")}
           className="absolute inset-0 -z-10 h-full w-full object-cover"
         />
         <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
@@ -181,13 +196,7 @@ export function MatchHero({
         </div>
 
         <CardContent className="space-y-4">
-          <Scoreboard
-            teamAName={teamAName}
-            teamBName={teamBName}
-            scoreA={scoreA}
-            scoreB={scoreB}
-            onPhoto
-          />
+          <Scoreboard teams={teams} onPhoto />
           <div className="flex justify-center">
             <ResultBadge winner={winner} />
           </div>
@@ -214,13 +223,7 @@ export function MatchHero({
             </Button>
           ) : null}
         </div>
-        <Scoreboard
-          teamAName={teamAName}
-          teamBName={teamBName}
-          scoreA={scoreA}
-          scoreB={scoreB}
-          onPhoto={false}
-        />
+        <Scoreboard teams={teams} onPhoto={false} />
         <div className="flex justify-center">
           <ResultBadge winner={winner} />
         </div>

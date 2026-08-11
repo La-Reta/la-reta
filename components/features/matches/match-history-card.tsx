@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatShortDateOnly } from "@/lib/dates";
 import type { MatchWithScorers } from "@/lib/queries";
+import { matchTeams, TEAM_COLORS } from "@/lib/teams";
 import { cn } from "@/lib/utils";
 import { NotebookTabsIcon, PencilIcon } from "lucide-react";
 import Link from "next/link";
@@ -20,8 +21,11 @@ export function MatchHistoryCard({
   match: MatchWithScorers;
   admin: boolean;
 }) {
-  const aWon = match.scoreA > match.scoreB;
-  const bWon = match.scoreB > match.scoreA;
+  const teams = matchTeams(match);
+  // Con 3+ equipos no hay "local vs visitante": gana quien más goles metió.
+  const best = Math.max(...teams.map((t) => t.score));
+  const isWinner = (score: number) =>
+    score === best && teams.filter((t) => t.score === best).length === 1;
   const goleadores = match.scorers.filter((s) => s.goals > 0);
   const asistentes = match.scorers.filter((s) => s.goals === 0);
 
@@ -60,36 +64,75 @@ export function MatchHistoryCard({
           </div>
         </div>
 
-        <div className="mt-1 flex items-center justify-center gap-4 text-center">
-          <span
-            className={cn(
-              "flex-1 text-right text-sm",
-              aWon ? "font-bold" : "text-muted-foreground",
-            )}
-          >
-            {match.teamAName}
-            {aWon ? <span className="sr-only"> (ganador)</span> : null}
-          </span>
-          <span
-            className="font-mono text-2xl font-black tabular-nums"
-            aria-label={`Marcador: ${match.teamAName} ${match.scoreA}, ${match.teamBName} ${match.scoreB}`}
-          >
-            <span aria-hidden="true">
-              {match.scoreA}
-              <span className="text-muted-foreground mx-1">-</span>
-              {match.scoreB}
+        {teams.length === 2 ? (
+          <div className="mt-1 flex items-center justify-center gap-4 text-center">
+            <span
+              className={cn(
+                "flex-1 text-right text-sm",
+                isWinner(teams[0].score)
+                  ? "font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              {teams[0].name}
+              {isWinner(teams[0].score) ? (
+                <span className="sr-only"> (ganador)</span>
+              ) : null}
             </span>
-          </span>
-          <span
-            className={cn(
-              "flex-1 text-left text-sm",
-              bWon ? "font-bold" : "text-muted-foreground",
-            )}
+            <span
+              className="font-mono text-2xl font-black tabular-nums"
+              aria-label={`Marcador: ${teams[0].name} ${teams[0].score}, ${teams[1].name} ${teams[1].score}`}
+            >
+              <span aria-hidden="true">
+                {teams[0].score}
+                <span className="text-muted-foreground mx-1">-</span>
+                {teams[1].score}
+              </span>
+            </span>
+            <span
+              className={cn(
+                "flex-1 text-left text-sm",
+                isWinner(teams[1].score)
+                  ? "font-bold"
+                  : "text-muted-foreground",
+              )}
+            >
+              {teams[1].name}
+              {isWinner(teams[1].score) ? (
+                <span className="sr-only"> (ganador)</span>
+              ) : null}
+            </span>
+          </div>
+        ) : (
+          // Reta de 3+ equipos: tabla corta en vez de un "vs" que no existe.
+          <div
+            className="mt-1 flex flex-wrap items-center justify-center gap-x-5 gap-y-1"
+            aria-label={`Marcador: ${teams.map((t) => `${t.name} ${t.score}`).join(", ")}`}
           >
-            {match.teamBName}
-            {bWon ? <span className="sr-only"> (ganador)</span> : null}
-          </span>
-        </div>
+            {teams.map((team) => (
+              <span key={team.key} className="flex items-center gap-1.5">
+                <span
+                  aria-hidden="true"
+                  className="size-2 rounded-full"
+                  style={{ backgroundColor: TEAM_COLORS[team.key] }}
+                />
+                <span
+                  className={cn(
+                    "max-w-32 truncate text-sm",
+                    isWinner(team.score)
+                      ? "font-bold"
+                      : "text-muted-foreground",
+                  )}
+                >
+                  {team.name}
+                </span>
+                <span className="font-mono text-lg font-black tabular-nums">
+                  {team.score}
+                </span>
+              </span>
+            ))}
+          </div>
+        )}
 
         <div className="mx-auto mt-3 flex max-w-xs items-center gap-2">
           <span className="text-muted-foreground text-[10px] uppercase">

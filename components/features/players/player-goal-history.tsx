@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import type { PlayerGoalHistoryItem } from "@/lib/queries";
 import { formatShortDateOnly } from "@/lib/dates";
+import { matchTeams } from "@/lib/teams";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -22,16 +23,15 @@ function goalsLabel(goals: number) {
 }
 
 function resultLabel(item: PlayerGoalHistoryItem) {
-  if (item.scoreA === item.scoreB) return "Empate";
-  return item.scoreA > item.scoreB
-    ? `Ganó ${item.teamAName}`
-    : `Ganó ${item.teamBName}`;
+  // Con 3+ equipos gana el de más goles; si hay varios arriba, es empate.
+  const teams = matchTeams(item);
+  const best = Math.max(...teams.map((t) => t.score));
+  const leaders = teams.filter((t) => t.score === best);
+  return leaders.length === 1 ? `Ganó ${leaders[0].name}` : "Empate";
 }
 
 function playerTeamName(item: PlayerGoalHistoryItem) {
-  if (item.team === "A") return item.teamAName;
-  if (item.team === "B") return item.teamBName;
-  return null;
+  return matchTeams(item).find((t) => t.key === item.team)?.name ?? null;
 }
 
 export function PlayerGoalHistory({

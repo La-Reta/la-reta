@@ -1,5 +1,7 @@
-export const TEAM_A = "#0ea5e9"; // sky
-export const TEAM_B = "#f43f5e"; // rose
+import { TEAM_COLORS } from "@/lib/teams";
+
+export const TEAM_A = TEAM_COLORS.A; // sky
+export const TEAM_B = TEAM_COLORS.B; // rose
 
 // Anchos de exportación: se renderiza una copia oculta a este ancho para que la
 // descarga (html-to-image) salga a tamaño desktop aun desde mobile.

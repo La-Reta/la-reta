@@ -11,7 +11,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
-import { FEET, GROUP_LABEL, POSITIONS, positionGroup } from "@/lib/constants";
+import { FEET, POSITION_NAME, POSITIONS } from "@/lib/constants";
 import {
   CheckCircle2Icon,
   ChevronLeftIcon,
@@ -127,7 +127,7 @@ export function PlayerSignupForm() {
               >
                 {POSITIONS.map((p) => (
                   <NativeSelectOption key={p} value={p}>
-                    {p} · {GROUP_LABEL[positionGroup(p)]}
+                    {p} · {POSITION_NAME[p]}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
@@ -141,7 +141,7 @@ export function PlayerSignupForm() {
                 <NativeSelectOption value="">— ninguna —</NativeSelectOption>
                 {POSITIONS.filter((p) => p !== form.position).map((p) => (
                   <NativeSelectOption key={p} value={p}>
-                    {p} · {GROUP_LABEL[positionGroup(p)]}
+                    {p} · {POSITION_NAME[p]}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>

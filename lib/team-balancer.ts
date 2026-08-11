@@ -5,16 +5,17 @@ import {
 } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { playerPositions } from "@/lib/format";
+import { DEFAULT_TEAM_COUNT, teamKeys, type TeamKey } from "@/lib/teams";
 
 /** A player together with the role they were assigned in this generation. */
 export type Lineup = { player: Player; role: Position };
 
+/** One generated team: its letter, its lineups and its average OVR. */
+export type TeamSplit = { key: TeamKey; lineups: Lineup[]; rating: number };
+
 export type BalancedTeams = {
-  teamA: Lineup[];
-  teamB: Lineup[];
-  ratingA: number;
-  ratingB: number;
-  /** Absolute difference between the two team average ratings. */
+  teams: TeamSplit[];
+  /** Spread between the strongest and the weakest team average. */
   diff: number;
 };
 
@@ -57,6 +58,15 @@ function average(lineups: Lineup[]): number {
   if (lineups.length === 0) return 0;
   const sum = lineups.reduce((acc, l) => acc + l.player.overall, 0);
   return Math.round((sum / lineups.length) * 10) / 10;
+}
+
+const meanOverall = (ps: Player[]) =>
+  ps.length ? ps.reduce((a, p) => a + p.overall, 0) / ps.length : 0;
+
+/** max − min of the team averages: 0 = todos parejos. */
+function spread(groups: Player[][]): number {
+  const avgs = groups.map(meanOverall);
+  return Math.max(...avgs) - Math.min(...avgs);
 }
 
 const canKeepGoal = (p: Player) =>
@@ -156,31 +166,21 @@ function assignRoles(outfielders: Player[]): Lineup[] {
 }
 
 /**
- * Splits the selected players into two teams of similar strength.
- *
- *  1. One goalkeeper per team is picked from the GK-capable players. The pick is
- *     shuffled, so a dual-position player (e.g. GK/CB) lands in goal on some
- *     generations and plays out on others — regenerating gives real variety.
- *  2. Everyone else is sorted strongest-first (ties shuffled) and greedily
- *     assigned to the lighter team, keeping squad sizes and totals even.
- *  3. Each team's outfielders are then spread across the lines by position so
- *     the board reads like a real formation (see `assignRoles`).
- */
-/**
  * Label-agnostic fingerprint of a split: each side's player ids sorted and
- * joined with ",", both sides sorted and joined with "|". The same matchup
- * with A/B swapped produces the same signature.
+ * joined with ",", the sides themselves sorted and joined with "|". The same
+ * matchup with the team letters permuted produces the same signature — y para
+ * 2 equipos da exactamente la misma cadena que la versión anterior, así que las
+ * firmas ya guardadas en la BD siguen siendo comparables.
  */
-export function splitSignature(aIds: number[], bIds: number[]): string {
-  const side = (ids: number[]) => [...ids].sort((x, y) => x - y).join(",");
-  return [side(aIds), side(bIds)].sort().join("|");
+export function splitSignature(sides: number[][]): string {
+  return sides
+    .map((ids) => [...ids].sort((x, y) => x - y).join(","))
+    .sort()
+    .join("|");
 }
 
-export function lineupSignature(teamA: Lineup[], teamB: Lineup[]): string {
-  return splitSignature(
-    teamA.map((l) => l.player.id),
-    teamB.map((l) => l.player.id),
-  );
+export function lineupSignature(teams: TeamSplit[]): string {
+  return splitSignature(teams.map((t) => t.lineups.map((l) => l.player.id)));
 }
 
 /** Unordered same-team pairs ("3-7") of a side, for overlap scoring. */
@@ -194,7 +194,7 @@ function sidePairs(ids: number[]): string[] {
 }
 
 /** A previously generated split, as stored in `generated_reta_players`. */
-export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
+export type RecentSplit = { sides: number[][] };
 
 /**
  * Like `balanceTeams`, but among several balanced candidates prefers the one
@@ -204,24 +204,22 @@ export type RecentSplit = { teamAIds: number[]; teamBIds: number[] };
 export function balanceTeamsVaried(
   selected: Player[],
   recent: RecentSplit[],
+  teamCount = DEFAULT_TEAM_COUNT,
   attempts = 12,
 ): BalancedTeams {
-  if (recent.length === 0) return balanceTeams(selected);
+  if (recent.length === 0) return balanceTeams(selected, teamCount);
 
-  const recentSignatures = new Set(
-    recent.map((r) => splitSignature(r.teamAIds, r.teamBIds)),
-  );
+  const recentSignatures = new Set(recent.map((r) => splitSignature(r.sides)));
   const recentPairs = new Set(
-    recent.flatMap((r) => [...sidePairs(r.teamAIds), ...sidePairs(r.teamBIds)]),
+    recent.flatMap((r) => r.sides.flatMap((ids) => sidePairs(ids))),
   );
 
   let best: BalancedTeams | null = null;
   let bestScore = Infinity;
   for (let i = 0; i < attempts; i++) {
-    const candidate = balanceTeams(selected);
-    const aIds = candidate.teamA.map((l) => l.player.id);
-    const bIds = candidate.teamB.map((l) => l.player.id);
-    const pairs = [...sidePairs(aIds), ...sidePairs(bIds)];
+    const candidate = balanceTeams(selected, teamCount);
+    const sides = candidate.teams.map((t) => t.lineups.map((l) => l.player.id));
+    const pairs = sides.flatMap((ids) => sidePairs(ids));
     const overlap = pairs.length
       ? pairs.filter((p) => recentPairs.has(p)).length / pairs.length
       : 0;
@@ -229,14 +227,25 @@ export function balanceTeamsVaried(
     // repetir todas las parejas otros 3; sube los pesos si sigue saliendo igual.
     const score =
       candidate.diff +
-      (recentSignatures.has(splitSignature(aIds, bIds)) ? 3 : 0) +
+      (recentSignatures.has(splitSignature(sides)) ? 3 : 0) +
       overlap * 3;
     if (score < bestScore) {
       bestScore = score;
       best = candidate;
     }
   }
-  return best ?? balanceTeams(selected);
+  return best ?? balanceTeams(selected, teamCount);
+}
+
+/** Recomputes ratings + diff from the current occupants of each team. */
+function withRatings(teams: { key: TeamKey; lineups: Lineup[] }[]) {
+  const rated = teams.map((t) => ({ ...t, rating: average(t.lineups) }));
+  const ratings = rated.map((t) => t.rating);
+  return {
+    teams: rated,
+    diff:
+      Math.round((Math.max(...ratings) - Math.min(...ratings)) * 10) / 10 || 0,
+  };
 }
 
 /**
@@ -252,75 +261,138 @@ export function swapPlayers(
   toId: number,
 ): BalancedTeams {
   if (fromId === toId) return teams;
-  const teamA = teams.teamA.map((l) => ({ ...l }));
-  const teamB = teams.teamB.map((l) => ({ ...l }));
-  const from = [...teamA, ...teamB].find((l) => l.player.id === fromId);
-  const to = [...teamA, ...teamB].find((l) => l.player.id === toId);
+  const next = teams.teams.map((t) => ({
+    key: t.key,
+    lineups: t.lineups.map((l) => ({ ...l })),
+  }));
+  const all = next.flatMap((t) => t.lineups);
+  const from = all.find((l) => l.player.id === fromId);
+  const to = all.find((l) => l.player.id === toId);
   if (!from || !to) return teams;
   [from.player, to.player] = [to.player, from.player];
-
-  const ratingA = average(teamA);
-  const ratingB = average(teamB);
-  return {
-    teamA,
-    teamB,
-    ratingA,
-    ratingB,
-    diff: Math.round(Math.abs(ratingA - ratingB) * 10) / 10,
-  };
+  return withRatings(next);
 }
 
-export function balanceTeams(selected: Player[]): BalancedTeams {
-  const gkA: Lineup[] = [];
-  const gkB: Lineup[] = [];
-  const membersA: Player[] = [];
-  const membersB: Player[] = [];
-  let sumA = 0;
-  let sumB = 0;
+/**
+ * Splits the selected players into `teamCount` teams of similar strength.
+ *
+ *  1. One goalkeeper per team is picked from the GK-capable players. The pick is
+ *     shuffled, so a dual-position player (e.g. GK/CB) lands in goal on some
+ *     generations and plays out on others — regenerating gives real variety.
+ *  2. Everyone else is sorted strongest-first (ties shuffled) and greedily
+ *     assigned to the lightest team, keeping squad sizes and totals even.
+ *  3. A local-search pass then trades outfielders between the strongest and the
+ *     weakest team while that closes the gap (sizes never change, so it can't
+ *     unbalance the squads).
+ *  4. Each team's outfielders are finally spread across the lines by position so
+ *     the board reads like a real formation (see `assignRoles`).
+ */
+export function balanceTeams(
+  selected: Player[],
+  teamCount = DEFAULT_TEAM_COUNT,
+): BalancedTeams {
+  // Never más equipos que jugadores: un equipo vacío no es una reta.
+  const keys = teamKeys(Math.min(teamCount, Math.max(2, selected.length)));
+  const n = keys.length;
+
+  const gks: (Player | null)[] = Array.from({ length: n }, () => null);
+  const members: Player[][] = Array.from({ length: n }, () => []);
 
   const keepers = shuffle(selected.filter(canKeepGoal));
   const assignedAsGK = new Set<number>();
-  if (keepers[0]) {
-    gkA.push({ player: keepers[0], role: "GK" });
-    sumA += keepers[0].overall;
-    assignedAsGK.add(keepers[0].id);
-  }
-  if (keepers[1]) {
-    gkB.push({ player: keepers[1], role: "GK" });
-    sumB += keepers[1].overall;
-    assignedAsGK.add(keepers[1].id);
-  }
+  keepers.slice(0, n).forEach((keeper, i) => {
+    gks[i] = keeper;
+    assignedAsGK.add(keeper.id);
+  });
 
   const outfield = shuffle(
     selected.filter((p) => !assignedAsGK.has(p.id)),
   ).sort((a, b) => b.overall - a.overall);
 
+  const size = (i: number) => members[i].length + (gks[i] ? 1 : 0);
+  const total = (i: number) =>
+    members[i].reduce((a, p) => a + p.overall, 0) + (gks[i]?.overall ?? 0);
+
   for (const player of outfield) {
-    const lenA = membersA.length + gkA.length;
-    const lenB = membersB.length + gkB.length;
-    const aLighter = lenA < lenB || (lenA === lenB && sumA <= sumB);
-    if (aLighter) {
-      membersA.push(player);
-      sumA += player.overall;
-    } else {
-      membersB.push(player);
-      sumB += player.overall;
+    let best = 0;
+    for (let i = 1; i < n; i++) {
+      if (
+        size(i) < size(best) ||
+        (size(i) === size(best) && total(i) < total(best))
+      )
+        best = i;
     }
+    members[best].push(player);
   }
 
-  const teamA = [...gkA, ...assignRoles(membersA)];
-  const teamB = [...gkB, ...assignRoles(membersB)];
+  refine(members, gks);
 
-  const ratingA = average(teamA);
-  const ratingB = average(teamB);
+  return withRatings(
+    keys.map((key, i) => ({
+      key,
+      lineups: [
+        ...(gks[i] ? [{ player: gks[i]!, role: "GK" as Position }] : []),
+        ...assignRoles(members[i]),
+      ],
+    })),
+  );
+}
 
-  return {
-    teamA,
-    teamB,
-    ratingA,
-    ratingB,
-    diff: Math.round(Math.abs(ratingA - ratingB) * 10) / 10,
-  };
+/**
+ * Local search: repeatedly trade one outfielder between the strongest and the
+ * weakest team when that shrinks the overall spread. Sizes are preserved, so
+ * only the averages move. Greedy alone leaves 1–3 pts on the table; this closes
+ * most of it in a handful of passes.
+ *
+ * ponytail: solo mira el par (más fuerte, más débil). Con muchos equipos podría
+ * quedar un intercambio útil entre dos equipos intermedios; pasar a todos los
+ * pares si algún día importa (es O(T²·P²), sigue siendo barato).
+ */
+function refine(members: Player[][], gks: (Player | null)[]) {
+  const squad = (i: number) =>
+    [...members[i], ...(gks[i] ? [gks[i]!] : [])] as Player[];
+
+  for (let pass = 0; pass < 60; pass++) {
+    const avgs = members.map((_, i) => meanOverall(squad(i)));
+    let hi = 0;
+    let lo = 0;
+    avgs.forEach((a, i) => {
+      if (a > avgs[hi]) hi = i;
+      if (a < avgs[lo]) lo = i;
+    });
+    if (hi === lo) return;
+
+    const base = spread(members.map((_, i) => squad(i)));
+    let bestGain = 0;
+    let bestSwap: [number, number] | null = null;
+
+    for (let a = 0; a < members[hi].length; a++) {
+      for (let b = 0; b < members[lo].length; b++) {
+        // Solo tiene sentido mandar al débil a alguien mejor.
+        if (members[hi][a].overall <= members[lo][b].overall) continue;
+        const swapped = members.map((m, i) =>
+          i === hi
+            ? m.map((p, k) => (k === a ? members[lo][b] : p))
+            : i === lo
+              ? m.map((p, k) => (k === b ? members[hi][a] : p))
+              : m,
+        );
+        const gain =
+          base -
+          spread(swapped.map((m, i) => [...m, ...(gks[i] ? [gks[i]!] : [])]));
+        if (gain > bestGain + 1e-9) {
+          bestGain = gain;
+          bestSwap = [a, b];
+        }
+      }
+    }
+
+    if (!bestSwap) return;
+    const [a, b] = bestSwap;
+    const tmp = members[hi][a];
+    members[hi][a] = members[lo][b];
+    members[lo][b] = tmp;
+  }
 }
 
 // self-check (npx tsx lib/team-balancer.ts)
@@ -333,31 +405,94 @@ export function demo() {
     role,
   });
   const teams: BalancedTeams = {
-    teamA: [L(1, 40, "GK"), L(2, 50, "CB")],
-    teamB: [L(3, 60, "GK"), L(4, 80, "ST")],
-    ratingA: 45,
-    ratingB: 70,
+    teams: [
+      { key: "A", lineups: [L(1, 40, "GK"), L(2, 50, "CB")], rating: 45 },
+      { key: "B", lineups: [L(3, 60, "GK"), L(4, 80, "ST")], rating: 70 },
+    ],
     diff: 25,
   };
 
   // Cross-team swap: occupant trades, role stays, ratings recomputed.
   const s = swapPlayers(teams, 2, 4);
   assert(
-    s.teamA[1].player.id === 4 && s.teamA[1].role === "CB",
+    s.teams[0].lineups[1].player.id === 4 &&
+      s.teams[0].lineups[1].role === "CB",
     "occupant swaps, role kept",
   );
   assert(
-    s.teamB[1].player.id === 2 && s.teamB[1].role === "ST",
+    s.teams[1].lineups[1].player.id === 2 &&
+      s.teams[1].lineups[1].role === "ST",
     "other side mirrored",
   );
-  assert(s.ratingA === 60 && s.ratingB === 55, "ratings recomputed");
-  assert(teams.teamA[1].player.id === 2, "original not mutated");
+  assert(
+    s.teams[0].rating === 60 && s.teams[1].rating === 55,
+    "ratings recomputed",
+  );
+  assert(teams.teams[0].lineups[1].player.id === 2, "original not mutated");
   // Same-team swap leaves ratings untouched.
-  const same = swapPlayers(teams, 1, 2);
-  assert(same.ratingA === 45, "same-team swap keeps rating");
+  assert(
+    swapPlayers(teams, 1, 2).teams[0].rating === 45,
+    "same-team swap keeps rating",
+  );
   // No-ops.
   assert(swapPlayers(teams, 2, 2) === teams, "same id is no-op");
   assert(swapPlayers(teams, 2, 999) === teams, "missing id is no-op");
+
+  // Signature is permutation-agnostic and matches the old 2-side format.
+  assert(
+    splitSignature([
+      [2, 1],
+      [4, 3],
+    ]) === "1,2|3,4",
+    "signature sorted",
+  );
+  assert(
+    splitSignature([
+      [3, 4],
+      [1, 2],
+    ]) ===
+      splitSignature([
+        [1, 2],
+        [3, 4],
+      ]),
+    "signature ignores team labels",
+  );
+
+  // N equipos: reparto parejo en tamaño y nivel.
+  const pool: Player[] = Array.from({ length: 18 }, (_, i) => ({
+    id: i + 1,
+    name: `P${i + 1}`,
+    displayName: `P${i + 1}`,
+    overall: 50 + ((i * 7) % 40),
+    position: i % 6 === 0 ? "GK" : "CM",
+    position2: null,
+  })) as unknown as Player[];
+
+  for (const count of [2, 3, 4]) {
+    const res = balanceTeams(pool, count);
+    assert(res.teams.length === count, `${count} equipos generados`);
+    const sizes = res.teams.map((t) => t.lineups.length);
+    assert(
+      Math.max(...sizes) - Math.min(...sizes) <= 1,
+      `${count}: tamaños parejos`,
+    );
+    assert(
+      res.teams.flatMap((t) => t.lineups).length === pool.length,
+      `${count}: nadie se pierde ni se duplica`,
+    );
+    assert(res.diff <= 4, `${count}: diff razonable (${res.diff})`);
+    const gkTeams = res.teams.filter((t) =>
+      t.lineups.some((l) => l.role === "GK"),
+    ).length;
+    assert(gkTeams === Math.min(count, 3), `${count}: un portero por equipo`);
+  }
+
+  // Con menos jugadores que equipos pedidos, nunca deja un equipo vacío.
+  assert(
+    balanceTeams(pool.slice(0, 3), 6).teams.length === 3,
+    "acota por jugadores",
+  );
+
   return "ok";
 }
 

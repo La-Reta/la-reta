@@ -4,6 +4,8 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Item, ItemContent, ItemMedia, ItemTitle } from "@/components/ui/item";
+import { MAX_TEAMS } from "@/lib/teams";
+import { cn } from "@/lib/utils";
 import {
   ChartNoAxesColumnIcon,
   ListChecksIcon,
@@ -21,6 +23,9 @@ export function ControlBar({
   allSelected,
   hasSelection,
   hasResult,
+  teamCount,
+  maxTeams,
+  onTeamCountChange,
   onToggleAll,
   onClear,
   onGenerate,
@@ -32,6 +37,10 @@ export function ControlBar({
   allSelected: boolean;
   hasSelection: boolean;
   hasResult: boolean;
+  teamCount: number;
+  /** Tope real: no puede haber más equipos que convocados. */
+  maxTeams: number;
+  onTeamCountChange: (count: number) => void;
   onToggleAll: () => void;
   onClear: () => void;
   onGenerate: () => void;
@@ -53,6 +62,11 @@ export function ControlBar({
 
         {/* Acciones: selección · vista · matchup */}
         <div className="flex flex-wrap items-center justify-end gap-2">
+          <TeamCountPicker
+            value={teamCount}
+            max={maxTeams}
+            onChange={onTeamCountChange}
+          />
           <Button variant="outline" onClick={onToggleAll}>
             <ListChecksIcon />
             {allSelected ? "Quitar todos" : "Todos"}
@@ -88,5 +102,51 @@ export function ControlBar({
         </div>
       </CardContent>
     </Card>
+  );
+}
+
+/**
+ * Cuántos equipos generar. 2 es el default de siempre; 3+ arma una reta con
+ * rotación (gana y se queda) que el live entiende.
+ */
+function TeamCountPicker({
+  value,
+  max,
+  onChange,
+}: {
+  value: number;
+  max: number;
+  onChange: (count: number) => void;
+}) {
+  const options = Array.from(
+    { length: Math.max(2, Math.min(MAX_TEAMS, max)) - 1 },
+    (_, i) => i + 2,
+  );
+  if (options.length < 2) return null;
+
+  return (
+    <div
+      className="bg-muted inline-flex items-center gap-1 rounded-xl p-0.5"
+      role="group"
+      aria-label="Número de equipos"
+    >
+      <UsersIcon className="text-muted-foreground ml-1.5 size-3.5" />
+      {options.map((n) => (
+        <button
+          key={n}
+          type="button"
+          onClick={() => onChange(n)}
+          aria-pressed={value === n}
+          className={cn(
+            "rounded-[10px] px-2.5 py-1 font-mono text-xs font-bold tabular-nums transition-colors",
+            value === n
+              ? "bg-background text-foreground shadow-sm"
+              : "text-muted-foreground hover:text-foreground",
+          )}
+        >
+          {n}
+        </button>
+      ))}
+    </div>
   );
 }

@@ -13,6 +13,7 @@ import {
   date,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   real,
@@ -159,6 +160,14 @@ export const generatedRetas = pgTable(
       .default("Equipo B"),
     ratingA: real("rating_a").notNull().default(0),
     ratingB: real("rating_b").notNull().default(0),
+    /**
+     * Todos los equipos de la reta (2 … 6) con su nombre y OVR. Null en las
+     * filas viejas (y en cualquier reta de 2), donde `team_a_name`/`rating_a`
+     * y su par B siguen siendo la fuente — ver `retaTeams()` en lib/queries.
+     */
+    teams:
+      jsonb("teams").$type<{ key: string; name: string; rating: number }[]>(),
+    /** Spread entre el equipo más fuerte y el más débil. */
     diff: real("diff").notNull().default(0),
     createdAt: timestamp("created_at").notNull().defaultNow(),
   },
@@ -200,6 +209,21 @@ export const matches = pgTable("matches", {
   teamBName: varchar("team_b_name", { length: 60 })
     .notNull()
     .default("Equipo B"),
+  /**
+   * Qué equipos de la reta generada jugaron este partido ("A", "C", …). Un
+   * partido siempre es 2 lados (A = local, B = visitante en `match_goals`);
+   * estas letras solo dicen de qué equipos de `generated_retas.teams` salieron,
+   * necesario cuando la reta tiene 3+ equipos rotando. Null = entrada manual.
+   */
+  teamAKey: varchar("team_a_key", { length: 1 }),
+  teamBKey: varchar("team_b_key", { length: 1 }),
+  /**
+   * Marcador completo cuando la reta se jugó con 3+ equipos: un elemento por
+   * equipo con su letra, nombre y goles. Null en los partidos de 2 lados (la
+   * inmensa mayoría), donde mandan team_a_name/score_a y su par B — que además
+   * se siguen escribiendo con los dos primeros equipos. Ver `matchTeams()`.
+   */
+  teams: jsonb("teams").$type<{ key: string; name: string; score: number }[]>(),
   scoreA: smallint("score_a").notNull().default(0),
   scoreB: smallint("score_b").notNull().default(0),
   // How even the match felt, 0 (paliza) … 100 (parejísimo).

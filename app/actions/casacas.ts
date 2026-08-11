@@ -17,8 +17,7 @@ function clerkDisplayName(
 }
 
 type Result =
-  | { ok: true; spunByName: string | null }
-  | { ok: false; error: string };
+  { ok: true; spunByName: string | null } | { ok: false; error: string };
 
 /**
  * Persist the wheel result. Pass `playerId` for a roster player or `guestName`
@@ -48,7 +47,8 @@ export async function recordCasacaSpin(target: {
     playerId = target.playerId;
   } else {
     guestName = target.guestName?.trim().slice(0, 60) || null;
-    if (!guestName) return { ok: false, error: "Falta el nombre del invitado." };
+    if (!guestName)
+      return { ok: false, error: "Falta el nombre del invitado." };
   }
 
   const user = userId ? await currentUser() : null;
@@ -63,4 +63,22 @@ export async function recordCasacaSpin(target: {
 
   revalidatePath("/casacas");
   return { ok: true, spunByName };
+}
+
+/**
+ * Borra un turno del historial. Solo admin: sirve cuando el elegido no apareció
+ * o no aceptó, y hay que dejar el turno como si nunca hubiera salido — al
+ * quitarlo vuelve a entrar al sorteo (la ruleta excluye a los últimos dos).
+ */
+export async function deleteCasacaAssignment(
+  id: number,
+): Promise<{ ok: true } | { ok: false; error: string }> {
+  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+  try {
+    await db.delete(casacaAssignments).where(eq(casacaAssignments.id, id));
+    revalidatePath("/casacas");
+    return { ok: true };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
 }

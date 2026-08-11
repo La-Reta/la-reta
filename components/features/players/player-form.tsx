@@ -26,11 +26,10 @@ import {
 import { Slider } from "@/components/ui/slider";
 import {
   FEET,
-  GROUP_LABEL,
+  POSITION_NAME,
   POSITIONS,
   STAT_KEYS,
   STAT_LABEL,
-  positionGroup,
   type StatKey,
 } from "@/lib/constants";
 import { ageFromBirthDate } from "@/lib/dates";
@@ -242,7 +241,7 @@ export function PlayerForm({
               >
                 {POSITIONS.map((p) => (
                   <NativeSelectOption key={p} value={p}>
-                    {p} · {GROUP_LABEL[positionGroup(p)]}
+                    {p} · {POSITION_NAME[p]}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
@@ -256,7 +255,7 @@ export function PlayerForm({
                 <NativeSelectOption value="">— ninguna —</NativeSelectOption>
                 {POSITIONS.filter((p) => p !== form.position).map((p) => (
                   <NativeSelectOption key={p} value={p}>
-                    {p} · {GROUP_LABEL[positionGroup(p)]}
+                    {p} · {POSITION_NAME[p]}
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
@@ -335,37 +334,37 @@ export function PlayerForm({
         </FormSection>
 
         {canEditStats ? (
-        <FormSection title="Atributos">
-          <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
-            {STAT_KEYS.map((key) => (
-              <div key={key} className="space-y-1.5">
-                <div className="flex items-center justify-between text-xs">
-                  <span className="font-medium">{STAT_LABEL[key]}</span>
-                  <Input
-                    type="number"
+          <FormSection title="Atributos">
+            <div className="grid gap-x-8 gap-y-4 sm:grid-cols-2">
+              {STAT_KEYS.map((key) => (
+                <div key={key} className="space-y-1.5">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className="font-medium">{STAT_LABEL[key]}</span>
+                    <Input
+                      type="number"
+                      min={1}
+                      max={99}
+                      value={form[key]}
+                      onChange={(e) => {
+                        const n = Number(e.target.value);
+                        if (Number.isNaN(n)) return;
+                        set(key, Math.max(1, Math.min(99, n)));
+                      }}
+                      className="h-7 w-16 font-mono font-bold tabular-nums"
+                    />
+                  </div>
+                  <Slider
                     min={1}
                     max={99}
                     value={form[key]}
-                    onChange={(e) => {
-                      const n = Number(e.target.value);
-                      if (Number.isNaN(n)) return;
-                      set(key, Math.max(1, Math.min(99, n)));
-                    }}
-                    className="h-7 w-16 font-mono font-bold tabular-nums"
+                    onValueChange={(v) =>
+                      set(key, Array.isArray(v) ? v[0] : (v as number))
+                    }
                   />
                 </div>
-                <Slider
-                  min={1}
-                  max={99}
-                  value={form[key]}
-                  onValueChange={(v) =>
-                    set(key, Array.isArray(v) ? v[0] : (v as number))
-                  }
-                />
-              </div>
-            ))}
-          </div>
-        </FormSection>
+              ))}
+            </div>
+          </FormSection>
         ) : (
           <p className="text-muted-foreground rounded-lg border border-dashed p-3 text-xs">
             Los atributos (PAC, SHO, PAS…) los ajusta el staff. Aquí puedes
