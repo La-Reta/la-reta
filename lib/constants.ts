@@ -187,6 +187,24 @@ export const IDEA_STATUS_CLASS: Record<IdeaStatus, string> = {
   descartada: "bg-muted text-muted-foreground",
 };
 
+/** Color sólido del estado, para puntos y barras de acento en las listas. */
+export const IDEA_STATUS_DOT: Record<IdeaStatus, string> = {
+  nueva: "bg-sky-500",
+  planeada: "bg-violet-500",
+  en_progreso: "bg-amber-500",
+  hecha: "bg-emerald-500",
+  descartada: "bg-muted-foreground/40",
+};
+
+/** Estados terminales: ya no son trabajo pendiente, se muestran atenuados. */
+export const IDEA_STATUS_DONE: Record<IdeaStatus, boolean> = {
+  nueva: false,
+  planeada: false,
+  en_progreso: false,
+  hecha: true,
+  descartada: true,
+};
+
 export const IDEA_PRIORITIES = ["baja", "media", "alta", "critica"] as const;
 export type IdeaPriority = (typeof IDEA_PRIORITIES)[number];
 
