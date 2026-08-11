@@ -12,7 +12,7 @@ import type { Player } from "@/lib/db/schema";
 import { isGuest } from "@/lib/guests";
 import type { CasacaAssignmentRow } from "@/lib/queries";
 import { guestsAtom, selectedIdsAtom } from "@/lib/state/atoms";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { useRouter } from "next/navigation";
 import { useMemo, useState } from "react";
 import { toast } from "sonner";
@@ -34,8 +34,8 @@ export function useCasacaWheel({
   canManage: boolean;
 }) {
   const router = useRouter();
-  const selectedIds = useAtomValue(selectedIdsAtom);
-  const guests = useAtomValue(guestsAtom);
+  const [selectedIds, setSelectedIds] = useAtom(selectedIdsAtom);
+  const [guests, setGuests] = useAtom(guestsAtom);
 
   // Wheel pool = roster picked in /teams (or the whole roster if none picked)
   // plus every last-minute guest, so guests can wash the casacas too.
@@ -120,6 +120,19 @@ export function useCasacaWheel({
     else toast.error(res.error);
   }
 
+  /**
+   * Quita a un invitado de última hora. Es el mismo estado que usa Armar
+   * equipos (`guestsAtom` + `selectedIdsAtom`), así que desaparece de la reta
+   * completa, no solo de esta ruleta. Los turnos que ya ganó quedan en el
+   * historial: eso ya pasó.
+   */
+  function removeGuest(id: number) {
+    if (!canManage || spinning) return;
+    setGuests((prev) => prev.filter((g) => g.id !== id));
+    setSelectedIds((prev) => prev.filter((x) => x !== id));
+    if (winner?.id === id) setWinner(null);
+  }
+
   // Assign the turn manually (someone volunteers) — no spin, but picks from the
   // same pool so the current list is respected.
   async function assignManual(id: number) {
@@ -127,7 +140,9 @@ export function useCasacaWheel({
     const chosen = pool.find((p) => p.id === id) ?? null;
     if (!chosen) return;
     const res = await recordCasacaSpin(
-      isGuest(chosen) ? { guestName: chosen.displayName } : { playerId: chosen.id },
+      isGuest(chosen)
+        ? { guestName: chosen.displayName }
+        : { playerId: chosen.id },
     );
     if (res.ok) {
       setWinner(chosen);
@@ -149,6 +164,7 @@ export function useCasacaWheel({
     canSpin,
     spin,
     assignManual,
+    removeGuest,
     onSpinEnd,
     dismissWinner: () => setWinner(null),
   };

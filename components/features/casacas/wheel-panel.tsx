@@ -18,7 +18,13 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import type { CasacaWheel } from "@/hooks/use-casaca-wheel";
-import { HandIcon, RefreshCwIcon, ShirtIcon, UserPlusIcon } from "lucide-react";
+import {
+  HandIcon,
+  RefreshCwIcon,
+  ShirtIcon,
+  UserPlusIcon,
+  XIcon,
+} from "lucide-react";
 import * as React from "react";
 
 /** Status line under the spin button: why you can't spin, or who's resting. */
@@ -150,15 +156,35 @@ export function WheelPanel({ wheel }: { wheel: CasacaWheel }) {
           <div className="w-full border-t pt-4">
             <div className="text-muted-foreground mb-2 flex items-center gap-1.5 text-xs font-semibold uppercase">
               <UserPlusIcon className="size-3.5" />
-              Invitados desde Armar equipos
+              Invitados de última hora
             </div>
             <div className="flex flex-wrap gap-1.5">
               {wheel.guestPlayers.map((g) => (
-                <Badge key={g.id} variant="default">
-                  {g.displayName}
-                </Badge>
+                <span
+                  key={g.id}
+                  className="bg-muted flex items-center gap-1 rounded-full py-1 pr-1 pl-2.5 text-xs"
+                >
+                  <span className="font-medium">{g.displayName}</span>
+                  {wheel.canManage ? (
+                    <button
+                      type="button"
+                      onClick={() => wheel.removeGuest(g.id)}
+                      disabled={wheel.spinning}
+                      aria-label={`Quitar a ${g.displayName}`}
+                      className="hover:bg-background text-muted-foreground hover:text-foreground flex size-5 items-center justify-center rounded-full transition-colors disabled:opacity-40"
+                    >
+                      <XIcon className="size-3.5" />
+                    </button>
+                  ) : null}
+                </span>
               ))}
             </div>
+            {wheel.canManage ? (
+              <p className="text-muted-foreground mt-2 text-[11px]">
+                Se comparten con Armar equipos: al quitarlos aquí salen también
+                de la reta.
+              </p>
+            ) : null}
           </div>
         ) : null}
       </CardContent>

@@ -323,7 +323,8 @@ export default async function MatchDetailPage({
   if (!match) notFound();
 
   //  Votación de premios (Figura / Golazo / Error)
-  const voterId = userId ?? (admin ? "admin" : null);
+  // Votar es exclusivo de cuentas: el PIN de admin no vota.
+  const voterId = userId ?? null;
   const [voteTally, myVotes] = await Promise.all([
     getMatchVoteTally(match.id),
     getMyMatchVotes(match.id, voterId),
@@ -454,7 +455,7 @@ export default async function MatchDetailPage({
         candidates={voteCandidates}
         tally={voteTally}
         myVotes={myVotes}
-        canVote={admin || Boolean(userId)}
+        canVote={Boolean(userId)}
         votingOpen={votingOpen}
         closesLabel={closesLabel}
       />

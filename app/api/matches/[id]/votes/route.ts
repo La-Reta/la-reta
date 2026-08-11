@@ -1,4 +1,3 @@
-import { isAdmin } from "@/lib/admin";
 import { getMatchVoteTally, getMyMatchVotes } from "@/lib/queries";
 import { auth } from "@clerk/nextjs/server";
 
@@ -11,9 +10,7 @@ export async function GET(
 ) {
   const { id } = await params;
   const matchId = Number(id);
-  const { userId } = await auth();
-  const admin = await isAdmin();
-  const voterId = userId ?? (admin ? "admin" : null);
+  const { userId: voterId } = await auth();
   const [tally, myVotes] = await Promise.all([
     getMatchVoteTally(matchId),
     getMyMatchVotes(matchId, voterId),

@@ -53,6 +53,7 @@ FIFA-style dashboard for organizing pickup football ("la reta"). **Next 16 App R
 
 - Display font is **Oswald** via `next/font` (`--font-oswald`). Tailwind v4 did NOT generate `font-display` from the `@theme` token — it's hand-defined in `app/globals.css` (`@layer utilities`). Use `font-display`.
 - `components/ui/button.tsx` is modified: when `render` is passed (e.g. `<Button render={<Link/>}>`) it sets `nativeButton={false}` to avoid a Base UI warning. Keep this if regenerating.
+- `components/ui/alert.tsx` is modified: `AlertAction` fluye debajo del texto en vez de flotar en la esquina (`absolute top-2.5 right-3` + `pr-18` en el Alert), porque un par de botones normales se montaban sobre la descripción. Keep this if regenerating.
 - Component layout: `components/ui/*` (shadcn primitives), `components/app/*` (shell/sidebar/providers), `components/features/<domain>/*`, `components/shared/*` (fifa-card, pitch, page-header, section-heading).
 - **Reusable page chrome**: every view's header is `<PageHeader title description actions />` (`components/shared/page-header.tsx`); section separators with the accent bar are `<SectionHeading title count? tone? />` (`components/shared/section-heading.tsx`, tones `primary`/`emerald`/`muted`). Reach for these instead of re-inlining an `h1`/`h2`.
 - **Prefer shadcn primitives over bespoke containers**: cards/panels use `Card`/`CardContent` (theme radius is `rounded-xl`; use `size="sm"` for compact density), empty states use `Empty`. Don't hand-roll `bg-card ring rounded-lg` boxes.

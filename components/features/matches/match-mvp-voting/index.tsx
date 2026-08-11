@@ -80,6 +80,8 @@ export function MatchMvpVoting({
 
   function vote(category: VoteCategory, c: VoteCandidate) {
     if (!canVote || !votingOpen || pending) return;
+    const previous = liveMyVotes[category];
+    if (previous === c.key) return; // ya es tu voto: no hay nada que cambiar
     startTransition(async () => {
       const res = await castMatchVote({
         matchId,
@@ -92,7 +94,12 @@ export function MatchMvpVoting({
         return;
       }
       refetch();
-      // Auto-avanza a la siguiente categoría que te falte votar.
+      if (previous) {
+        // Cambiar de opinión no debe sacarte de la categoría que estás mirando.
+        toast.success(`Tu voto ahora es para ${c.name}`);
+        return;
+      }
+      // Primer voto de la categoría: avanza a la siguiente que te falte.
       const voted = new Set([...Object.keys(liveMyVotes), category]);
       const next = VOTE_CATEGORIES.find((cat) => !voted.has(cat.key));
       if (next) setActiveCat(next.key);
@@ -106,6 +113,7 @@ export function MatchMvpVoting({
       if (res.ok) {
         refetch();
         setActiveCat(category);
+        toast.success("Voto quitado");
       } else {
         toast.error(res.error);
       }
@@ -113,12 +121,6 @@ export function MatchMvpVoting({
   }
 
   const votedCount = VOTE_CATEGORIES.filter((c) => liveMyVotes[c.key]).length;
-  console.log("MatchMvpVoting render", {
-    votedCount,
-    liveMyVotes,
-    tally,
-    myVotes,
-  });
 
   return (
     <section className="space-y-3">
@@ -141,10 +143,11 @@ export function MatchMvpVoting({
           <LogInIcon />
           <AlertTitle>Inicia sesión para votar</AlertTitle>
           <AlertDescription>
-            Necesitas una cuenta para elegir la figura, el golazo y el error del
-            partido.
+            Solo con cuenta puedes elegir la figura (el MVP), el golazo y el
+            error del partido. Podrás cambiar o quitar tu voto cuando quieras
+            mientras la votación siga abierta.
           </AlertDescription>
-          <AlertAction className="flex flex-wrap gap-2">
+          <AlertAction>
             <SignInButton mode="modal">
               <Button variant="secondary">
                 <LogInIcon />

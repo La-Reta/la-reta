@@ -38,7 +38,8 @@ export function VotingPanel({
   const max = Math.max(1, ...list.map((c) => c.count));
   const myKey = liveMyVotes[cat.key];
   const alreadyVoted = Boolean(myKey);
-  const interactive = canVote && !alreadyVoted;
+  // Con cuenta siempre se puede tocar: votar por otro reemplaza tu voto.
+  const interactive = canVote;
 
   return (
     <Card className="overflow-hidden">
@@ -86,7 +87,7 @@ export function VotingPanel({
             <p className="text-sm font-semibold">{cat.label}</p>
             <p className="text-muted-foreground text-xs">
               {alreadyVoted
-                ? "Ya votaste aquí. Puedes resetear para volver a elegir."
+                ? "Ya votaste aquí. Toca a otro para cambiar tu voto, o quítalo."
                 : cat.description}
             </p>
           </div>
@@ -99,7 +100,7 @@ export function VotingPanel({
               className="shrink-0"
             >
               <RotateCcwIcon />
-              Resetear
+              Quitar voto
             </Button>
           ) : null}
         </div>
@@ -111,7 +112,7 @@ export function VotingPanel({
             const share = Math.round((c.count / max) * 100);
             const cls = cn(
               "block w-full rounded-xl px-2 py-1.5 text-left transition-colors",
-              mine && "bg-muted/70 ring-1 ring-border",
+              mine && "bg-muted/70 ring-primary/40 ring-1",
               interactive && "hover:bg-muted cursor-pointer",
             );
             const row = (

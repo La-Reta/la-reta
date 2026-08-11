@@ -400,7 +400,7 @@ export function PlayerForm({
                 Inicia sesión o entra como administrador para{" "}
                 {isEdit ? "editar" : "crear"} jugadores.
               </AlertDescription>
-              <AlertAction className="flex gap-2">
+              <AlertAction>
                 <SignInButton mode="modal">
                   <Button variant="outline">Iniciar sesión</Button>
                 </SignInButton>

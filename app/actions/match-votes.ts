@@ -1,6 +1,5 @@
 "use server";
 
-import { isAdmin } from "@/lib/admin";
 import { db, matchGoals, matchVotes, matches } from "@/lib/db";
 import {
   isVotingOpen,
@@ -14,10 +13,11 @@ import { revalidatePath } from "next/cache";
 type Result = { ok: true } | { ok: false; error: string };
 
 /**
- * Registra el voto del usuario en una categoría de un partido. Solo usuarios con
- * sesión Clerk o admin (PIN). Un voto por (partido, categoría, votante) y es
- * **definitivo**: si ya votaste en esa categoría, no puedes cambiarlo. Solo
- * mientras la votación esté abierta y para candidatos que participaron.
+ * Registra el voto del usuario en una categoría de un partido. **Solo con
+ * cuenta** (sesión de Clerk): el PIN de admin no vota, porque un voto anónimo
+ * compartido no representa a nadie. Un voto por (partido, categoría, votante),
+ * y se puede **cambiar** mientras la votación siga abierta — votar por otro
+ * candidato reemplaza tu voto anterior. Para quitarlo, `resetMatchVote`.
  */
 export async function castMatchVote(input: {
   matchId: number;
@@ -26,14 +26,9 @@ export async function castMatchVote(input: {
   guestName?: string | null;
 }): Promise<Result> {
   try {
-    const { userId } = await auth();
-    const admin = await isAdmin();
-    const voterId = userId ?? (admin ? "admin" : null);
+    const { userId: voterId } = await auth();
     if (!voterId)
-      return {
-        ok: false,
-        error: "Inicia sesión o entra como admin para votar.",
-      };
+      return { ok: false, error: "Inicia sesión con tu cuenta para votar." };
 
     if (!VOTE_CATEGORY_KEYS.includes(input.category))
       return { ok: false, error: "Categoría inválida." };
@@ -54,7 +49,10 @@ export async function castMatchVote(input: {
 
     // El candidato debe haber participado en el partido (evita votos arbitrarios).
     const participants = await db
-      .select({ playerId: matchGoals.playerId, guestName: matchGoals.guestName })
+      .select({
+        playerId: matchGoals.playerId,
+        guestName: matchGoals.guestName,
+      })
       .from(matchGoals)
       .where(eq(matchGoals.matchId, input.matchId));
     const isParticipant =
@@ -66,31 +64,25 @@ export async function castMatchVote(input: {
     if (!isParticipant)
       return { ok: false, error: "Ese jugador no participó en este partido." };
 
-    // Un voto por categoría y definitivo: si ya existe, no se cambia.
-    const [existing] = await db
-      .select({ id: matchVotes.id })
-      .from(matchVotes)
-      .where(
-        and(
-          eq(matchVotes.matchId, input.matchId),
-          eq(matchVotes.category, input.category),
-          eq(matchVotes.voterId, voterId),
-        ),
-      )
-      .limit(1);
-    if (existing)
-      return {
-        ok: false,
-        error: "Ya votaste en esta categoría; tu voto es definitivo.",
-      };
-
-    await db.insert(matchVotes).values({
-      matchId: input.matchId,
-      category: input.category,
-      voterId,
-      playerId: input.playerId ?? null,
-      guestName,
-    });
+    // Un voto por (partido, categoría, votante): el índice único deja que el
+    // upsert cambie el candidato en una sola query, sin leer-luego-escribir.
+    await db
+      .insert(matchVotes)
+      .values({
+        matchId: input.matchId,
+        category: input.category,
+        voterId,
+        playerId: input.playerId ?? null,
+        guestName,
+      })
+      .onConflictDoUpdate({
+        target: [matchVotes.matchId, matchVotes.category, matchVotes.voterId],
+        set: {
+          playerId: input.playerId ?? null,
+          guestName,
+          updatedAt: new Date(),
+        },
+      });
 
     revalidatePath(`/matches/${input.matchId}/detail`);
     return { ok: true };
@@ -100,7 +92,7 @@ export async function castMatchVote(input: {
 }
 
 /**
- * Quita tu voto en una categoría (reset explícito). Mismo votante, votación
+ * Quita tu voto en una categoría. Mismo votante (cuenta de Clerk), votación
  * abierta. Tras esto puedes volver a votar en esa categoría.
  */
 export async function resetMatchVote(input: {
@@ -108,11 +100,8 @@ export async function resetMatchVote(input: {
   category: VoteCategory;
 }): Promise<Result> {
   try {
-    const { userId } = await auth();
-    const admin = await isAdmin();
-    const voterId = userId ?? (admin ? "admin" : null);
-    if (!voterId)
-      return { ok: false, error: "No autorizado." };
+    const { userId: voterId } = await auth();
+    if (!voterId) return { ok: false, error: "No autorizado." };
     if (!VOTE_CATEGORY_KEYS.includes(input.category))
       return { ok: false, error: "Categoría inválida." };
 
