@@ -56,7 +56,7 @@ export default async function MatchesPage() {
         description="Registra los resultados de la reta y lleva la tabla de goleadores."
       />
 
-      <RetaMatchForm retas={retaOptions} players={formPlayers} />
+      <RetaMatchForm retas={retaOptions} players={formPlayers} admin={admin} />
 
       <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
         <section className="space-y-3">

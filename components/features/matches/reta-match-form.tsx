@@ -1,7 +1,17 @@
 "use client";
 
-import { createMatch } from "@/app/actions/matches";
-import type { MatchPlayer } from "@/components/features/matches/match-form";
+import { createMatch, updateMatch } from "@/app/actions/matches";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import type { RetaToMatchItem } from "@/components/features/teams/registro/reta-to-match-list";
 import { Button } from "@/components/ui/button";
 import {
@@ -23,6 +33,7 @@ import { formatApiDate } from "@/lib/dates";
 import {
   DEFAULT_TEAM_COUNT,
   defaultTeamName,
+  isTeamKey,
   MAX_TEAMS,
   TEAM_COLORS,
   teamKeys,
@@ -32,6 +43,26 @@ import { LayersIcon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+
+export type MatchPlayer = { id: number; name: string };
+
+/** Un partido ya guardado, listo para editarse (ver `matchTeams`). */
+export type EditRetaMatch = {
+  id: number;
+  playedAt: string;
+  balance: number;
+  durationSec: number | null;
+  notes: string | null;
+  teams: { key: TeamKey; name: string; score: number }[];
+  scorers: {
+    playerId: number | null;
+    name: string;
+    /** Letra del equipo, o null en partidos viejos sin equipo asignado. */
+    team: string | null;
+    goals: number;
+    assists: number;
+  }[];
+};
 
 /** Un participante de un equipo: del roster (`playerId`) o invitado. */
 type Row = {
@@ -92,6 +123,26 @@ function teamsFromReta(reta: RetaToMatchItem): Team[] {
   }));
 }
 
+const rowFromScorer = (s: EditRetaMatch["scorers"][number]): Row => ({
+  key: s.playerId != null ? `p:${s.playerId}` : `g:${s.name.toLowerCase()}`,
+  playerId: s.playerId,
+  name: s.name,
+  goals: String(s.goals),
+  assists: String(s.assists),
+});
+
+/** Equipos de un partido guardado, con su plantilla ya repartida. */
+function teamsFromMatch(match: EditRetaMatch): Team[] {
+  return match.teams.map((team) => ({
+    key: team.key,
+    name: team.name,
+    score: String(team.score),
+    players: match.scorers
+      .filter((s) => s.team === team.key)
+      .map(rowFromScorer),
+  }));
+}
+
 /**
  * Registra una reta como un solo partido con su marcador de N equipos (2 … 6).
  * Se puede armar de cero o prellenar desde una reta generada y ajustar: agregar
@@ -99,21 +150,40 @@ function teamsFromReta(reta: RetaToMatchItem): Team[] {
  * quitar a quien no llegó y cambiar nombres, equipos y marcador.
  */
 export function RetaMatchForm({
-  retas,
+  retas = [],
   players,
+  match,
+  admin,
 }: {
-  retas: RetaToMatchItem[];
+  retas?: RetaToMatchItem[];
   players: MatchPlayer[];
+  /** Presente = modo edición de un partido ya guardado. */
+  match?: EditRetaMatch;
+  admin: boolean;
 }) {
   const router = useRouter();
+  const isEdit = Boolean(match);
   const [retaId, setRetaId] = React.useState("");
-  const [playedAt, setPlayedAt] = React.useState("");
+  const [playedAt, setPlayedAt] = React.useState(match?.playedAt ?? "");
   const [teams, setTeams] = React.useState<Team[]>(() =>
-    blankTeams(DEFAULT_TEAM_COUNT),
+    match ? teamsFromMatch(match) : blankTeams(DEFAULT_TEAM_COUNT),
   );
-  const [durationMin, setDurationMin] = React.useState("");
-  const [balance, setBalance] = React.useState(50);
-  const [notes, setNotes] = React.useState("");
+  // Partidos viejos pueden traer goleadores sin equipo: se muestran aparte para
+  // moverlos a uno, en vez de perderlos.
+  const [loose, setLoose] = React.useState<Row[]>(() =>
+    match
+      ? match.scorers
+          .filter((s) => !match.teams.some((t) => t.key === s.team))
+          .map(rowFromScorer)
+      : [],
+  );
+  const [durationMin, setDurationMin] = React.useState(
+    match?.durationSec != null
+      ? String(Math.round(match.durationSec / 60))
+      : "",
+  );
+  const [balance, setBalance] = React.useState(match?.balance ?? 50);
+  const [notes, setNotes] = React.useState(match?.notes ?? "");
   const [pending, startTransition] = React.useTransition();
 
   const playersById = React.useMemo(
@@ -133,20 +203,31 @@ export function RetaMatchForm({
     );
   }
 
-  /** Cambia el número de equipos conservando los que ya están capturados. */
+  /**
+   * Cambia el número de equipos conservando los que ya están capturados. Al
+   * reducir, la gente de los equipos que se van pasa a "sin equipo" en vez de
+   * borrarse en silencio.
+   */
   function setTeamCount(count: number) {
-    setTeams((prev) => {
-      const keys = teamKeys(count);
-      return keys.map(
+    const keys = teamKeys(count);
+    const dropped = teams.slice(keys.length).flatMap((t) => t.players);
+    if (dropped.length) {
+      setLoose((prev) => [
+        ...prev,
+        ...dropped.filter((d) => !prev.some((p) => p.key === d.key)),
+      ]);
+    }
+    setTeams(
+      keys.map(
         (key, i) =>
-          prev[i] ?? {
+          teams[i] ?? {
             key,
             name: defaultTeamName(key),
             score: "0",
             players: [],
           },
-      );
-    });
+      ),
+    );
   }
 
   function addRow(index: number, row: Row) {
@@ -177,6 +258,41 @@ export function RetaMatchForm({
     );
   }
 
+  /** Manda un goleador sin equipo al equipo elegido, con sus goles. */
+  function assignLoose(key: string, teamKey: TeamKey) {
+    const row = loose.find((r) => r.key === key);
+    if (!row) return;
+    setLoose((prev) => prev.filter((r) => r.key !== key));
+    setTeams((prev) =>
+      prev.map((t) =>
+        t.key === teamKey && !t.players.some((p) => p.key === row.key)
+          ? {
+              ...t,
+              players: [...t.players, row],
+              score: String(
+                [...t.players, row].reduce((n, p) => n + num(p.goals), 0),
+              ),
+            }
+          : t,
+      ),
+    );
+  }
+
+  /** Deja el formulario en blanco (alta) o lo devuelve al partido (edición). */
+  function cancel() {
+    if (match) {
+      router.push(`/matches/${match.id}/detail`);
+      return;
+    }
+    setRetaId("");
+    setTeams(blankTeams(DEFAULT_TEAM_COUNT));
+    setLoose([]);
+    setPlayedAt("");
+    setDurationMin("");
+    setBalance(50);
+    setNotes("");
+  }
+
   /** Escribe goles/asistencias y refleja el marcador del equipo. */
   function setStat(index: number, key: string, patch: Partial<Row>) {
     setTeams((prev) =>
@@ -205,45 +321,64 @@ export function RetaMatchForm({
       index: i,
     }));
 
-    startTransition(async () => {
-      const res = await createMatch({
-        playedAt: playedAt || formatApiDate(),
-        teamAName: payload[0].name,
-        teamBName: payload[1].name,
-        teamAKey: payload[0].key,
-        teamBKey: payload[1].key,
-        // Con 2 equipos manda el par de siempre; con 3+ el marcador va en `teams`.
-        teams: payload.map(({ key, name, score }) => ({ key, name, score })),
-        scoreA: payload[0].score,
-        scoreB: payload[1].score,
-        balance,
-        durationSec: durationMin.trim() ? num(durationMin) * 60 || null : null,
-        notes,
-        generatedRetaId: retaId ? Number(retaId) : null,
-        // Asistencia completa: quien no anotó queda en 0, con su equipo.
-        scorers: teams.flatMap((team) =>
+    const input = {
+      playedAt: playedAt || formatApiDate(),
+      teamAName: payload[0].name,
+      teamBName: payload[1].name,
+      teamAKey: payload[0].key,
+      teamBKey: payload[1].key,
+      // Con 2 equipos manda el par de siempre; con 3+ el marcador va en `teams`.
+      teams: payload.map(({ key, name, score }) => ({ key, name, score })),
+      scoreA: payload[0].score,
+      scoreB: payload[1].score,
+      balance,
+      durationSec: durationMin.trim() ? num(durationMin) * 60 || null : null,
+      notes,
+      generatedRetaId: retaId ? Number(retaId) : null,
+      // Asistencia completa: quien no anotó queda en 0, con su equipo. Los
+      // sueltos se conservan sin equipo (updateMatch reemplaza la lista).
+      scorers: [
+        ...teams.flatMap((team) =>
           team.players.map((p) => ({
             playerId: p.playerId,
             guestName: p.playerId == null ? p.name : undefined,
-            team: team.key,
+            team: team.key as string,
             goals: num(p.goals),
             assists: num(p.assists),
           })),
         ),
-      });
+        ...loose.map((p) => ({
+          playerId: p.playerId,
+          guestName: p.playerId == null ? p.name : undefined,
+          team: null,
+          goals: num(p.goals),
+          assists: num(p.assists),
+        })),
+      ],
+    };
 
-      if (res.ok) {
-        toast.success("Reta registrada en el historial");
-        setRetaId("");
-        setTeams(blankTeams(DEFAULT_TEAM_COUNT));
-        setPlayedAt("");
-        setDurationMin("");
-        setBalance(50);
-        setNotes("");
+    startTransition(async () => {
+      const res = match
+        ? await updateMatch(match.id, input)
+        : await createMatch(input);
+      if (!res.ok) {
+        toast.error(res.error);
+        return;
+      }
+      if (match) {
+        toast.success("Partido actualizado");
+        router.push(`/matches/${match.id}/detail`);
         router.refresh();
         return;
       }
-      toast.error(res.error);
+      toast.success("Reta registrada en el historial");
+      setRetaId("");
+      setTeams(blankTeams(DEFAULT_TEAM_COUNT));
+      setPlayedAt("");
+      setDurationMin("");
+      setBalance(50);
+      setNotes("");
+      router.refresh();
     });
   }
 
@@ -254,34 +389,41 @@ export function RetaMatchForm({
           <span className="bg-primary/10 text-primary grid size-7 place-items-center rounded-lg">
             <LayersIcon className="size-4" />
           </span>
-          Registrar una reta
+          {isEdit ? "Editar la reta" : "Registrar una reta"}
         </CardTitle>
         <CardDescription>
-          Ármala a mano o parte de una reta generada y ajústala: puedes agregar
-          jugadores que no salieron en la generación, sumar invitados y quitar a
-          quien no llegó.
+          {isEdit
+            ? "Cambia nombres, marcador y plantillas. Puedes agregar equipos, jugadores e invitados, o quitar a quien no jugó."
+            : "Ármala a mano o parte de una reta generada y ajústala: puedes agregar jugadores que no salieron en la generación, sumar invitados y quitar a quien no llegó."}
         </CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
-          <div>
-            <Label className="mb-1.5 block text-xs">
-              Partir de una reta generada (opcional)
-            </Label>
-            <NativeSelect
-              className="w-full"
-              value={retaId}
-              onChange={(e) => pickReta(e.target.value)}
-            >
-              <NativeSelectOption value="">— armar a mano —</NativeSelectOption>
-              {retas.map((r) => (
-                <NativeSelectOption key={r.id} value={String(r.id)}>
-                  {r.dateLabel} · {r.teams.length} equipos · {r.players.length}{" "}
-                  jugadores · {r.teams.map((t) => t.name).join(" / ")}
+          {isEdit ? (
+            <div className="hidden sm:block" />
+          ) : (
+            <div>
+              <Label className="mb-1.5 block text-xs">
+                Partir de una reta generada (opcional)
+              </Label>
+              <NativeSelect
+                className="w-full"
+                value={retaId}
+                onChange={(e) => pickReta(e.target.value)}
+              >
+                <NativeSelectOption value="">
+                  — armar a mano —
                 </NativeSelectOption>
-              ))}
-            </NativeSelect>
-          </div>
+                {retas.map((r) => (
+                  <NativeSelectOption key={r.id} value={String(r.id)}>
+                    {r.dateLabel} · {r.teams.length} equipos ·{" "}
+                    {r.players.length} jugadores ·{" "}
+                    {r.teams.map((t) => t.name).join(" / ")}
+                  </NativeSelectOption>
+                ))}
+              </NativeSelect>
+            </div>
+          )}
           <div>
             <Label className="mb-1.5 block text-xs">Equipos</Label>
             <NativeSelect
@@ -322,6 +464,22 @@ export function RetaMatchForm({
           ))}
         </div>
 
+        {loose.length > 0 && (
+          <LooseCard
+            rows={loose}
+            teams={teams}
+            onAssign={assignLoose}
+            onRemove={(key) =>
+              setLoose((prev) => prev.filter((r) => r.key !== key))
+            }
+            onStat={(key, patch) =>
+              setLoose((prev) =>
+                prev.map((r) => (r.key === key ? { ...r, ...patch } : r)),
+              )
+            }
+          />
+        )}
+
         {/* Detalles opcionales del partido. */}
         <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
           <div>
@@ -359,16 +517,63 @@ export function RetaMatchForm({
           />
         </div>
 
-        <Button
-          type="button"
-          size="lg"
-          className="w-full"
-          disabled={pending}
-          onClick={submit}
-        >
-          <SaveIcon />
-          {pending ? "Guardando…" : "Registrar la reta"}
-        </Button>
+        {admin ? (
+          <div className="flex flex-col gap-2 sm:flex-row-reverse">
+            <Button
+              type="button"
+              size="lg"
+              className="flex-1"
+              disabled={pending}
+              onClick={submit}
+            >
+              <SaveIcon />
+              {pending
+                ? "Guardando…"
+                : isEdit
+                  ? "Guardar cambios"
+                  : "Registrar la reta"}
+            </Button>
+
+            <AlertDialog>
+              <AlertDialogTrigger
+                render={
+                  <Button
+                    type="button"
+                    variant="outline"
+                    size="lg"
+                    className="sm:w-auto"
+                    disabled={pending}
+                  >
+                    <XIcon />
+                    Cancelar
+                  </Button>
+                }
+              />
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>
+                    {isEdit ? "Descartar los cambios" : "Limpiar el formulario"}
+                  </AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {isEdit
+                      ? "Lo que ajustaste aquí no se guardará y volverás al partido tal como está."
+                      : "Se borrará todo lo que llevas capturado de esta reta. No se guarda nada."}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Seguir editando</AlertDialogCancel>
+                  <AlertDialogAction onClick={cancel}>
+                    {isEdit ? "Descartar" : "Limpiar"}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
+        ) : (
+          <p className="text-muted-foreground text-center text-sm">
+            Entra como admin para guardar.
+          </p>
+        )}
       </CardContent>
     </Card>
   );
@@ -539,6 +744,84 @@ function TeamCard({
           </Button>
         </div>
       </div>
+    </div>
+  );
+}
+
+/**
+ * Goleadores de partidos viejos que quedaron sin equipo. Se listan aparte con
+ * un select para mandarlos al equipo que les toca (se llevan sus goles).
+ */
+function LooseCard({
+  rows,
+  teams,
+  onAssign,
+  onRemove,
+  onStat,
+}: {
+  rows: Row[];
+  teams: Team[];
+  onAssign: (key: string, teamKey: TeamKey) => void;
+  onRemove: (key: string) => void;
+  onStat: (key: string, patch: Partial<Row>) => void;
+}) {
+  return (
+    <div className="space-y-3 rounded-xl border border-dashed p-3">
+      <p className="text-sm font-semibold">
+        Sin equipo asignado
+        <span className="text-muted-foreground ml-1 text-xs font-normal">
+          · asígnalos para que cuenten en el marcador
+        </span>
+      </p>
+      {rows.map((p) => (
+        <div
+          key={p.key}
+          className="grid grid-cols-[1fr_auto_3rem_3rem_2rem] items-center gap-2"
+        >
+          <span className="min-w-0 truncate text-sm">{p.name}</span>
+          <NativeSelect
+            value=""
+            className="h-8"
+            aria-label={`Mover a ${p.name} a un equipo`}
+            onChange={(e) => {
+              const key = e.target.value;
+              if (isTeamKey(key)) onAssign(p.key, key);
+            }}
+          >
+            <NativeSelectOption value="">Mover a…</NativeSelectOption>
+            {teams.map((t) => (
+              <NativeSelectOption key={t.key} value={t.key}>
+                {t.name}
+              </NativeSelectOption>
+            ))}
+          </NativeSelect>
+          <Input
+            type="number"
+            min={0}
+            value={p.goals}
+            onChange={(e) => onStat(p.key, { goals: e.target.value })}
+            className="h-8 px-1 text-center"
+            aria-label={`Goles de ${p.name}`}
+          />
+          <Input
+            type="number"
+            min={0}
+            value={p.assists}
+            onChange={(e) => onStat(p.key, { assists: e.target.value })}
+            className="h-8 px-1 text-center"
+            aria-label={`Asistencias de ${p.name}`}
+          />
+          <Button
+            type="button"
+            variant="ghost"
+            size="icon-sm"
+            aria-label={`Quitar a ${p.name}`}
+            onClick={() => onRemove(p.key)}
+          >
+            <XIcon />
+          </Button>
+        </div>
+      ))}
     </div>
   );
 }
