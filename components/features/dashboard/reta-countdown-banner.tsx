@@ -1,6 +1,8 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
+import { computeReta } from "@/lib/functions/compute-reta";
+import { CDMX_TZ, DAY_MS, SHOW_WITHIN_DAYS } from "@/lib/match-dates";
 import {
   CalendarClockIcon,
   RadioIcon,
@@ -10,48 +12,10 @@ import {
 import Link from "next/link";
 import * as React from "react";
 
-// ponytail: la reta cae cada 14 días. Ancla = próximo jueves conocido; edítala
-// a tu fecha real y todo lo demás se deriva sola.
-const RETA_ANCHOR = "2026-07-09"; // jueves
-// La reta arranca 7pm hora CDMX. México no usa horario de verano desde 2022, así
-// que CDMX es UTC-6 fijo — anclamos el instante con ese offset para que el conteo
-// sea correcto sin importar la zona horaria del visitante.
-const CDMX_TZ = "America/Mexico_City";
-const CDMX_OFFSET = "-06:00";
-const KICKOFF_TIME = "19:00:00"; // 7:00 pm CDMX
-const DAY_MS = 86_400_000;
-const SHOW_WITHIN_DAYS = 2; // muestra cuando falten ≤2 días; se oculta pasada la reta
-
 function midnight(date: Date) {
   const d = new Date(date);
   d.setHours(0, 0, 0, 0);
   return d;
-}
-
-/** Fecha de hoy (YYYY-MM-DD) en CDMX, para que el día de la reta sea consistente. */
-function cdmxDateStr(date: Date) {
-  return new Intl.DateTimeFormat("en-CA", { timeZone: CDMX_TZ }).format(date);
-}
-
-function addDaysStr(ymd: string, days: number) {
-  return new Date(Date.parse(`${ymd}T00:00:00Z`) + days * DAY_MS)
-    .toISOString()
-    .slice(0, 10);
-}
-
-/** Días hasta la próxima reta (0 = hoy) y el instante exacto de arranque (7pm CDMX). */
-export function computeReta(now: Date) {
-  const todayStr = cdmxDateStr(now);
-  const elapsedDays = Math.round(
-    (Date.parse(`${todayStr}T00:00:00Z`) -
-      Date.parse(`${RETA_ANCHOR}T00:00:00Z`)) /
-      DAY_MS,
-  );
-  const mod = ((elapsedDays % 14) + 14) % 14;
-  const daysUntil = mod === 0 ? 0 : 14 - mod;
-  const retaDateStr = addDaysStr(todayStr, daysUntil);
-  const kickoff = new Date(`${retaDateStr}T${KICKOFF_TIME}${CDMX_OFFSET}`);
-  return { daysUntil, kickoff };
 }
 
 const dateFmt = new Intl.DateTimeFormat("es-MX", {

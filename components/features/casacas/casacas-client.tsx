@@ -52,7 +52,7 @@ export function CasacasClient({
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
-      <WheelPanel wheel={wheel} />
+      <WheelPanel wheel={wheel} assignments={assignments} />
       <CasacaHistory assignments={assignments} admin={admin} />
       <WinnerDialog winner={wheel.winner} onClose={wheel.dismissWinner} />
     </div>
