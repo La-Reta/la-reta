@@ -9,224 +9,24 @@ import {
   SidebarGroupLabel,
   SidebarHeader,
   SidebarMenu,
-  SidebarMenuBadge,
-  SidebarMenuButton,
-  SidebarMenuItem,
   useSidebar,
 } from "@/components/ui/sidebar";
 import { liveMatchAtom } from "@/lib/state/atoms";
-import { cn } from "@/lib/utils";
 import { atom, useAtomValue } from "jotai";
-import {
-  ChevronRightIcon,
-  CircleDotIcon,
-  FileUserIcon,
-  LayoutDashboardIcon,
-  LifeBuoyIcon,
-  LightbulbIcon,
-  LockIcon,
-  MapIcon,
-  RadioIcon,
-  ScaleIcon,
-  ShieldHalfIcon,
-  ShirtIcon,
-  SparkleIcon,
-  SparklesIcon,
-  TrophyIcon,
-  UserPlusIcon,
-  UsersIcon,
-} from "lucide-react";
+import { CircleDotIcon, SparkleIcon } from "lucide-react";
 import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
-import { Badge } from "../ui/badge";
-import { SidebarTitle } from "./sidebar-title";
-
-type NavItem = {
-  title: string;
-  href: string;
-  icon: React.ComponentType<React.ComponentProps<"svg">>;
-  hint?: string;
-};
-
-type NavSection = {
-  label: string;
-  items: NavItem[];
-};
-
-const NAV_SECTIONS: NavSection[] = [
-  {
-    label: "Partido",
-    items: [
-      {
-        title: "Resumen",
-        href: "/",
-        icon: LayoutDashboardIcon,
-        hint: "Vista general",
-      },
-      {
-        title: "En vivo",
-        href: "/live",
-        icon: RadioIcon,
-        hint: "Marcador activo",
-      },
-      {
-        title: "Partidos",
-        href: "/matches",
-        icon: TrophyIcon,
-        hint: "Historial y resultados",
-      },
-    ],
-  },
-  {
-    label: "Plantilla",
-    items: [
-      {
-        title: "Jugadores",
-        href: "/players",
-        icon: UsersIcon,
-        hint: "Roster completo",
-      },
-      {
-        title: "Nuevo jugador",
-        href: "/players/new",
-        icon: UserPlusIcon,
-        hint: "Alta rápida",
-      },
-      {
-        title: "Posiciones",
-        href: "/positions",
-        icon: MapIcon,
-        hint: "Mapa de cancha",
-      },
-      {
-        title: "Armar equipos",
-        href: "/teams",
-        icon: ShieldHalfIcon,
-        hint: "Balancear reta",
-      },
-      {
-        title: "Casacas",
-        href: "/casacas",
-        icon: ShirtIcon,
-        hint: "Ruleta de lavado",
-      },
-    ],
-  },
-  {
-    label: "Comunidad",
-    items: [
-      {
-        title: "Ideas",
-        href: "/ideas",
-        icon: LightbulbIcon,
-        hint: "Mejoras y propuestas",
-      },
-      {
-        title: "La Reta ___",
-        href: "/palabras",
-        icon: SparklesIcon,
-        hint: "Dinámica social",
-      },
-      {
-        title: "Reportar",
-        href: "/reportes",
-        icon: LifeBuoyIcon,
-        hint: "Ayuda y denuncias",
-      },
-    ],
-  },
-  {
-    label: "Confianza",
-    items: [
-      {
-        title: "Legal",
-        href: "/legal",
-        icon: ScaleIcon,
-        hint: "Privacidad, términos e IA",
-      },
-    ],
-  },
-];
-
-// "Administración" section in the nav: a single entry point for non-admins
-// (the login lives at /admin), expanding to the admin pages once signed in.
-const NON_ADMIN_ITEMS: NavItem[] = [
-  {
-    title: "Admin",
-    href: "/admin",
-    icon: LockIcon,
-    hint: "Acceso de administrador",
-  },
-];
-
-const ADMIN_ITEMS: NavItem[] = [
-  {
-    title: "Panel",
-    href: "/admin",
-    icon: LockIcon,
-    hint: "Tablero de control",
-  },
-  {
-    title: "Reportes",
-    href: "/admin/reportes",
-    icon: LifeBuoyIcon,
-    hint: "Bandeja de reportes",
-  },
-  {
-    title: "Ideas",
-    href: "/admin/ideas",
-    icon: LightbulbIcon,
-    hint: "Bandeja de ideas",
-  },
-  {
-    title: "Registros",
-    href: "/admin/registros",
-    icon: FileUserIcon,
-    hint: "Bandeja de registros",
-  },
-];
+import { Badge } from "../../ui/badge";
+import { SidebarTitle } from "../sidebar-title";
+import { ADMIN_ITEMS } from "./constants/admin-items";
+import { NAV_SECTIONS } from "./constants/nav-sections";
+import { NON_ADMIN_ITEMS } from "./constants/non-admin-items";
+import { SidebarNavItem } from "./sidebar-nav-item";
 
 const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
 const liveMatchActiveAtom = atom((get) => get(liveMatchAtom).active);
-
-const SidebarNavItem = React.memo(function SidebarNavItem({
-  item,
-  active,
-  liveActive,
-  showTooltip,
-}: {
-  item: NavItem;
-  active: boolean;
-  liveActive: boolean;
-  showTooltip: boolean;
-}) {
-  return (
-    <SidebarMenuItem>
-      <SidebarMenuButton
-        isActive={active}
-        tooltip={showTooltip ? item.title : undefined}
-        render={<Link href={item.href} />}
-        className={cn(
-          "h-10 rounded-xl px-3 transition-all group-data-[collapsible=icon]:mx-auto group-data-[collapsible=icon]:size-10 group-data-[collapsible=icon]:rounded-2xl",
-          "data-[active=true]:bg-sidebar-primary/12 data-[active=true]:text-sidebar-foreground data-[active=true]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--sidebar-primary)_28%,transparent)]",
-          "hover:bg-sidebar-accent/80 hover:text-sidebar-foreground",
-        )}
-      >
-        <item.icon className={cn(active && "text-sidebar-primary")} />
-        <span>{item.title}</span>
-        {item.href === "/live" && liveActive ? (
-          <SidebarMenuBadge className="right-2 bg-emerald-500/14 text-emerald-600 group-data-[collapsible=icon]:hidden dark:text-emerald-400">
-            Live
-          </SidebarMenuBadge>
-        ) : active ? (
-          <ChevronRightIcon className="text-sidebar-primary ml-auto size-4 group-data-[collapsible=icon]:hidden" />
-        ) : null}
-      </SidebarMenuButton>
-    </SidebarMenuItem>
-  );
-});
 
 export function AppSidebar({ admin }: { admin: boolean }) {
   const pathname = usePathname();
@@ -344,6 +144,7 @@ export function AppSidebar({ admin }: { admin: boolean }) {
                     active={item.href === activeHref}
                     liveActive={liveActive}
                     showTooltip={showTooltip}
+                    admin={admin}
                   />
                 ))}
               </SidebarMenu>
@@ -366,6 +167,7 @@ export function AppSidebar({ admin }: { admin: boolean }) {
                   active={item.href === activeHref}
                   liveActive={liveActive}
                   showTooltip={showTooltip}
+                  admin={admin}
                 />
               ))}
             </SidebarMenu>

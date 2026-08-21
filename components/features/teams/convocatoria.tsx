@@ -1,7 +1,18 @@
 "use client";
 
 import { Badge } from "@/components/ui/badge";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import {
   GROUP_COLOR,
   GROUP_LABEL,
@@ -12,7 +23,7 @@ import type { Player } from "@/lib/db/schema";
 import { flagEmoji, playerPositions } from "@/lib/format";
 import { isGuest } from "@/lib/guests";
 import { cn } from "@/lib/utils";
-import { CheckIcon, InfoIcon } from "lucide-react";
+import { CheckIcon, ChevronDownIcon, InfoIcon } from "lucide-react";
 import * as React from "react";
 import { SelectedCountItem } from "./selected-count-item";
 
@@ -29,23 +40,41 @@ export function Convocatoria({
   onToggle: (id: number) => void;
   selectedCount: number;
 }) {
+  const [open, setOpen] = React.useState(true);
   const selectedSet = React.useMemo(() => new Set(selected), [selected]);
 
   return (
-    <Card>
-      <CardHeader className="border-b">
+    <Collapsible
+      render={<Card />}
+      open={open}
+      onOpenChange={setOpen}
+      defaultOpen={true}
+      className={"pt-0"}
+    >
+      <CollapsibleTrigger
+        render={<CardHeader />}
+        className="hover:bg-muted border-b pt-[24px]"
+      >
         <CardTitle className="flex items-center justify-between">
-          <span>Convocatoria</span>
+          <span>
+            Convocatoria{" "}
+            <ChevronDownIcon
+              className={cn(
+                "inline-block transition-transform",
+                open && "rotate-180",
+              )}
+            />
+          </span>
           <div className="flex flex-wrap-reverse items-center justify-end gap-2">
-            <Badge variant={"outline"}>
+            <Badge variant={"outline"} className="select-none">
               <InfoIcon />
               Toca para convocar
             </Badge>
             <SelectedCountItem count={selectedCount} />
           </div>
         </CardTitle>
-      </CardHeader>
-      <CardContent className="space-y-5">
+      </CollapsibleTrigger>
+      <CollapsibleContent render={<CardContent />} className="space-y-5">
         {GROUPS.map((g) => {
           const groupPlayers = players.filter(
             (p) => positionGroup(p.position) === g,
@@ -115,7 +144,10 @@ export function Convocatoria({
             </div>
           );
         })}
-      </CardContent>
-    </Card>
+      </CollapsibleContent>
+      {open ? null : (
+        <CardFooter>Despliega para mostrar a todos los jugadores</CardFooter>
+      )}
+    </Collapsible>
   );
 }

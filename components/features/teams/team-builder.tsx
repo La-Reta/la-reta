@@ -12,6 +12,8 @@ import {
 } from "@/components/features/teams/guest-manager";
 import { Matchup } from "@/components/features/teams/matchup";
 import { TeamNameInputs } from "@/components/features/teams/team-name-inputs";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent } from "@/components/ui/card";
 import {
   Empty,
   EmptyDescription,
@@ -41,8 +43,6 @@ import {
   type TeamSplit,
 } from "@/lib/team-balancer";
 import { MAX_TEAMS, TEAM_COLORS, teamName, type TeamKey } from "@/lib/teams";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useAtom, useSetAtom } from "jotai";
 import { ScaleIcon, ShuffleIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
@@ -238,6 +238,34 @@ export function TeamBuilder({
         onRegistro={() => router.push("/teams/registro")}
       />
 
+      <Convocatoria
+        players={allPlayers}
+        selected={selected}
+        onToggle={toggle}
+        selectedCount={selectedPlayers.length}
+      />
+
+      <GuestManager
+        guests={guests}
+        // Con "Reiniciar al editar" encendido, cualquier cambio vuelve a
+        // repartir: elegir equipo aquí no significaría nada, así que no se ofrece.
+        teams={
+          resetOnEdit
+            ? []
+            : (result?.teams.map((t) => ({
+                key: t.key,
+                name: teamName(names, t.key),
+              })) ?? [])
+        }
+        teamOf={(id) =>
+          result?.teams.find((t) => t.lineups.some((l) => l.player.id === id))
+            ?.key ?? null
+        }
+        onAdd={addGuest}
+        onEdit={editGuest}
+        onRemove={removeGuest}
+      />
+
       <TeamNameInputs count={effectiveCount} names={names} onChange={setName} />
 
       {result ? (
@@ -284,34 +312,6 @@ export function TeamBuilder({
           }
         />
       ) : null}
-
-      <GuestManager
-        guests={guests}
-        // Con "Reiniciar al editar" encendido, cualquier cambio vuelve a
-        // repartir: elegir equipo aquí no significaría nada, así que no se ofrece.
-        teams={
-          resetOnEdit
-            ? []
-            : (result?.teams.map((t) => ({
-                key: t.key,
-                name: teamName(names, t.key),
-              })) ?? [])
-        }
-        teamOf={(id) =>
-          result?.teams.find((t) => t.lineups.some((l) => l.player.id === id))
-            ?.key ?? null
-        }
-        onAdd={addGuest}
-        onEdit={editGuest}
-        onRemove={removeGuest}
-      />
-
-      <Convocatoria
-        players={allPlayers}
-        selected={selected}
-        onToggle={toggle}
-        selectedCount={selectedPlayers.length}
-      />
     </div>
   );
 }

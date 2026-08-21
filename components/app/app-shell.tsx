@@ -1,9 +1,8 @@
-import { AppSidebar } from "@/components/app/app-sidebar";
+import { AppSidebar } from "@/components/app/sidebar/app-sidebar";
 import { LegalConsentGate } from "@/components/features/legal/legal-consent-alert";
 import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
 import { isAdmin } from "@/lib/admin";
-
-import { AppSidebarHeader } from "./app-sidebar-header";
+import { AppSidebarHeader } from "./sidebar/app-sidebar-header";
 
 export async function AppShell({ children }: { children: React.ReactNode }) {
   const admin = await isAdmin();

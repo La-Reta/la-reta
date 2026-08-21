@@ -1,11 +1,11 @@
 import { ThemeToggle } from "@/components/app/theme-toggle";
 import { Separator } from "@/components/ui/separator";
 import Link from "next/link";
-import { Button } from "../ui/button";
-import { SidebarTrigger } from "../ui/sidebar";
-import { HeaderAuth } from "./header-auth";
-import { RepositoryButton } from "./repository-button";
-import { SidebarTitle } from "./sidebar-title";
+import { Button } from "../../ui/button";
+import { SidebarTrigger } from "../../ui/sidebar";
+import { HeaderAuth } from "../header-auth";
+import { RepositoryButton } from "../repository-button";
+import { SidebarTitle } from "../sidebar-title";
 
 export function AppSidebarHeader() {
   return (

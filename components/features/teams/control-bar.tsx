@@ -28,6 +28,7 @@ import {
   ShuffleIcon,
   XIcon,
 } from "lucide-react";
+import { useMemo } from "react";
 import { SelectedCountItem } from "./selected-count-item";
 
 export type MatchupView = "board" | "list";
@@ -98,7 +99,7 @@ export function ControlBar({
 
         {/* 2 · Ajustes de la generación · 3 · la acción */}
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
-          <div className="flex flex-wrap items-end gap-4">
+          <div className="flex flex-wrap items-start gap-4">
             <Field label="Convocatoria">
               <Button variant="outline" onClick={onToggleAll}>
                 <ListChecksIcon />
@@ -257,7 +258,7 @@ function TeamCountPicker({
     { length: Math.max(2, Math.min(MAX_TEAMS, max)) - 1 },
     (_, i) => i + 2,
   );
-  if (options.length < 2) return null;
+  const isEmpty = useMemo(() => options.length < 2, [options]);
 
   return (
     <div
@@ -269,6 +270,7 @@ function TeamCountPicker({
         <button
           key={n}
           type="button"
+          disabled={isEmpty}
           onClick={() => onChange(n)}
           aria-pressed={value === n}
           className={cn(
