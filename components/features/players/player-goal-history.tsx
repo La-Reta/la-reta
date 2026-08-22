@@ -1,5 +1,9 @@
-import Link from "next/link";
-import type { ReactNode } from "react";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { formatShortDateOnly } from "@/lib/dates";
+import type { PlayerGoalHistoryItem } from "@/lib/queries";
+import { matchTeams } from "@/lib/teams";
 import {
   CalendarDaysIcon,
   CircleDotIcon,
@@ -7,12 +11,8 @@ import {
   TargetIcon,
   TrophyIcon,
 } from "lucide-react";
-import type { PlayerGoalHistoryItem } from "@/lib/queries";
-import { formatShortDateOnly } from "@/lib/dates";
-import { matchTeams } from "@/lib/teams";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import Link from "next/link";
+import type { ReactNode } from "react";
 
 function plural(value: number, singular: string, pluralText: string) {
   return value === 1 ? singular : pluralText;
@@ -117,47 +117,43 @@ export function PlayerGoalHistory({
               {history.map((item) => (
                 <li
                   key={item.matchId}
-                  className="hover:bg-muted/35 rounded-lg border p-3 transition-colors"
+                  className="hover:bg-muted rounded-lg border p-3 transition-colors"
                 >
-                  <div className="flex flex-wrap items-start justify-between gap-3">
-                    <div className="min-w-0">
-                      <p className="text-sm font-semibold">
-                        {item.teamAName}{" "}
-                        <span className="font-mono tabular-nums">
-                          {item.scoreA}-{item.scoreB}
-                        </span>{" "}
-                        {item.teamBName}
-                      </p>
-                      <p className="text-muted-foreground mt-1 text-xs">
-                        {formatShortDateOnly(item.playedAt)} ·{" "}
-                        {resultLabel(item)}
-                        {playerTeamName(item)
-                          ? ` · ${playerTeamName(item)}`
-                          : ""}
-                        {item.durationSec
-                          ? ` · ${Math.round(item.durationSec / 60)} min`
-                          : ""}
-                      </p>
+                  <Link href={`/matches/${item.matchId}/detail`}>
+                    <div className="flex flex-wrap items-start justify-between gap-3">
+                      <div className="min-w-0">
+                        <p className="text-sm font-semibold">
+                          {item.teamAName}{" "}
+                          <span className="font-mono tabular-nums">
+                            {item.scoreA}-{item.scoreB}
+                          </span>{" "}
+                          {item.teamBName}
+                        </p>
+                        <p className="text-muted-foreground mt-1 text-xs">
+                          {formatShortDateOnly(item.playedAt)} ·{" "}
+                          {resultLabel(item)}
+                          {playerTeamName(item)
+                            ? ` · ${playerTeamName(item)}`
+                            : ""}
+                          {item.durationSec
+                            ? ` · ${Math.round(item.durationSec / 60)} min`
+                            : ""}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <Badge>{goalsLabel(item.goals)}</Badge>
+                        <Button
+                          size="xs"
+                          variant="outline"
+                          render={
+                            <Link href={`/matches/${item.matchId}/detail`} />
+                          }
+                        >
+                          Ver
+                        </Button>
+                      </div>
                     </div>
-                    <div className="flex items-center gap-2">
-                      <Badge>{goalsLabel(item.goals)}</Badge>
-                      <Button
-                        size="xs"
-                        variant="outline"
-                        render={
-                          <Link href={`/matches/${item.matchId}/detail`} />
-                        }
-                      >
-                        Ver
-                      </Button>
-                    </div>
-                  </div>
-                  <div className="bg-muted mt-3 h-1.5 overflow-hidden rounded-full">
-                    <div
-                      className="h-full rounded-full bg-emerald-500"
-                      style={{ width: `${(item.goals / maxGoals) * 100}%` }}
-                    />
-                  </div>
+                  </Link>
                 </li>
               ))}
             </ol>

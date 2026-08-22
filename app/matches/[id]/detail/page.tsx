@@ -216,6 +216,7 @@ function TeamRosterCard({
 }) {
   // Sorted by goals so the numbered rank reflects the scoring order.
   const ranked = [...scorers].sort((a, b) => b.goals - a.goals);
+  const totalGoals = scorers.reduce((sum, s) => sum + s.goals, 0);
 
   return (
     <Card size="sm" className="overflow-hidden">
@@ -228,9 +229,16 @@ function TeamRosterCard({
             />
             <span className="truncate">{title}</span>
           </CardTitle>
-          <Badge variant="secondary" className="shrink-0 tabular-nums">
-            {scorers.length}
-          </Badge>
+          <div className="flex flex-wrap items-center justify-end gap-2">
+            <Badge variant={"default"} className="shrink-0 tabular-nums">
+              {totalGoals > 0
+                ? `${totalGoals} gol${totalGoals === 1 ? "" : "es"}`
+                : "Sin goles"}
+            </Badge>
+            <Badge variant="secondary" className="shrink-0 tabular-nums">
+              {scorers.length} jugador{scorers.length === 1 ? "" : "es"}
+            </Badge>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="pt-3">
