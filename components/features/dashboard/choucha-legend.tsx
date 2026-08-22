@@ -84,7 +84,7 @@ export function ChouchaLegend() {
         <div className="relative shrink-0 bg-black">
           <LegendVideo
             src="/choucha-video.webm"
-            className="mx-auto h-56 w-auto object-contain lg:h-full"
+            className="mx-auto h-56 w-auto max-w-lg object-contain lg:h-full"
           />
         </div>
 
