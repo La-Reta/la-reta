@@ -46,6 +46,7 @@ export function MatchHistoryCard({
                 variant="default"
                 size="sm"
                 render={<Link href={matchDetailUrl} />}
+                className={"hidden md:inline-flex"}
               >
                 <NotebookTabsIcon />
                 Ver detalles

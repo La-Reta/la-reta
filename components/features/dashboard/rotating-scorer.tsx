@@ -112,7 +112,16 @@ export function RotatingScorer({
           transform: visible ? "translateY(0)" : "translateY(4px)",
         }}
         secondAction={
-          <Button variant={"secondary"} render={<Link href={"/matches"} />}>
+          <Button
+            variant={"secondary"}
+            render={
+              <Link
+                href={"/matches#top-scorers-content"}
+                transitionTypes={["slide-in"]}
+              />
+            }
+            className={"flex-wrap wrap-break-word"}
+          >
             Ver todos los goleadores <ArrowRightIcon />{" "}
           </Button>
         }

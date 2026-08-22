@@ -52,12 +52,12 @@ function ScorerRow({
 
 export function TopScorersCard({ scorers }: { scorers: TopScorer[] }) {
   return (
-    <Card className="h-fit" size="sm">
+    <Card className="h-fit" size="sm" id="top-scorers-content">
       <CardContent className="p-0">
         {scorers.length === 0 ? (
-          <p className="text-muted-foreground p-4 text-xs">
+          <h2 className="text-muted-foreground p-4 text-xs">
             Aún sin goles ni asistencias registrados.
-          </p>
+          </h2>
         ) : (
           <>
             {/* Column headers: G = goles, A = asistencias, G+A = total. */}

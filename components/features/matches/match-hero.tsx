@@ -2,11 +2,21 @@
 
 import { setMatchPhoto } from "@/app/actions/matches";
 import { uploadImage } from "@/app/actions/uploads";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { TEAM_COLORS_LIGHT, type MatchTeamRow } from "@/lib/teams";
-import { cn } from "@/lib/utils";
 import { ImagePlusIcon, Trash2Icon, TrophyIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
@@ -157,77 +167,110 @@ export function MatchHero({
     </Badge>
   );
 
-  if (hasPhoto) {
-    return (
-      <Card className="relative isolate min-h-[200px] justify-end overflow-hidden pt-0 text-white sm:min-h-[260px]">
-        {hiddenInput}
-        {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img
-          src={photoUrl!}
-          alt={teams.map((t) => t.name).join(" vs ")}
-          className="absolute inset-0 -z-10 h-full w-full object-cover"
-        />
-        <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
-
-        <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4 sm:p-5">
-          {dateBadge}
-          {admin ? (
-            <div className="flex items-center gap-2">
-              <Button
-                variant="secondary"
-                size="sm"
-                disabled={busy}
-                onClick={() => inputRef.current?.click()}
-              >
-                <ImagePlusIcon />
-                {busy ? "Subiendo…" : "Cambiar"}
-              </Button>
-              <Button
-                variant="destructive"
-                size="icon"
-                disabled={busy}
-                onClick={remove}
-                aria-label="Quitar foto"
-              >
-                <Trash2Icon />
-              </Button>
-            </div>
-          ) : null}
-        </div>
-
-        <CardContent className="space-y-4">
-          <Scoreboard teams={teams} onPhoto />
-          <div className="flex justify-center">
-            <ResultBadge winner={winner} />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  }
-
-  return (
-    <Card>
-      {hiddenInput}
-      <CardContent className="space-y-4">
-        <div className="flex items-center justify-between gap-3">
-          {dateBadge}
-          {admin ? (
+  const heroImageActions = (
+    <>
+      {admin ? (
+        <div className="flex items-center justify-end gap-2">
+          {hasPhoto ? (
             <Button
-              variant="outline"
-              size="sm"
+              variant="secondary"
+              disabled={busy}
+              onClick={() => inputRef.current?.click()}
+            >
+              <ImagePlusIcon />
+              {busy ? "Subiendo…" : "Cambiar"}
+            </Button>
+          ) : (
+            <Button
+              variant="secondary"
               disabled={busy}
               onClick={() => inputRef.current?.click()}
             >
               <ImagePlusIcon />
               {busy ? "Subiendo…" : "Subir foto"}
             </Button>
-          ) : null}
+          )}
+
+          <AlertDialog>
+            <AlertDialogTrigger
+              render={
+                <Button
+                  variant="destructive"
+                  size="icon"
+                  disabled={busy}
+                  aria-label="Quitar foto"
+                />
+              }
+            >
+              <Trash2Icon />
+            </AlertDialogTrigger>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>
+                  Deseas eliminar la fotografia?
+                </AlertDialogTitle>
+                <AlertDialogDescription>
+                  No podrias recuperar la imagen, revisa que la imagen sea la
+                  que realmente quieres eliminar.
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                <AlertDialogAction onClick={remove}>
+                  Confirmar
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </div>
-        <Scoreboard teams={teams} onPhoto={false} />
-        <div className="flex justify-center">
-          <ResultBadge winner={winner} />
-        </div>
-      </CardContent>
-    </Card>
+      ) : null}
+    </>
+  );
+
+  if (hasPhoto) {
+    return (
+      <>
+        <Card className="relative isolate mb-2 min-h-[200px] justify-end overflow-hidden pt-0 text-white sm:min-h-[260px]">
+          {hiddenInput}
+          {/* eslint-disable-next-line @next/next/no-img-element */}
+          <img
+            src={photoUrl!}
+            alt={teams.map((t) => t.name).join(" vs ")}
+            className="absolute inset-0 -z-10 h-full w-full object-cover"
+          />
+          <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
+
+          <div className="absolute inset-x-0 top-0 flex items-start justify-between gap-3 p-4 sm:p-5">
+            {dateBadge}
+          </div>
+
+          <CardContent className="space-y-4">
+            <Scoreboard teams={teams} onPhoto />
+            <div className="flex justify-center">
+              <ResultBadge winner={winner} />
+            </div>
+          </CardContent>
+        </Card>
+        {heroImageActions}
+      </>
+    );
+  }
+
+  return (
+    <>
+      <Card>
+        {hiddenInput}
+        <CardContent className="space-y-4">
+          <div className="flex items-center justify-between gap-3">
+            {dateBadge}
+          </div>
+          <Scoreboard teams={teams} onPhoto={false} />
+          <div className="flex justify-center">
+            <ResultBadge winner={winner} />
+          </div>
+        </CardContent>
+      </Card>
+      {heroImageActions}
+    </>
   );
 }

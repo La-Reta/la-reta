@@ -5,9 +5,16 @@ import {
   MatchMvpVoting,
   type VoteCandidate,
 } from "@/components/features/matches/match-mvp-voting";
-import { MatchesBackButton } from "@/components/features/matches/matches-back-button";
 import { SectionHeading } from "@/components/shared/section-heading";
 import { Badge } from "@/components/ui/badge";
+import {
+  Breadcrumb,
+  BreadcrumbItem,
+  BreadcrumbLink,
+  BreadcrumbList,
+  BreadcrumbPage,
+  BreadcrumbSeparator,
+} from "@/components/ui/breadcrumb";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
@@ -394,7 +401,21 @@ export default async function MatchDetailPage({
   return (
     <div className="mx-auto max-w-5xl space-y-6 lg:container">
       <div className="flex flex-wrap items-center justify-between gap-3">
-        <MatchesBackButton />
+        <Breadcrumb>
+          <BreadcrumbList>
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbLink href="/matches">Partidos</BreadcrumbLink>
+            </BreadcrumbItem>
+            <BreadcrumbSeparator />
+            <BreadcrumbItem>
+              <BreadcrumbPage>Detalle del partido</BreadcrumbPage>
+            </BreadcrumbItem>
+          </BreadcrumbList>
+        </Breadcrumb>
         {admin ? (
           <Button
             variant="default"
@@ -416,9 +437,9 @@ export default async function MatchDetailPage({
       />
 
       {match.notes ? (
-        <p className="text-muted-foreground text-center text-sm">
+        <h2 className="text-muted-foreground text-center text-sm font-semibold uppercase transition hover:text-black">
           {match.notes}
-        </p>
+        </h2>
       ) : null}
 
       <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">

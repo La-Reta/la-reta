@@ -553,14 +553,8 @@ export function RetaMatchForm({
         </div>
 
         {admin ? (
-          <div className="flex flex-col gap-2 sm:flex-row-reverse">
-            <Button
-              type="button"
-              size="lg"
-              className="flex-1"
-              disabled={pending}
-              onClick={submit}
-            >
+          <div className="flex flex-col gap-2 sm:flex-row-reverse xl:justify-between">
+            <Button type="button" size="lg" disabled={pending} onClick={submit}>
               <SaveIcon />
               {pending
                 ? "Guardando…"
@@ -574,9 +568,8 @@ export function RetaMatchForm({
                 render={
                   <Button
                     type="button"
-                    variant="outline"
+                    variant="secondary"
                     size="lg"
-                    className="sm:w-auto"
                     disabled={pending}
                   >
                     <XIcon />
