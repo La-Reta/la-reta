@@ -21,6 +21,11 @@ import {
   CardHeader,
   CardTitle,
 } from "@/components/ui/card";
+import {
+  Collapsible,
+  CollapsibleContent,
+  CollapsibleTrigger,
+} from "@/components/ui/collapsible";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
@@ -39,7 +44,14 @@ import {
   teamKeys,
   type TeamKey,
 } from "@/lib/teams";
-import { LayersIcon, PlusIcon, SaveIcon, XIcon } from "lucide-react";
+import { cn } from "@/lib/utils";
+import {
+  ChevronDownIcon,
+  LayersIcon,
+  PlusIcon,
+  SaveIcon,
+  XIcon,
+} from "lucide-react";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -168,6 +180,7 @@ export function RetaMatchForm({
   const [teams, setTeams] = React.useState<Team[]>(() =>
     match ? teamsFromMatch(match) : blankTeams(DEFAULT_TEAM_COUNT),
   );
+  const [open, setOpen] = React.useState(isEdit);
   // Partidos viejos pueden traer goleadores sin equipo: se muestran aparte para
   // moverlos a uno, en vez de perderlos.
   const [loose, setLoose] = React.useState<Row[]>(() =>
@@ -383,21 +396,43 @@ export function RetaMatchForm({
   }
 
   return (
-    <Card>
-      <CardHeader className="border-b">
+    <Collapsible
+      render={<Card />}
+      className={cn(!isEdit && "p-0")}
+      open={open}
+      onOpenChange={setOpen}
+      defaultOpen={isEdit}
+      disabled={isEdit}
+    >
+      <CollapsibleTrigger
+        render={<CardHeader />}
+        className={cn(
+          !isEdit &&
+            "hover:bg-muted cursor-pointer border-b pt-6 transition-colors select-none",
+        )}
+      >
         <CardTitle className="flex items-center gap-2 text-base">
-          <span className="bg-primary/10 text-primary grid size-7 place-items-center rounded-lg">
+          <span className="bg-primary/10 text-primary grid size-7 place-items-center rounded-lg transition">
             <LayersIcon className="size-4" />
           </span>
-          {isEdit ? "Editar la reta" : "Registrar una reta"}
+          {isEdit ? (
+            "Editar la reta"
+          ) : (
+            <span className="inline-flex items-center justify-start gap-1">
+              Registrar una reta{" "}
+              <ChevronDownIcon
+                className={cn("transition", open && "rotate-180")}
+              />
+            </span>
+          )}
         </CardTitle>
         <CardDescription>
           {isEdit
             ? "Cambia nombres, marcador y plantillas. Puedes agregar equipos, jugadores e invitados, o quitar a quien no jugó."
             : "Ármala a mano o parte de una reta generada y ajústala: puedes agregar jugadores que no salieron en la generación, sumar invitados y quitar a quien no llegó."}
         </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-4">
+      </CollapsibleTrigger>
+      <CollapsibleContent render={<CardContent />} className="space-y-4 pb-6">
         <div className="grid gap-4 sm:grid-cols-[1fr_auto_auto]">
           {isEdit ? (
             <div className="hidden sm:block" />
@@ -574,8 +609,8 @@ export function RetaMatchForm({
             Entra como admin para guardar.
           </p>
         )}
-      </CardContent>
-    </Card>
+      </CollapsibleContent>
+    </Collapsible>
   );
 }
 
