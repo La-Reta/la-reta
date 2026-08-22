@@ -1,9 +1,12 @@
 "use client";
 
-import * as React from "react";
 import { Spotlight } from "@/components/app/spotlight";
+import { Button } from "@/components/ui/button";
 import type { Player } from "@/lib/db/schema";
 import { cn } from "@/lib/utils";
+import { ArrowRightIcon } from "lucide-react";
+import Link from "next/link";
+import * as React from "react";
 
 export type ScorerEntry = { player: Player; goals: number; matches: number };
 
@@ -108,6 +111,11 @@ export function RotatingScorer({
           opacity: visible ? 1 : 0,
           transform: visible ? "translateY(0)" : "translateY(4px)",
         }}
+        secondAction={
+          <Button variant={"secondary"} render={<Link href={"/matches"} />}>
+            Ver todos los goleadores <ArrowRightIcon />{" "}
+          </Button>
+        }
       />
     </div>
   );

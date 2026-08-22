@@ -26,6 +26,7 @@ export function Spotlight({
   footer,
   contentClassName,
   contentStyle,
+  secondAction,
 }: {
   title: string;
   subtitle: string;
@@ -38,6 +39,7 @@ export function Spotlight({
   /** Extra classes/style on the body, so a parent can animate only the content. */
   contentClassName?: string;
   contentStyle?: React.CSSProperties;
+  secondAction?: React.ReactNode;
 }) {
   return (
     <Card className={cn(footer && "pb-0")} size="sm">
@@ -89,14 +91,17 @@ export function Spotlight({
           {note ? (
             <p className="text-muted-foreground text-[11px]">{note}</p>
           ) : null}
-          <Button
-            variant="default"
-            className="mt-3"
-            render={<Link href={`/players/${player.id}`} />}
-          >
-            Ver ficha
-            <ArrowRightIcon />
-          </Button>
+          <div className="flex flex-wrap items-center justify-start gap-2">
+            <Button
+              variant="default"
+              className="mt-3"
+              render={<Link href={`/players/${player.id}`} />}
+            >
+              Ver ficha
+              <ArrowRightIcon />
+            </Button>
+            {secondAction ?? null}
+          </div>
         </div>
       </CardContent>
       {footer ? (
