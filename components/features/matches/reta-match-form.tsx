@@ -1,6 +1,7 @@
 "use client";
 
 import { createMatch, updateMatch } from "@/app/actions/matches";
+import type { RetaToMatchItem } from "@/components/features/teams/registro/reta-to-match-list";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -12,7 +13,6 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog";
-import type { RetaToMatchItem } from "@/components/features/teams/registro/reta-to-match-list";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -180,7 +180,7 @@ export function RetaMatchForm({
   const [durationMin, setDurationMin] = React.useState(
     match?.durationSec != null
       ? String(Math.round(match.durationSec / 60))
-      : "",
+      : "60",
   );
   const [balance, setBalance] = React.useState(match?.balance ?? 50);
   const [notes, setNotes] = React.useState(match?.notes ?? "");
