@@ -2,9 +2,12 @@ import { IdeaForm } from "@/components/features/ideas/idea-form";
 import { IdeasView } from "@/components/features/ideas/ideas-view";
 import { PageHeader } from "@/components/shared/page-header";
 import { SectionHeading } from "@/components/shared/section-heading";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
+import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { isAdmin } from "@/lib/admin";
 import { getIdeas } from "@/lib/queries";
+import { LightbulbIcon } from "lucide-react";
 import { Metadata } from "next";
 import type { ReactNode } from "react";
 
@@ -24,12 +27,21 @@ export default async function IdeasPage() {
 
   return (
     <div className="mx-auto max-w-5xl min-w-0 space-y-6 xl:container">
-      <PageHeader
-        title="Ideas de la reta"
-        description="¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la revisa y le asigna prioridad."
-      />
-
-      <IdeaForm />
+      <Dialog>
+        <PageHeader
+          title="Ideas de la reta"
+          description="¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la revisa y le asigna prioridad."
+          actions={
+            <DialogTrigger
+              render={<Button type="button" variant={"default"} />}
+            >
+              <LightbulbIcon />
+              Crear nueva idea
+            </DialogTrigger>
+          }
+        />
+        <IdeaForm />
+      </Dialog>
 
       {ideas.length === 0 ? (
         <EmptyNote>

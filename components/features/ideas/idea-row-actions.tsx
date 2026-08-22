@@ -35,7 +35,7 @@ export function IdeaRowActions({ id, status }: { id: number; status: string }) {
       <DropdownMenuTrigger
         render={
           <Button
-            variant="ghost"
+            variant="secondary"
             size="icon"
             aria-label="Acciones"
             disabled={pending}
