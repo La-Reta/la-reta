@@ -14,15 +14,14 @@ import {
 import { liveMatchAtom } from "@/lib/state/atoms";
 import { atom, useAtomValue } from "jotai";
 import { CircleDotIcon, SparkleIcon } from "lucide-react";
-import Image from "next/image";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import * as React from "react";
 import { Badge } from "../../ui/badge";
-import { SidebarTitle } from "../sidebar-title";
 import { ADMIN_ITEMS } from "./constants/admin-items";
 import { NAV_SECTIONS } from "./constants/nav-sections";
 import { NON_ADMIN_ITEMS } from "./constants/non-admin-items";
+import { SidebarLogo } from "./sidebar-logo";
 import { SidebarNavItem } from "./sidebar-nav-item";
 
 const ALL_NAV_ITEMS = NAV_SECTIONS.flatMap((section) => section.items);
@@ -61,35 +60,7 @@ export function AppSidebar({ admin }: { admin: boolean }) {
   return (
     <Sidebar variant="floating" collapsible="icon">
       <SidebarHeader className="gap-3 group-data-[collapsible=icon]:items-center group-data-[collapsible=icon]:px-1 group-data-[collapsible=icon]:pt-3">
-        <Link
-          href="/"
-          aria-label="Ir al resumen"
-          className="border-sidebar-border/70 bg-sidebar/80 hover:bg-sidebar-accent/50 group-data-[collapsible=icon]:border-sidebar-border/60 block rounded-xl border p-3 shadow-sm transition-colors group-data-[collapsible=icon]:bg-transparent group-data-[collapsible=icon]:p-0 group-data-[collapsible=icon]:shadow-none"
-        >
-          <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-            <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-white shadow-sm ring-1 ring-black/8 group-data-[collapsible=icon]:h-11 group-data-[collapsible=icon]:w-11 group-data-[collapsible=icon]:rounded-xl">
-              <Image
-                src="/fifa-wc.webp"
-                alt="Reta Credix · FIFA 26"
-                width={1536}
-                height={1024}
-                priority
-                className="h-7 w-auto"
-              />
-            </div>
-            <div className="min-w-0 group-data-[collapsible=icon]:hidden">
-              <div className="flex items-center gap-2">
-                <SidebarTitle />
-                <span className="bg-sidebar-accent text-sidebar-accent-foreground rounded-full px-2 py-0.5 text-[10px] font-semibold">
-                  FIFA 26
-                </span>
-              </div>
-              <p className="text-sidebar-foreground/65 mt-1 text-[11px]">
-                Navegación principal de la reta
-              </p>
-            </div>
-          </div>
-        </Link>
+        <SidebarLogo />
 
         <div className="border-sidebar-border/70 bg-sidebar-accent/45 rounded-xl border p-3 group-data-[collapsible=icon]:hidden">
           <div className="flex items-center justify-between gap-3">
