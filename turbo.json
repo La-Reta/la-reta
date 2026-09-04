@@ -1,11 +1,31 @@
 {
   "$schema": "https://turborepo.dev/schema.json",
   "ui": "tui",
+  "globalDependencies": [".env"],
+  "globalEnv": ["NODE_ENV"],
   "tasks": {
     "build": {
       "dependsOn": ["^build"],
       "inputs": ["$TURBO_DEFAULT$", ".env*"],
-      "outputs": [".next/**", "!.next/cache/**", "!.next/dev/**"]
+      "outputs": [
+        ".next/**",
+        "!.next/cache/**",
+        "!.next/dev/**",
+        "dist/**",
+        ".expo/**"
+      ],
+      "env": [
+        "ADMIN_PIN",
+        "BLOB_READ_WRITE_TOKEN",
+        "BLOB_STORE_ID",
+        "CLERK_SECRET_KEY",
+        "DATABASE_URL",
+        "LIVE_PIN",
+        "NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY",
+        "NEXT_PUBLIC_CLOUDFLARE_WEB_ANALYTICS_TOKEN",
+        "NEXT_PUBLIC_SITE_URL",
+        "EXPO_PUBLIC_*"
+      ]
     },
     "lint": {
       "dependsOn": ["^lint"]
