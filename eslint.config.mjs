@@ -8,7 +8,17 @@ export default [
   // Ultracite no tiene preset de React Native, y su core carga
   // eslint-plugin-compat / -n / -html, que asumen navegador o Node y
   // producirían falsos positivos sobre código RN.
-  { ignores: ["apps/la-reta-app/**", "**/*.json", "**/*.jsonc"] },
+  {
+    ignores: [
+      "apps/la-reta-app/**",
+      // Skills vendorizadas (upstream de Clerk, Neon y Vercel): no son
+      // código nuestro y no las cubre ningún tsconfig.
+      ".agents/**",
+      ".claude/skills/**",
+      "**/*.json",
+      "**/*.jsonc",
+    ],
+  },
 
   ...core,
   ...react,
