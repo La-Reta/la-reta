@@ -1,0 +1,1 @@
+export const LEGAL_CONSENT_VERSION = "2026-06-28";

@@ -1,0 +1,12 @@
+{
+  "schedule": "weekly",
+  "ignoredFiles": [
+    "public/next.svg",
+    "public/vercel.svg",
+    "public/globe.svg",
+    "public/file.svg",
+    "public/window.svg"
+  ],
+  "aggressiveCompression": "false",
+  "minKBReduced": 10
+}

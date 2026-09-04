@@ -1,0 +1,354 @@
+"use server";
+
+import { eq, inArray } from "drizzle-orm";
+import { revalidatePath } from "next/cache";
+import { auth, currentUser } from "@clerk/nextjs/server";
+import { db, players, playerStatHistory, playerSignups } from "@/lib/db";
+import { isAdmin } from "@/lib/admin";
+import { computeOverall } from "@/lib/ratings";
+import { ageFromBirthDate } from "@/lib/dates";
+import {
+  POSITIONS,
+  FEET,
+  STAT_KEYS,
+  type Position,
+  type Foot,
+} from "@/lib/constants";
+
+/** Extracts the attribute snapshot (6 stats + overall) from normalized values. */
+function snapshotOf(values: ReturnType<typeof normalize>) {
+  return {
+    pace: values.pace,
+    shooting: values.shooting,
+    passing: values.passing,
+    dribbling: values.dribbling,
+    defending: values.defending,
+    physical: values.physical,
+    overall: values.overall,
+  };
+}
+
+export type PlayerInput = {
+  name: string;
+  displayName: string;
+  position: string;
+  position2: string;
+  preferredFoot: string;
+  nationality: string;
+  photoUrl: string;
+  birthDate: string;
+  age: number;
+  heightCm: number;
+  weightKg: number;
+  pace: number;
+  shooting: number;
+  passing: number;
+  dribbling: number;
+  defending: number;
+  physical: number;
+};
+
+type ActionResult = { ok: true; id: number } | { ok: false; error: string };
+
+function clamp(value: unknown, min: number, max: number, fallback: number) {
+  const n = Math.round(Number(value));
+  if (Number.isNaN(n)) return fallback;
+  return Math.max(min, Math.min(max, n));
+}
+
+function normalize(input: PlayerInput) {
+  const name = input.name?.trim();
+  const displayName = (input.displayName?.trim() || name || "").toUpperCase();
+
+  if (!name) throw new Error("El nombre es obligatorio.");
+  if (!POSITIONS.includes(input.position as Position))
+    throw new Error("Posición inválida.");
+  if (!FEET.includes(input.preferredFoot as Foot))
+    throw new Error("Pie inválido.");
+
+  // Secondary position is optional; ignore it if empty or equal to the primary.
+  const rawPos2 = input.position2?.trim();
+  const position2 =
+    rawPos2 &&
+    rawPos2 !== input.position &&
+    POSITIONS.includes(rawPos2 as Position)
+      ? (rawPos2 as Position)
+      : null;
+
+  const stats = {
+    pace: clamp(input.pace, 1, 99, 50),
+    shooting: clamp(input.shooting, 1, 99, 50),
+    passing: clamp(input.passing, 1, 99, 50),
+    dribbling: clamp(input.dribbling, 1, 99, 50),
+    defending: clamp(input.defending, 1, 99, 50),
+    physical: clamp(input.physical, 1, 99, 50),
+  };
+
+  const position = input.position as Position;
+
+  // birthDate (YYYY-MM-DD) is the source of truth when present; age is derived
+  // from it. Fall back to the raw age input for entries without a birth date.
+  const birthDate = input.birthDate?.trim() || null;
+  const derivedAge = ageFromBirthDate(birthDate);
+
+  return {
+    name,
+    displayName: displayName.slice(0, 60),
+    position,
+    position2,
+    preferredFoot: input.preferredFoot as Foot,
+    nationality: (input.nationality?.trim().toLowerCase() || "mx").slice(0, 2),
+    photoUrl: input.photoUrl?.trim() || null,
+    birthDate,
+    age: clamp(
+      Number.isFinite(derivedAge) ? derivedAge : input.age,
+      14,
+      60,
+      25,
+    ),
+    heightCm: clamp(input.heightCm, 140, 220, 175),
+    weightKg: clamp(input.weightKg, 40, 130, 75),
+    ...stats,
+    overall: computeOverall(position, stats),
+    updatedAt: new Date(),
+  };
+}
+
+/** Display name for the signed-in Clerk user, or null. */
+function clerkDisplayName(
+  user: Awaited<ReturnType<typeof currentUser>>,
+): string | null {
+  if (!user) return null;
+  const full = [user.firstName, user.lastName].filter(Boolean).join(" ");
+  const email = user.primaryEmailAddress?.emailAddress?.split("@")[0];
+  return (user.username || full || email || null)?.slice(0, 60) ?? null;
+}
+
+export async function createPlayer(
+  input: PlayerInput,
+  signupId?: number,
+): Promise<ActionResult> {
+  try {
+    // Alta permitida a admins (cookie PIN) o a cualquier usuario con sesión Clerk.
+    const { userId } = await auth();
+    if (!userId && !(await isAdmin()))
+      return {
+        ok: false,
+        error: "Inicia sesión o entra como admin para crear un jugador.",
+      };
+
+    const values = normalize(input);
+    const creator = userId ? await currentUser() : null;
+    const [row] = await db
+      .insert(players)
+      .values({
+        ...values,
+        createdById: userId ?? null,
+        createdByName: clerkDisplayName(creator),
+      })
+      .returning({ id: players.id });
+    // Record the initial snapshot so the history starts from day one.
+    await db
+      .insert(playerStatHistory)
+      .values({ playerId: row.id, ...snapshotOf(values) });
+    // Si el alta vino de una solicitud, márcala como registrada para sacarla
+    // del pendiente/aprobado en /admin/registros.
+    if (signupId && Number.isFinite(signupId)) {
+      await db
+        .update(playerSignups)
+        .set({ status: "registrado", updatedAt: new Date() })
+        .where(eq(playerSignups.id, signupId));
+      revalidatePath("/admin/registros");
+    }
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath("/teams");
+    return { ok: true, id: row.id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+export async function updatePlayer(
+  id: number,
+  input: PlayerInput,
+): Promise<ActionResult> {
+  try {
+    // Edición completa (incluye atributos) — solo admin.
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    const values = normalize(input);
+    const [existing] = await db
+      .select()
+      .from(players)
+      .where(eq(players.id, id))
+      .limit(1);
+
+    await db.update(players).set(values).where(eq(players.id, id));
+
+    // Append a snapshot only when an attribute actually changed.
+    const statsChanged =
+      !existing ||
+      STAT_KEYS.some((k) => existing[k] !== values[k]) ||
+      existing.overall !== values.overall;
+    if (statsChanged) {
+      await db
+        .insert(playerStatHistory)
+        .values({ playerId: id, ...snapshotOf(values) });
+    }
+
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    revalidatePath("/teams");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/**
+ * Info-only edit for the profile owner (or admin). Never touches the 6 stats:
+ * they're read from the existing row, so `overall` recomputes from the possibly
+ * new position but the attributes stay put. Authorized by ownership OR admin.
+ */
+export async function updatePlayerInfo(
+  id: number,
+  input: PlayerInput,
+): Promise<ActionResult> {
+  try {
+    const { userId } = await auth();
+    const [existing] = await db
+      .select()
+      .from(players)
+      .where(eq(players.id, id))
+      .limit(1);
+    if (!existing) return { ok: false, error: "Jugador no encontrado." };
+
+    const owner = Boolean(userId) && existing.clerkUserId === userId;
+    if (!owner && !(await isAdmin()))
+      return { ok: false, error: "No autorizado." };
+
+    // Ignora los stats del cliente: usa los existentes (el dueño no los edita).
+    const values = normalize({
+      ...input,
+      pace: existing.pace,
+      shooting: existing.shooting,
+      passing: existing.passing,
+      dribbling: existing.dribbling,
+      defending: existing.defending,
+      physical: existing.physical,
+    });
+
+    // Whitelist explícita de campos de info (atributos quedan intactos).
+    await db
+      .update(players)
+      .set({
+        name: values.name,
+        displayName: values.displayName,
+        position: values.position,
+        position2: values.position2,
+        preferredFoot: values.preferredFoot,
+        nationality: values.nationality,
+        photoUrl: values.photoUrl,
+        birthDate: values.birthDate,
+        age: values.age,
+        heightCm: values.heightCm,
+        weightKg: values.weightKg,
+        overall: values.overall,
+        updatedAt: values.updatedAt,
+      })
+      .where(eq(players.id, id));
+
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    revalidatePath("/teams");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/**
+ * Self-claim an unclaimed player profile to the signed-in Clerk account. One
+ * account ↔ one player (also enforced by a partial unique index). Admin unlinks.
+ */
+export async function claimPlayer(id: number): Promise<ActionResult> {
+  try {
+    const { userId } = await auth();
+    if (!userId)
+      return { ok: false, error: "Inicia sesión para reclamar tu perfil." };
+
+    const [player] = await db
+      .select({ id: players.id, clerkUserId: players.clerkUserId })
+      .from(players)
+      .where(eq(players.id, id))
+      .limit(1);
+    if (!player) return { ok: false, error: "Jugador no encontrado." };
+    if (player.clerkUserId === userId) return { ok: true, id };
+    if (player.clerkUserId)
+      return { ok: false, error: "Este perfil ya está vinculado a otra cuenta." };
+
+    const [mine] = await db
+      .select({ id: players.id })
+      .from(players)
+      .where(eq(players.clerkUserId, userId))
+      .limit(1);
+    if (mine)
+      return { ok: false, error: "Tu cuenta ya está vinculada a otro jugador." };
+
+    await db.update(players).set({ clerkUserId: userId }).where(eq(players.id, id));
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+/** Unlink a player from its account. Admin only. */
+export async function unlinkPlayer(id: number): Promise<ActionResult> {
+  try {
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    await db
+      .update(players)
+      .set({ clerkUserId: null })
+      .where(eq(players.id, id));
+    revalidatePath("/players");
+    revalidatePath(`/players/${id}`);
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+export async function deletePlayer(id: number): Promise<ActionResult> {
+  try {
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    await db.delete(players).where(eq(players.id, id));
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath("/teams");
+    return { ok: true, id };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
+
+export async function deletePlayers(
+  ids: number[],
+): Promise<{ ok: true; count: number } | { ok: false; error: string }> {
+  try {
+    if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+    if (ids.length === 0) return { ok: true, count: 0 };
+    await db.delete(players).where(inArray(players.id, ids));
+    revalidatePath("/");
+    revalidatePath("/players");
+    revalidatePath("/teams");
+    revalidatePath("/positions");
+    revalidatePath("/matches");
+    return { ok: true, count: ids.length };
+  } catch (err) {
+    return { ok: false, error: (err as Error).message };
+  }
+}
