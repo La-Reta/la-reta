@@ -4,6 +4,7 @@ import {
   RetaToMatchList,
   type RetaToMatchItem,
 } from "@/components/features/teams/registro/reta-to-match-list";
+import { BackButton } from "@/components/shared/back-button";
 import { PageHeader } from "@/components/shared/page-header";
 import { Button } from "@/components/ui/button";
 import {
@@ -16,50 +17,49 @@ import {
 import { formatApiDate, formatCompactDate, formatTime } from "@/lib/dates";
 import { getGeneratedRetas, retaTeams } from "@/lib/queries";
 import { computeRetaStats, type RetaStats } from "@/lib/reta-stats";
-import { cn } from "@/lib/utils";
 import type { TeamKey } from "@/lib/teams";
+import { cn } from "@/lib/utils";
 import {
-  ArrowLeftIcon,
+  ActivityIcon,
   CalendarRangeIcon,
   CopyIcon,
   HandshakeIcon,
   LayersIcon,
-  ActivityIcon,
-  UsersIcon,
   RepeatIcon,
   ScaleIcon,
   ShuffleIcon,
   TrophyIcon,
+  UsersIcon,
 } from "lucide-react";
 import { Metadata } from "next";
 import Link from "next/link";
 
 /** Small tinted icon chip that fronts every section title, for a shared rhythm. */
-function CardIcon({
+const CardIcon = ({
   children,
   tone = "primary",
 }: {
-  children: React.ReactNode;
-  tone?: "primary" | "amber";
-}) {
+  readonly children: React.ReactNode;
+  readonly tone?: "primary" | "amber";
+}) => {
   return (
     <span
       className={cn(
         "grid size-7 shrink-0 place-items-center rounded-lg [&_svg]:size-4",
         tone === "amber"
           ? "bg-amber-500/15 text-amber-600 dark:text-amber-400"
-          : "bg-primary/10 text-primary",
+          : "bg-primary/10 text-primary"
       )}
     >
       {children}
     </span>
   );
-}
+};
 
 export const metadata: Metadata = { title: "Registro de retas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function RetaRegistroPage() {
+const RetaRegistroPage = async () => {
   const retas = await getGeneratedRetas();
   const stats = computeRetaStats(retas);
 
@@ -84,10 +84,11 @@ export default async function RetaRegistroPage() {
         title="Registro de retas"
         description="Cómo se han armado los equipos: repetición de splits, duplas frecuentes y quién juega más. Alimenta la variedad del generador."
         actions={
-          <Button variant="outline" render={<Link href="/teams" />}>
-            <ArrowLeftIcon />
-            Armar equipos
-          </Button>
+          // <Button variant="outline" render={<Link href="/teams" />}>
+          //   <ArrowLeftIcon />
+          //   Armar equipos
+          // </Button>
+          <BackButton />
         }
       />
 
@@ -174,9 +175,11 @@ export default async function RetaRegistroPage() {
       )}
     </div>
   );
-}
+};
 
-function StatTile({
+export default RetaRegistroPage;
+
+const StatTile = ({
   label,
   value,
   sub,
@@ -184,14 +187,14 @@ function StatTile({
   accent,
   meter,
 }: {
-  label: string;
-  value: string | number;
-  sub?: string;
-  icon?: React.ReactNode;
-  accent?: boolean;
+  readonly label: string;
+  readonly value: string | number;
+  readonly sub?: string;
+  readonly icon?: React.ReactNode;
+  readonly accent?: boolean;
   /** 0–100. Draws a slim health bar under the value (e.g. repetition rate). */
-  meter?: number;
-}) {
+  readonly meter?: number;
+}) => {
   return (
     <Card size="sm">
       <CardContent>
@@ -202,7 +205,7 @@ function StatTile({
         <p
           className={cn(
             "font-display mt-2 text-4xl leading-none font-bold tabular-nums",
-            accent && "text-amber-600 dark:text-amber-400",
+            accent && "text-amber-600 dark:text-amber-400"
           )}
         >
           {value}
@@ -212,21 +215,21 @@ function StatTile({
             <div
               className={cn(
                 "h-full rounded-full",
-                accent ? "bg-amber-500" : "bg-primary",
+                accent ? "bg-amber-500" : "bg-primary"
               )}
               style={{ width: `${Math.min(100, Math.max(0, meter))}%` }}
             />
           </div>
         ) : null}
         {sub ? (
-          <p className="text-muted-foreground mt-1.5 text-[11px]">{sub}</p>
+          <p className="text-muted-foreground mt-1.5 text-xs">{sub}</p>
         ) : null}
       </CardContent>
     </Card>
   );
-}
+};
 
-function TopPairs({ stats }: { stats: RetaStats }) {
+const TopPairs = ({ stats }: { readonly stats: RetaStats }) => {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
@@ -267,9 +270,9 @@ function TopPairs({ stats }: { stats: RetaStats }) {
       </CardContent>
     </Card>
   );
-}
+};
 
-function TopPlayers({ stats }: { stats: RetaStats }) {
+const TopPlayers = ({ stats }: { readonly stats: RetaStats }) => {
   const max = stats.topPlayers[0]?.count ?? 1;
   return (
     <Card size="sm">
@@ -301,7 +304,7 @@ function TopPlayers({ stats }: { stats: RetaStats }) {
                 <div
                   className={cn(
                     "h-full rounded-full",
-                    i === 0 ? "bg-primary" : "bg-primary/50",
+                    i === 0 ? "bg-primary" : "bg-primary/50"
                   )}
                   style={{ width: `${Math.round((p.count / max) * 100)}%` }}
                 />
@@ -312,9 +315,9 @@ function TopPlayers({ stats }: { stats: RetaStats }) {
       </CardContent>
     </Card>
   );
-}
+};
 
-function RepeatedMatchups({ stats }: { stats: RetaStats }) {
+const RepeatedMatchups = ({ stats }: { readonly stats: RetaStats }) => {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
@@ -339,7 +342,10 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
             </span>
             <div className="flex min-w-0 flex-1 flex-wrap items-center gap-x-2 gap-y-1 text-xs">
               {m.sides.map((side, i) => (
-                <span key={i} className="flex min-w-0 items-center gap-2">
+                <span
+                  key={side.join(",")}
+                  className="flex min-w-0 items-center gap-2"
+                >
                   {i > 0 && (
                     <span className="text-muted-foreground font-display font-bold">
                       VS
@@ -354,13 +360,13 @@ function RepeatedMatchups({ stats }: { stats: RetaStats }) {
       </CardContent>
     </Card>
   );
-}
+};
 
 /**
  * Cuántas retas se armaron con 2, 3, 4 … equipos. Son dos o tres categorías, así
  * que una barra etiquetada lee mejor (y cuesta menos) que un gráfico completo.
  */
-function FormatBreakdown({ stats }: { stats: RetaStats }) {
+const FormatBreakdown = ({ stats }: { readonly stats: RetaStats }) => {
   if (stats.byFormat.length < 2) return null;
   const max = Math.max(...stats.byFormat.map((f) => f.count));
   return (
@@ -396,9 +402,9 @@ function FormatBreakdown({ stats }: { stats: RetaStats }) {
       </CardContent>
     </Card>
   );
-}
+};
 
-function EmptyState() {
+const EmptyState = () => {
   return (
     <div className="flex flex-col items-center gap-4 rounded-xl border border-dashed py-20 text-center">
       <span className="bg-primary/10 text-primary grid size-14 place-items-center rounded-2xl">
@@ -418,4 +424,4 @@ function EmptyState() {
       </Button>
     </div>
   );
-}
+};

@@ -1,11 +1,11 @@
 import { DeleteMatchButton } from "@/components/features/matches/delete-match-button";
-import { Button, buttonVariants } from "@/components/ui/button";
+import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { formatShortDateOnly } from "@/lib/dates";
 import type { MatchWithScorers } from "@/lib/queries";
 import { matchTeams, TEAM_COLORS } from "@/lib/teams";
 import { cn } from "@/lib/utils";
-import { NotebookTabsIcon, PencilIcon } from "lucide-react";
+import { PencilIcon } from "lucide-react";
 import Link from "next/link";
 
 /** Color del relleno del <progress>, por pseudo-elemento de cada motor. */
@@ -57,7 +57,7 @@ export const MatchHistoryCard = ({
             {/* Afordancia visual, no un enlace: toda la tarjeta ya lleva al
                 detalle, así que duplicarlo solo añadiría una parada de teclado
                 de más al mismo destino. */}
-            <span
+            {/* <span
               aria-hidden="true"
               className={cn(
                 buttonVariants({ variant: "default", size: "sm" }),
@@ -66,7 +66,7 @@ export const MatchHistoryCard = ({
             >
               <NotebookTabsIcon />
               Ver detalles
-            </span>
+            </span> */}
             {admin ? (
               <>
                 <Button

@@ -1,3 +1,4 @@
+import { PageTransition } from "@/components/app/page-transition";
 import { MatchHistoryList } from "@/components/features/matches/match-history-list";
 import { MatchesChart } from "@/components/features/matches/matches-chart";
 import { RetaMatchForm } from "@/components/features/matches/reta-match-form";
@@ -16,7 +17,6 @@ import {
 } from "@/lib/queries";
 import type { TeamKey } from "@/lib/teams";
 import { Metadata } from "next";
-import { PageTransition } from "@/components/app/page-transition";
 
 export const metadata: Metadata = { title: "Partidos · Reta Fútbol" };
 export const dynamic = "force-dynamic";

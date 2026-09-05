@@ -1,3 +1,4 @@
+import { PageTransition } from "@/components/app/page-transition";
 import { DeletePlayerButton } from "@/components/features/players/delete-player-button";
 import {
   CommentsCount,
@@ -11,6 +12,7 @@ import {
   UnlinkProfileButton,
 } from "@/components/features/players/profile-ownership";
 import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
+import { BackButton } from "@/components/shared/back-button";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Pitch } from "@/components/shared/pitch";
 import { Badge } from "@/components/ui/badge";
@@ -36,10 +38,9 @@ import {
 } from "@/lib/queries";
 import { cardTier, TIER_LABEL } from "@/lib/ratings";
 import { auth } from "@clerk/nextjs/server";
-import { ArrowLeftIcon, PencilIcon, UserPenIcon } from "lucide-react";
+import { PencilIcon, UserPenIcon } from "lucide-react";
 import Link from "next/link";
 import { notFound } from "next/navigation";
-import { PageTransition } from "@/components/app/page-transition";
 
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
@@ -104,14 +105,7 @@ const PlayerDetailPage = async ({
           {/* El botón de regresar vive dentro de la columna pegajosa, así que se
             queda a la vista junto con la carta mientras se hace scroll. */}
           <div className="mx-auto w-full max-w-[260px] space-y-3 md:sticky md:top-16 2xl:max-w-[300px]">
-            <Button
-              variant="secondary"
-              className="w-full"
-              render={<Link href="/players" transitionTypes={["nav-back"]} />}
-            >
-              <ArrowLeftIcon />
-              Jugadores
-            </Button>
+            <BackButton />
             <FifaCard player={player} className="card-shine" />
           </div>
 
