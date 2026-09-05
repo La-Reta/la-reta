@@ -1,5 +1,5 @@
 import { ClerkProvider } from "@clerk/nextjs";
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono, Raleway, Oswald, Inter } from "next/font/google";
 import "./globals.css";
 import { cn } from "@/lib/utils";
@@ -38,8 +38,14 @@ const siteUrl =
     ? `https://${process.env.VERCEL_URL}`
     : "http://localhost:3000");
 
+// URL.canParse: si NEXT_PUBLIC_SITE_URL viene mal escrita, `new URL` tira
+// TypeError y revienta el render de todo el layout.
+const metadataBase = URL.canParse(siteUrl)
+  ? new URL(siteUrl)
+  : new URL("http://localhost:3000");
+
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  metadataBase,
   title: {
     default: "Reta Fútbol · Manager estilo FIFA para tu reta",
     template: "%s",
@@ -93,11 +99,29 @@ export const metadata: Metadata = {
   appleWebApp: { capable: true, title: "Reta Fútbol" },
 };
 
-export default function RootLayout({
+/**
+ * `colorScheme: "dark light"` le dice al navegador que pinte scrollbars,
+ * `<select>` nativos y autofill acordes al tema — sin esto se ven en claro
+ * sobre el fondo oscuro. `themeColor` pinta la barra del navegador en móvil
+ * con el mismo fondo de la app. Zoom queda habilitado a propósito (nada de
+ * `userScalable: false`) y `viewportFit: "cover"` deja usar los safe areas.
+ */
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  viewportFit: "cover",
+  colorScheme: "dark light",
+  themeColor: [
+    { media: "(prefers-color-scheme: dark)", color: "#09090b" },
+    { media: "(prefers-color-scheme: light)", color: "#ffffff" },
+  ],
+};
+
+const RootLayout = ({
   children,
 }: Readonly<{
   children: React.ReactNode;
-}>) {
+}>) => {
   return (
     <html
       lang="es"
@@ -109,7 +133,7 @@ export default function RootLayout({
         geistMono.variable,
         "font-sans",
         inter.variable,
-        oswald.variable,
+        oswald.variable
       )}
     >
       <body className="min-h-full">
@@ -142,4 +166,6 @@ export default function RootLayout({
       </body>
     </html>
   );
-}
+};
+
+export default RootLayout;

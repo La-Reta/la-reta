@@ -1,9 +1,10 @@
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
+import { buttonVariants } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatShortDateOnly } from "@/lib/dates";
 import type { PlayerGoalHistoryItem } from "@/lib/queries";
 import { matchTeams } from "@/lib/teams";
+import { cn } from "@/lib/utils";
 import {
   CalendarDaysIcon,
   CircleDotIcon,
@@ -34,16 +35,16 @@ function playerTeamName(item: PlayerGoalHistoryItem) {
   return matchTeams(item).find((t) => t.key === item.team)?.name ?? null;
 }
 
-export function PlayerGoalHistory({
+export const PlayerGoalHistory = ({
   history,
 }: {
-  history: PlayerGoalHistoryItem[];
-}) {
+  readonly history: PlayerGoalHistoryItem[];
+}) => {
   const totalGoals = history.reduce((sum, item) => sum + item.goals, 0);
   const scoringMatches = history.length;
   const bestMatch = history.reduce<PlayerGoalHistoryItem | null>(
     (best, item) => (!best || item.goals > best.goals ? item : best),
-    null,
+    null
   );
   const latest = history[0] ?? null;
   const maxGoals = Math.max(1, ...history.map((item) => item.goals));
@@ -95,7 +96,7 @@ export function PlayerGoalHistory({
 
             {latest ? (
               <div className="bg-muted/30 rounded-lg border p-3">
-                <p className="text-muted-foreground text-[10px] font-semibold uppercase">
+                <p className="text-muted-foreground text-xs font-semibold uppercase">
                   Último registro
                 </p>
                 <div className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1 text-sm">
@@ -115,44 +116,55 @@ export function PlayerGoalHistory({
 
             <ol className="space-y-2">
               {history.map((item) => (
+                // Patrón "stretched link": el <li> entero es clicable con un
+                // solo enlace estirado. Antes envolvía al botón "Ver" en otro
+                // <a>, lo que es HTML inválido y rompía la hidratación.
                 <li
                   key={item.matchId}
-                  className="hover:bg-muted rounded-lg border p-3 transition-colors"
+                  className="hover:bg-muted focus-within:ring-ring relative rounded-lg border p-3 transition-colors focus-within:ring-2"
                 >
-                  <Link href={`/matches/${item.matchId}/detail`}>
-                    <div className="flex flex-wrap items-start justify-between gap-3">
-                      <div className="min-w-0">
-                        <p className="text-sm font-semibold">
-                          {item.teamAName}{" "}
-                          <span className="font-mono tabular-nums">
-                            {item.scoreA}-{item.scoreB}
-                          </span>{" "}
-                          {item.teamBName}
-                        </p>
-                        <p className="text-muted-foreground mt-1 text-xs">
-                          {formatShortDateOnly(item.playedAt)} ·{" "}
-                          {resultLabel(item)}
-                          {playerTeamName(item)
-                            ? ` · ${playerTeamName(item)}`
-                            : ""}
-                          {item.durationSec
-                            ? ` · ${Math.round(item.durationSec / 60)} min`
-                            : ""}
-                        </p>
-                      </div>
-                      <div className="flex items-center gap-2">
-                        <Badge>{goalsLabel(item.goals)}</Badge>
-                        <Button
-                          size="xs"
-                          variant="outline"
-                          render={
-                            <Link href={`/matches/${item.matchId}/detail`} />
-                          }
-                        >
-                          Ver
-                        </Button>
-                      </div>
+                  <div className="flex flex-wrap items-start justify-between gap-3">
+                    <div className="min-w-0">
+                      <p className="text-sm font-semibold">
+                        {item.teamAName}{" "}
+                        <span className="font-mono tabular-nums">
+                          {item.scoreA}-{item.scoreB}
+                        </span>{" "}
+                        {item.teamBName}
+                      </p>
+                      <p className="text-muted-foreground mt-1 text-xs">
+                        {formatShortDateOnly(item.playedAt)} ·{" "}
+                        {resultLabel(item)}
+                        {playerTeamName(item)
+                          ? ` · ${playerTeamName(item)}`
+                          : ""}
+                        {item.durationSec
+                          ? ` · ${Math.round(item.durationSec / 60)} min`
+                          : ""}
+                      </p>
                     </div>
+                    <div className="flex items-center gap-2">
+                      <Badge>{goalsLabel(item.goals)}</Badge>
+                      {/* Afordancia visual: el enlace real cubre todo el <li>. */}
+                      <span
+                        aria-hidden="true"
+                        className={cn(
+                          buttonVariants({ size: "xs", variant: "outline" }),
+                          "pointer-events-none"
+                        )}
+                      >
+                        Ver
+                      </span>
+                    </div>
+                  </div>
+                  <Link
+                    href={`/matches/${item.matchId}/detail`}
+                    transitionTypes={["nav-forward"]}
+                    className="absolute inset-0 rounded-lg focus-visible:outline-none"
+                  >
+                    <span className="sr-only">
+                      Ver el partido del {formatShortDateOnly(item.playedAt)}
+                    </span>
                   </Link>
                 </li>
               ))}
@@ -162,24 +174,24 @@ export function PlayerGoalHistory({
       </CardContent>
     </Card>
   );
-}
+};
 
-function GoalStat({
+const GoalStat = ({
   icon,
   label,
   value,
 }: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-}) {
+  readonly icon: ReactNode;
+  readonly label: string;
+  readonly value: string;
+}) => {
   return (
     <div className="bg-muted/30 rounded-lg border p-3">
-      <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
+      <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold uppercase">
         <span className="[&_svg]:size-3.5">{icon}</span>
         {label}
       </div>
       <p className="mt-2 font-mono text-2xl font-black tabular-nums">{value}</p>
     </div>
   );
-}
+};

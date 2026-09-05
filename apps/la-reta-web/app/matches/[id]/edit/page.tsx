@@ -13,15 +13,16 @@ import { getMatchById, getPlayers } from "@/lib/queries";
 import { matchTeams } from "@/lib/teams";
 import { Metadata } from "next";
 import { notFound, redirect } from "next/navigation";
+import Link from "next/link";
 
 export const metadata: Metadata = { title: "Editar partido · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function EditMatchPage({
+const EditMatchPage = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
-}) {
+  readonly params: Promise<{ id: string }>;
+}) => {
   const { id } = await params;
   if (!(await isAdmin())) {
     redirect(`/matches/${id}/detail`);
@@ -43,15 +44,26 @@ export default async function EditMatchPage({
       <Breadcrumb>
         <BreadcrumbList>
           <BreadcrumbItem>
-            <BreadcrumbLink href="/">Home</BreadcrumbLink>
+            <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href="/matches">Partidos</BreadcrumbLink>
+            <BreadcrumbLink
+              render={<Link href="/matches" transitionTypes={["nav-back"]} />}
+            >
+              Partidos
+            </BreadcrumbLink>
           </BreadcrumbItem>
           <BreadcrumbSeparator />
           <BreadcrumbItem>
-            <BreadcrumbLink href={`/matches/${match.id}/detail`}>
+            <BreadcrumbLink
+              render={
+                <Link
+                  href={`/matches/${match.id}/detail`}
+                  transitionTypes={["nav-back"]}
+                />
+              }
+            >
               Detalle partido
             </BreadcrumbLink>
           </BreadcrumbItem>
@@ -87,4 +99,6 @@ export default async function EditMatchPage({
       />
     </div>
   );
-}
+};
+
+export default EditMatchPage;

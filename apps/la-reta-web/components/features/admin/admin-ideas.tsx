@@ -1,6 +1,7 @@
 "use client";
 
 import { deleteIdea, updateIdeaTriage } from "@/app/actions/ideas";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -35,16 +36,16 @@ import { toast } from "sonner";
  * de un vistazo qué falta y qué ya se hizo, y al cambiar el estado de una idea
  * se ve saltar de grupo — sin filtros que recordar ni nada que se esconda.
  */
-export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
+export const AdminIdeas = ({ ideas }: { readonly ideas: Idea[] }) => {
   const [selectedId, setSelectedId] = React.useState<number | null>(
-    ideas[0]?.id ?? null,
+    ideas[0]?.id ?? null
   );
 
   const selected = ideas.find((i) => i.id === selectedId) ?? null;
-  const groups = IDEA_STATUSES.map((status) => ({
-    status,
-    items: ideas.filter((i) => i.status === status),
-  })).filter((g) => g.items.length > 0);
+  const groups = IDEA_STATUSES.flatMap((status) => {
+    const items = ideas.filter((i) => i.status === status);
+    return items.length > 0 ? [{ status, items }] : [];
+  });
 
   if (ideas.length === 0) {
     return <EmptyNote>Todavía no hay ideas que revisar.</EmptyNote>;
@@ -56,12 +57,12 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
       <div className="bg-card ring-foreground/10 min-w-0 overflow-hidden rounded-xl ring-1 lg:sticky lg:top-16 lg:max-h-[calc(100svh-6rem)] lg:overflow-y-auto">
         {groups.map((group) => (
           <section key={group.status}>
-            <h3 className="bg-card/95 text-muted-foreground sticky top-0 z-10 flex items-center gap-2 border-b px-3 py-1.5 text-[10px] font-semibold tracking-wide uppercase backdrop-blur">
+            <h3 className="bg-card/95 text-muted-foreground sticky top-0 z-10 flex items-center gap-2 border-b px-3 py-1.5 text-xs font-semibold tracking-wide uppercase backdrop-blur">
               <span
                 aria-hidden="true"
                 className={cn(
                   "size-1.5 shrink-0 rounded-full",
-                  IDEA_STATUS_DOT[group.status],
+                  IDEA_STATUS_DOT[group.status]
                 )}
               />
               {IDEA_STATUS_LABEL[group.status]}
@@ -79,7 +80,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
                     "flex w-full min-w-0 flex-col gap-1 border-l-2 px-3 py-2.5 text-left transition-colors",
                     idea.id === selectedId
                       ? "bg-muted border-l-primary"
-                      : "hover:bg-muted/50 border-l-transparent",
+                      : "hover:bg-muted/50 border-l-transparent"
                   )}
                 >
                   <span
@@ -87,20 +88,20 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
                       "line-clamp-1 text-sm font-medium",
                       // Lo terminado se atenúa para que el trabajo vivo resalte.
                       IDEA_STATUS_DONE[idea.status] && "text-muted-foreground",
-                      idea.status === "descartada" && "line-through",
+                      idea.status === "descartada" && "line-through"
                     )}
                   >
                     {idea.title}
                   </span>
                   <span className="flex min-w-0 flex-wrap items-center gap-2">
-                    <span className="text-muted-foreground text-[10px]">
+                    <span className="text-muted-foreground text-xs">
                       {formatCompactDate(idea.createdAt)}
                     </span>
                     {idea.priority ? (
                       <span
                         className={cn(
-                          "rounded-sm px-1.5 py-0.5 text-[10px] font-medium",
-                          IDEA_PRIORITY_CLASS[idea.priority],
+                          "rounded-sm px-1.5 py-0.5 text-xs font-medium",
+                          IDEA_PRIORITY_CLASS[idea.priority]
                         )}
                       >
                         {IDEA_PRIORITY_LABEL[idea.priority]}
@@ -126,7 +127,7 @@ export function AdminIdeas({ ideas }: { ideas: Idea[] }) {
       )}
     </div>
   );
-}
+};
 
 function ideaDraft(idea: Idea) {
   return {
@@ -137,15 +138,19 @@ function ideaDraft(idea: Idea) {
   };
 }
 
-function IdeaEditor({
+const IdeaEditor = ({
   idea,
   onDeleted,
 }: {
-  idea: Idea;
-  onDeleted: () => void;
-}) {
+  readonly idea: Idea;
+  readonly onDeleted: () => void;
+}) => {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  const statusId = React.useId();
+  const priorityId = React.useId();
+  const estimateId = React.useId();
+  const notesId = React.useId();
   const [draft, setDraft] = React.useState(() => ideaDraft(idea));
 
   function save() {
@@ -156,7 +161,7 @@ function IdeaEditor({
         toast.success(
           draft.status === idea.status
             ? "Idea actualizada"
-            : `Idea movida a ${IDEA_STATUS_LABEL[draft.status]}`,
+            : `Idea movida a ${IDEA_STATUS_LABEL[draft.status]}`
         );
         router.refresh();
       } else {
@@ -166,7 +171,6 @@ function IdeaEditor({
   }
 
   function remove() {
-    if (!confirm(`¿Eliminar la idea "${idea.title}"?`)) return;
     startTransition(async () => {
       const res = await deleteIdea(idea.id);
       if (res.ok) {
@@ -186,15 +190,15 @@ function IdeaEditor({
           {/* El estado actual se ve sin tener que buscar el select de abajo. */}
           <span
             className={cn(
-              "mb-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-[11px] font-semibold",
-              IDEA_STATUS_CLASS[idea.status],
+              "mb-2 inline-flex items-center gap-1.5 rounded-full px-2 py-0.5 text-xs font-semibold",
+              IDEA_STATUS_CLASS[idea.status]
             )}
           >
             <span
               aria-hidden="true"
               className={cn(
                 "size-1.5 rounded-full",
-                IDEA_STATUS_DOT[idea.status],
+                IDEA_STATUS_DOT[idea.status]
               )}
             />
             {IDEA_STATUS_LABEL[idea.status]}
@@ -210,7 +214,7 @@ function IdeaEditor({
         </div>
 
         <div className="bg-muted/30 min-w-0 rounded-lg border p-3">
-          <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
+          <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold uppercase">
             <MonitorSmartphoneIcon className="size-3.5" />
             Cliente
           </div>
@@ -221,7 +225,7 @@ function IdeaEditor({
             <ClientInfo label="Plataforma" value={idea.platform} />
           </div>
           {idea.userAgent ? (
-            <p className="text-muted-foreground mt-2 line-clamp-3 text-[11px] break-all">
+            <p className="text-muted-foreground mt-2 line-clamp-3 text-xs break-all">
               {idea.userAgent}
             </p>
           ) : null}
@@ -229,10 +233,13 @@ function IdeaEditor({
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div>
-            <Label className="mb-1.5 block text-xs">Estado</Label>
+            <Label htmlFor={statusId} className="mb-1.5 block text-xs">
+              Estado
+            </Label>
             <NativeSelect
               className="w-full"
               value={draft.status}
+              id={statusId}
               onChange={(e) =>
                 setDraft((d) => ({
                   ...d,
@@ -248,10 +255,13 @@ function IdeaEditor({
             </NativeSelect>
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs">Prioridad</Label>
+            <Label htmlFor={priorityId} className="mb-1.5 block text-xs">
+              Prioridad
+            </Label>
             <NativeSelect
               className="w-full"
               value={draft.priority}
+              id={priorityId}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, priority: e.target.value }))
               }
@@ -265,9 +275,12 @@ function IdeaEditor({
             </NativeSelect>
           </div>
           <div className="sm:col-span-2">
-            <Label className="mb-1.5 block text-xs">Tiempo estimado</Label>
+            <Label htmlFor={estimateId} className="mb-1.5 block text-xs">
+              Tiempo estimado
+            </Label>
             <Input
               value={draft.estimate}
+              id={estimateId}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, estimate: e.target.value }))
               }
@@ -275,9 +288,12 @@ function IdeaEditor({
             />
           </div>
           <div className="sm:col-span-2">
-            <Label className="mb-1.5 block text-xs">Notas internas</Label>
+            <Label htmlFor={notesId} className="mb-1.5 block text-xs">
+              Notas internas
+            </Label>
             <Textarea
               value={draft.adminNotes}
+              id={notesId}
               onChange={(e) =>
                 setDraft((d) => ({ ...d, adminNotes: e.target.value }))
               }
@@ -292,17 +308,25 @@ function IdeaEditor({
             <SaveIcon />
             {pending ? "Guardando…" : "Guardar"}
           </Button>
-          <Button variant="destructive" onClick={remove} disabled={pending}>
-            <Trash2Icon />
-            Eliminar
-          </Button>
+          <ConfirmDialog
+            pending={pending}
+            onConfirm={remove}
+            title="¿Eliminar esta idea?"
+            description={`“${idea.title}” se borra del tablero de ideas. No se puede deshacer.`}
+            trigger={
+              <Button variant="destructive" disabled={pending}>
+                <Trash2Icon />
+                Eliminar
+              </Button>
+            }
+          />
         </div>
       </CardContent>
     </Card>
   );
-}
+};
 
-function EmptyNote({ children }: { children: React.ReactNode }) {
+const EmptyNote = ({ children }: { readonly children: React.ReactNode }) => {
   return (
     <Card size="sm">
       <CardContent className="py-6 text-center">
@@ -310,13 +334,19 @@ function EmptyNote({ children }: { children: React.ReactNode }) {
       </CardContent>
     </Card>
   );
-}
+};
 
-function ClientInfo({ label, value }: { label: string; value: string | null }) {
+const ClientInfo = ({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string | null;
+}) => {
   return (
     <div className="min-w-0">
-      <p className="text-muted-foreground text-[10px] uppercase">{label}</p>
+      <p className="text-muted-foreground text-xs uppercase">{label}</p>
       <p className="font-medium break-words">{value ?? "—"}</p>
     </div>
   );
-}
+};

@@ -23,8 +23,8 @@ const STAGE_LABEL: Record<Stage, string> = {
 };
 
 type Props = {
-  onUploadComplete?: (url: string) => void;
-  maxSizeMB?: number;
+  readonly onUploadComplete?: (url: string) => void;
+  readonly maxSizeMB?: number;
 };
 
 // Helpers puros
@@ -55,7 +55,7 @@ async function assertRealImage(file: File): Promise<void> {
 async function compressToWebp(
   file: File,
   maxSizeMB: number,
-  onProgress: (percent: number) => void,
+  onProgress: (percent: number) => void
 ): Promise<File> {
   return imageCompression(file, {
     maxSizeMB,
@@ -67,10 +67,10 @@ async function compressToWebp(
 }
 
 // Componente
-export function ImageUploader({
+export const ImageUploader = ({
   onUploadComplete,
   maxSizeMB = DEFAULT_MAX_SIZE_MB,
-}: Props) {
+}: Props) => {
   const { isSignedIn } = useAuth();
   const inputRef = React.useRef<HTMLInputElement>(null);
   const previewUrlRef = React.useRef<string | null>(null);
@@ -79,7 +79,7 @@ export function ImageUploader({
   const [progress, setProgress] = React.useState(0);
   const [originalSize, setOriginalSize] = React.useState<number | null>(null);
   const [compressedSize, setCompressedSize] = React.useState<number | null>(
-    null,
+    null
   );
   const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
   const [resultUrl, setResultUrl] = React.useState<string | null>(null);
@@ -89,8 +89,13 @@ export function ImageUploader({
     stage === "reading" || stage === "compressing" || stage === "uploading";
 
   // Revoca el object URL previo (evita fugas de memoria) y guarda el nuevo.
+  // El linter no ve el revoke porque va por ref; sí se libera aquí y al
+  // desmontar. El useCallback se queda: React Compiler no está activado en
+  // este proyecto, así que quitarlo sí recrearía la función en cada render.
+  // eslint-disable-next-line react-doctor/react-compiler-no-manual-memoization
   const setPreview = React.useCallback((blob: Blob | null) => {
     if (previewUrlRef.current) URL.revokeObjectURL(previewUrlRef.current);
+    // eslint-disable-next-line react-doctor/no-create-object-url-without-revoke -- se revoca en la línea de arriba y al desmontar, vía previewUrlRef
     const next = blob ? URL.createObjectURL(blob) : null;
     previewUrlRef.current = next;
     setPreviewUrl(next);
@@ -125,6 +130,7 @@ export function ImageUploader({
       return;
     }
 
+    // eslint-disable-next-line react-hooks/todo -- el compilador de React todavía no soporta try/finally; el código es correcto
     try {
       // 2) Lectura + validación real de imagen.
       setStage("reading");
@@ -176,6 +182,7 @@ export function ImageUploader({
         <input
           ref={inputRef}
           id="image-uploader"
+          aria-label="Subir imagen"
           type="file"
           accept={ACCEPTED_TYPES.join(",")}
           onChange={onChange}
@@ -203,31 +210,23 @@ export function ImageUploader({
       {/* Barra de progreso por etapas (solo etapas locales/subida, sin % de red inventado) */}
       {busy || stage === "done" ? (
         <div className="space-y-1">
-          <div
-            className="h-2 w-full overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800"
-            role="progressbar"
-            aria-valuenow={progress}
-            aria-valuemin={0}
-            aria-valuemax={100}
+          <progress
+            value={progress}
+            max={100}
             aria-label={STAGE_LABEL[stage]}
-          >
-            <div
-              className="h-full rounded-full bg-blue-600 transition-[width] duration-200"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+            className="h-2 w-full appearance-none overflow-hidden rounded-full bg-neutral-200 dark:bg-neutral-800 [&::-moz-progress-bar]:rounded-full [&::-moz-progress-bar]:bg-blue-600 [&::-webkit-progress-bar]:rounded-full [&::-webkit-progress-bar]:bg-neutral-200 dark:[&::-webkit-progress-bar]:bg-neutral-800 [&::-webkit-progress-value]:rounded-full [&::-webkit-progress-value]:bg-blue-600"
+          />
         </div>
       ) : null}
 
       {/* Estado accesible (aria-live) */}
-      <p
+      <output
         id="image-uploader-status"
-        role="status"
         aria-live="polite"
         className={`text-sm ${error ? "text-red-600" : "text-neutral-600 dark:text-neutral-300"}`}
       >
         {statusText}
-      </p>
+      </output>
 
       {/* Métricas de tamaño */}
       {originalSize != null ? (
@@ -272,7 +271,7 @@ export function ImageUploader({
           <a
             href={resultUrl}
             target="_blank"
-            rel="noreferrer"
+            rel="noopener noreferrer"
             className="block break-all text-blue-600 underline"
           >
             {resultUrl}
@@ -281,16 +280,22 @@ export function ImageUploader({
       ) : null}
     </div>
   );
-}
+};
 
-function Metric({ label, value }: { label: string; value: string }) {
+const Metric = ({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string;
+}) => {
   return (
     <div className="rounded-md border border-neutral-200 p-2 dark:border-neutral-800">
       <dt className="text-neutral-500">{label}</dt>
       <dd className="font-semibold tabular-nums">{value}</dd>
     </div>
   );
-}
+};
 
 function errorMessage(err: unknown): string {
   if (err instanceof Error) return err.message;

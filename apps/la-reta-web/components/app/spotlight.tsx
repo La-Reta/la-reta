@@ -16,7 +16,7 @@ import {
   CardTitle,
 } from "../ui/card";
 
-export function Spotlight({
+export const Spotlight = ({
   title,
   subtitle,
   player,
@@ -27,22 +27,25 @@ export function Spotlight({
   contentClassName,
   contentStyle,
   secondAction,
+  highlight = false,
 }: {
-  title: string;
-  subtitle: string;
-  player: Player;
-  statValue: number;
-  statLabel: string;
-  note?: string;
+  readonly title: string;
+  readonly subtitle: string;
+  readonly player: Player;
+  readonly statValue: number;
+  readonly statLabel: string;
+  readonly note?: string;
   /** Optional footer (e.g. rotation dots) rendered as a bordered CardFooter. */
-  footer?: React.ReactNode;
+  readonly footer?: React.ReactNode;
   /** Extra classes/style on the body, so a parent can animate only the content. */
-  contentClassName?: string;
-  contentStyle?: React.CSSProperties;
-  secondAction?: React.ReactNode;
-}) {
+  readonly contentClassName?: string;
+  readonly contentStyle?: React.CSSProperties;
+  readonly secondAction?: React.ReactNode;
+  /** Aro giratorio alrededor de la tarjeta. Solo para "El crack". */
+  readonly highlight?: boolean;
+}) => {
   return (
-    <Card className={cn(footer && "pb-0")} size="sm">
+    <Card className={cn(footer && "pb-0", highlight && "crack-ring")} size="sm">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           {title}
@@ -59,7 +62,7 @@ export function Spotlight({
           href={`/players/${player.id}`}
           className="w-28 shrink-0 transition-transform hover:-translate-y-1"
         >
-          <FifaCard player={player} size="sm" />
+          <FifaCard player={player} size="sm" className="card-shine" />
         </Link>
         <div className="min-w-0">
           <p className="font-display text-2xl leading-none font-bold uppercase">
@@ -70,7 +73,7 @@ export function Spotlight({
           </p>
           <div className="mt-1 flex items-center gap-2">
             <span
-              className="inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-bold text-white"
+              className="inline-flex rounded-sm px-1.5 py-0.5 text-xs font-bold text-white"
               style={{
                 backgroundColor: GROUP_COLOR[positionGroup(player.position)],
               }}
@@ -89,7 +92,7 @@ export function Spotlight({
             </span>
           </p>
           {note ? (
-            <p className="text-muted-foreground text-[11px]">{note}</p>
+            <p className="text-muted-foreground text-xs">{note}</p>
           ) : null}
           <div className="flex flex-wrap items-center justify-start gap-2">
             <Button
@@ -105,6 +108,10 @@ export function Spotlight({
         </div>
       </CardContent>
       {footer ? (
+        // <fieldset> pediría un <legend> y trae estilos propios; para un grupo
+        // de botones de rotación (no un formulario) role="group" es el patrón
+        // correcto de ARIA.
+        // eslint-disable-next-line jsx-a11y/prefer-tag-over-role
         <CardFooter
           className="justify-center overflow-hidden border-t px-3 pt-2! pb-3!"
           role="group"
@@ -115,4 +122,4 @@ export function Spotlight({
       ) : null}
     </Card>
   );
-}
+};

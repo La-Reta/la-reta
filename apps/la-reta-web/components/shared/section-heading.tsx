@@ -13,24 +13,27 @@ const TONE_BAR = {
  * opcional y un tono de barra (primary por defecto). Reemplaza los `h2`
  * repetidos con `span` de acento en varias vistas.
  */
-export function SectionHeading({
+export const SectionHeading = ({
   title,
   count,
   tone = "primary",
 }: {
-  title: ReactNode;
-  count?: number;
-  tone?: keyof typeof TONE_BAR;
-}) {
+  readonly title: ReactNode;
+  readonly count?: number;
+  readonly tone?: keyof typeof TONE_BAR;
+}) => {
   return (
-    <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold uppercase">
-      <span className={cn("h-4 w-1 rounded-full", TONE_BAR[tone])} />
-      {title}
+    <h2 className="text-muted-foreground flex items-center gap-2 text-sm font-semibold tracking-wide uppercase">
+      <span
+        aria-hidden="true"
+        className={cn("h-4 w-1 shrink-0 rounded-full", TONE_BAR[tone])}
+      />
+      <span className="min-w-0 truncate">{title}</span>
       {count !== undefined ? (
-        <span className="text-muted-foreground/70 font-normal normal-case">
+        <span className="text-muted-foreground/70 font-normal normal-case tabular-nums">
           · {count}
         </span>
       ) : null}
     </h2>
   );
-}
+};

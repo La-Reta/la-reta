@@ -59,10 +59,26 @@ FIFA-style dashboard for organizing pickup football ("la reta"). **Next 16 App R
 
 - Display font is **Oswald** via `next/font` (`--font-oswald`). Tailwind v4 did NOT generate `font-display` from the `@theme` token — it's hand-defined in `app/globals.css` (`@layer utilities`). Use `font-display`.
 - `components/ui/button.tsx` is modified: when `render` is passed (e.g. `<Button render={<Link/>}>`) it sets `nativeButton={false}` to avoid a Base UI warning. Keep this if regenerating.
+- `components/ui/collapsible.tsx` is modified, igual que `button.tsx`: `CollapsibleTrigger` deriva `nativeButton` de si le pasas `render` (p. ej. `render={<CardHeader/>}`), porque si no Base UI avisa en consola y el `<div>` resultante se queda sin role/tabIndex/teclado. Keep this if regenerating.
 - `components/ui/alert.tsx` is modified: `AlertAction` fluye debajo del texto en vez de flotar en la esquina (`absolute top-2.5 right-3` + `pr-18` en el Alert), porque un par de botones normales se montaban sobre la descripción. Keep this if regenerating.
 - Component layout: `components/ui/*` (shadcn primitives), `components/app/*` (shell/sidebar/providers), `components/features/<domain>/*`, `components/shared/*` (fifa-card, pitch, page-header, section-heading).
 - **Reusable page chrome**: every view's header is `<PageHeader title description actions />` (`components/shared/page-header.tsx`); section separators with the accent bar are `<SectionHeading title count? tone? />` (`components/shared/section-heading.tsx`, tones `primary`/`emerald`/`muted`). Reach for these instead of re-inlining an `h1`/`h2`.
+- **Confirmaciones destructivas**: `<ConfirmDialog trigger title description onConfirm pending />` (`components/shared/confirm-dialog.tsx`) envuelve el `AlertDialog` de la app. Nada de `confirm()` nativo — se ve fuera de lugar, bloquea el hilo y solo admite una línea de texto.
 - **Prefer shadcn primitives over bespoke containers**: cards/panels use `Card`/`CardContent` (theme radius is `rounded-xl`; use `size="sm"` for compact density), empty states use `Empty`. Don't hand-roll `bg-card ring rounded-lg` boxes.
+
+### Movimiento y CSS moderno
+
+- **View transitions**: `<ViewTransition>` viene en el React que empaqueta el App Router (canary); **no instales `react@canary`**. `@types/react` todavía no lo declara, así que los tipos están en `types/react-view-transition.d.ts` (bórralo cuando upstream los incluya).
+  - Cada `page.tsx` jerárquica se envuelve en `<PageTransition>` (`components/app/page-transition.tsx`), **nunca un layout**: los layouts persisten y enter/exit no dispararían.
+  - La dirección la marca el enlace con `transitionTypes={["nav-forward"]}` / `["nav-back"]`. Sin tipo (botón atrás del navegador, `router.refresh()`) cae en `default: "none"` y no anima.
+  - Header y sidebar llevan `viewTransitionName: "app-header" / "app-sidebar"` para quedarse fijos; las reglas están en `globals.css`.
+  - **El morph de elemento compartido (`name` + `share`) NO funciona aquí**: todas las páginas de detalle son `force-dynamic`, así que el destino no se renderiza en el mismo commit que la navegación y el par nunca se forma (es la precondición que documenta Next). Comprobado en `/players` → `/players/[id]`. Volvería a ser viable si esas rutas se pudieran prefetchear.
+- **Animaciones sin JS**: `.reveal-on-scroll` usa `animation-timeline: view()` (corre en el compositor, sin IntersectionObserver). El estado inicial vive dentro de `@supports`, así que donde no haya soporte el contenido queda visible en vez de invisible.
+- `.card-shine` (banda diagonal al hover, solo `translate`) y `.crack-ring` (borde cónico animado con `@property --ring-angle` + máscara). El aro **necesita** la máscara: con `z-index: -1` el pseudo se pinta encima del fondo de la tarjeta y la tiñe entera.
+- Base moderna en `globals.css`: `color-scheme`, `interpolate-size: allow-keywords` (permite animar `height: auto`), `field-sizing: content` en textareas, `touch-action: manipulation`, `overscroll-behavior: contain` en overlays.
+- **Enlaces**: `BreadcrumbLink` renderiza un `<a>` plano — sin `render={<Link/>}` provoca **recarga completa**. Siempre `<BreadcrumbLink render={<Link href=... />}>`.
+- **Nunca anides `<a>` dentro de `<a>`** (p. ej. una tarjeta-enlace con un `<Button render={<Link/>}>` dentro): es HTML inválido, rompe la hidratación y hace que el botón interno navegue al destino de la tarjeta. Usa el patrón _stretched link_: la tarjeta `relative`, un único `<Link className="absolute inset-0">` como último hijo, y las acciones reales encima con `relative z-10`.
+
 - Dashboard banner rotates a colored word via `getBannerWords()` = base `constants/rotatingWords.ts` + user `reta_words`, deduped; starts on index 0 so SSR/client match.
 
 If a new Tailwind/`@theme` class doesn't appear, the long-running dev server may be serving stale CSS: `rm -rf .next/dev` and relaunch. Production build is the truth.

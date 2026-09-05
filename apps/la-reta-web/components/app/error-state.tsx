@@ -14,7 +14,7 @@ import { ArrowLeftIcon, HomeIcon } from "lucide-react";
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-export function ErrorState({
+export const ErrorState = ({
   code,
   icon,
   title,
@@ -22,13 +22,13 @@ export function ErrorState({
   details,
   actions,
 }: {
-  code: string;
-  icon: ReactNode;
-  title: string;
-  description: string;
-  details?: ReactNode;
-  actions?: ReactNode;
-}) {
+  readonly code: string;
+  readonly icon: ReactNode;
+  readonly title: string;
+  readonly description: string;
+  readonly details?: ReactNode;
+  readonly actions?: ReactNode;
+}) => {
   return (
     <div className="mx-auto flex min-h-[calc(100svh-7rem)] w-full max-w-3xl items-center justify-center px-4 py-10">
       <Card className="w-full border-dashed">
@@ -60,16 +60,25 @@ export function ErrorState({
             ) : null}
 
             <EmptyContent>
-              <div className="flex w-full flex-col-reverse gap-2 sm:flex-row sm:justify-center">
-                <Button variant="default" render={<Link href="/matches" />}>
+              {/* La acción de recuperación (p. ej. "Reintentar") va primero y
+                  es la única enfatizada: si existe, navegar a otra vista es la
+                  salida secundaria, no la principal. */}
+              <div className="flex w-full flex-col gap-2 sm:flex-row sm:justify-center">
+                {actions}
+                <Button
+                  variant={actions ? "outline" : "default"}
+                  render={<Link href="/matches" />}
+                >
                   <ArrowLeftIcon />
                   Partidos
                 </Button>
-                <Button variant="secondary" render={<Link href="/" />}>
+                <Button
+                  variant={actions ? "ghost" : "secondary"}
+                  render={<Link href="/" />}
+                >
                   <HomeIcon />
                   Inicio
                 </Button>
-                {actions}
               </div>
             </EmptyContent>
           </Empty>
@@ -77,4 +86,4 @@ export function ErrorState({
       </Card>
     </div>
   );
-}
+};

@@ -1,3 +1,4 @@
+/* eslint-disable react-doctor/only-export-components -- El archivo exporta además constantes de contenido legal que se consumen desde las páginas de /legal. */
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import {
@@ -49,17 +50,17 @@ export const legalPages = [
   },
 ];
 
-export function LegalShell({
+export const LegalShell = ({
   eyebrow,
   title,
   description,
   children,
 }: {
-  eyebrow: string;
-  title: string;
-  description: string;
-  children: React.ReactNode;
-}) {
+  readonly eyebrow: string;
+  readonly title: string;
+  readonly description: string;
+  readonly children: React.ReactNode;
+}) => {
   return (
     <div className="mx-auto flex w-full max-w-6xl min-w-0 flex-col gap-6 xl:container">
       <section className="border-border/70 bg-card relative overflow-hidden rounded-3xl border p-6 shadow-xs sm:p-8">
@@ -88,19 +89,19 @@ export function LegalShell({
       </div>
     </div>
   );
-}
+};
 
-export function LegalSection({
+export const LegalSection = ({
   title,
   description,
   children,
   className,
 }: {
-  title: string;
-  description?: string;
-  children: React.ReactNode;
-  className?: string;
-}) {
+  readonly title: string;
+  readonly description?: string;
+  readonly children: React.ReactNode;
+  readonly className?: string;
+}) => {
   return (
     <Card className={cn("min-w-0", className)}>
       <CardHeader className="border-b">
@@ -112,19 +113,23 @@ export function LegalSection({
       </CardContent>
     </Card>
   );
-}
+};
 
-export function LegalGrid({ children }: { children: React.ReactNode }) {
+export const LegalGrid = ({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) => {
   return <div className="grid gap-4 sm:grid-cols-2">{children}</div>;
-}
+};
 
-export function LegalPoint({
+export const LegalPoint = ({
   title,
   children,
 }: {
-  title: string;
-  children: React.ReactNode;
-}) {
+  readonly title: string;
+  readonly children: React.ReactNode;
+}) => {
   return (
     <div className="bg-muted/35 rounded-2xl border p-4">
       <h3 className="font-semibold">{title}</h3>
@@ -133,9 +138,9 @@ export function LegalPoint({
       </p>
     </div>
   );
-}
+};
 
-export function LegalList({ items }: { items: string[] }) {
+export const LegalList = ({ items }: { readonly items: string[] }) => {
   return (
     <ul className="text-muted-foreground grid gap-2">
       {items.map((item) => (
@@ -146,17 +151,21 @@ export function LegalList({ items }: { items: string[] }) {
       ))}
     </ul>
   );
-}
+};
 
-export function LegalNote({ children }: { children: React.ReactNode }) {
+export const LegalNote = ({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) => {
   return (
     <div className="border-primary/20 bg-primary/5 text-muted-foreground rounded-2xl border p-4 text-sm leading-relaxed">
       {children}
     </div>
   );
-}
+};
 
-export function LegalReferences() {
+export const LegalReferences = () => {
   return (
     <LegalSection
       title="Referencias útiles"
@@ -180,23 +189,23 @@ export function LegalReferences() {
       </p>
     </LegalSection>
   );
-}
+};
 
-function ReferenceLink({
+const ReferenceLink = ({
   href,
   children,
 }: {
-  href: string;
-  children: React.ReactNode;
-}) {
+  readonly href: string;
+  readonly children: React.ReactNode;
+}) => {
   return (
     <Button
       variant="outline"
       className="h-auto w-full justify-between gap-3 px-3 py-2 text-left whitespace-normal"
-      render={<Link href={href} target="_blank" rel="noreferrer" />}
+      render={<Link href={href} target="_blank" rel="noopener noreferrer" />}
     >
       <span className="min-w-0 break-words">{children}</span>
       <ExternalLinkIcon className="size-4 shrink-0" />
     </Button>
   );
-}
+};

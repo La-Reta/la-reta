@@ -5,13 +5,13 @@ import { RefreshCwIcon, ShieldAlertIcon } from "lucide-react";
 import { ErrorState } from "@/components/app/error-state";
 import { Button } from "@/components/ui/button";
 
-export default function Error({
+const ErrorBoundary = ({
   error,
   unstable_retry,
 }: {
-  error: Error & { digest?: string };
-  unstable_retry: () => void;
-}) {
+  readonly error: Error & { digest?: string };
+  readonly unstable_retry: () => void;
+}) => {
   React.useEffect(() => {
     console.error(error);
   }, [error]);
@@ -33,11 +33,13 @@ export default function Error({
         )
       }
       actions={
-        <Button variant={"destructive"} onClick={() => unstable_retry()}>
+        <Button onClick={() => unstable_retry()}>
           <RefreshCwIcon />
           Reintentar
         </Button>
       }
     />
   );
-}
+};
+
+export default ErrorBoundary;

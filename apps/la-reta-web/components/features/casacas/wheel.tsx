@@ -29,10 +29,26 @@ const REST_FILL = "#e2e8f0"; // slate-200 — "en descanso"
 const CENTER = 100;
 const RADIUS = 92;
 
+/**
+ * Math.sin/cos pueden diferir en el último bit entre el V8 del servidor y el
+ * del navegador, y React marcaba la ruleta entera como hydration mismatch por
+ * un `126.27229609564647` contra `126.27229609564645`. Con 3 decimales (0.001
+ * de 200 unidades de viewBox) ambos lados escriben exactamente lo mismo y no se
+ * pierde precisión visible.
+ */
+const COORD_DECIMALS = 3;
+
+function round(value: number) {
+  return Number(value.toFixed(COORD_DECIMALS));
+}
+
 /** Point on the wheel at `deg` measured clockwise from the top (12 o'clock). */
 function polar(deg: number, r: number) {
   const rad = ((deg - 90) * Math.PI) / 180;
-  return { x: CENTER + r * Math.cos(rad), y: CENTER + r * Math.sin(rad) };
+  return {
+    x: round(CENTER + r * Math.cos(rad)),
+    y: round(CENTER + r * Math.sin(rad)),
+  };
 }
 
 function segmentPath(start: number, end: number) {
@@ -42,7 +58,7 @@ function segmentPath(start: number, end: number) {
   return `M ${CENTER} ${CENTER} L ${a.x} ${a.y} A ${RADIUS} ${RADIUS} 0 ${largeArc} 1 ${b.x} ${b.y} Z`;
 }
 
-export function Wheel({
+export const Wheel = ({
   segments,
   rotation,
   spinning,
@@ -50,14 +66,14 @@ export function Wheel({
   onSpinEnd,
   className,
 }: {
-  segments: WheelSegment[];
-  rotation: number;
-  spinning: boolean;
+  readonly segments: WheelSegment[];
+  readonly rotation: number;
+  readonly spinning: boolean;
   /** Indexes drawn faded (resting players who can't win this spin). */
-  dimIndexes?: Set<number>;
-  onSpinEnd?: () => void;
-  className?: string;
-}) {
+  readonly dimIndexes?: Set<number>;
+  readonly onSpinEnd?: () => void;
+  readonly className?: string;
+}) => {
   const n = segments.length;
   const seg = n > 0 ? 360 / n : 360;
   // Base size shrinks as segments get thinner; per-label size shrinks further so
@@ -66,6 +82,10 @@ export function Wheel({
 
   return (
     <div className={cn("relative mx-auto w-full max-w-md", className)}>
+      {/* El SVG se dibuja inline y rota con los datos, así que no puede ser un
+          <img>. role="img" + aria-label es el patrón que recomienda la WAI para
+          gráficos SVG en línea. */}
+      {/* eslint-disable-next-line jsx-a11y/prefer-tag-over-role */}
       <svg
         viewBox="0 0 200 200"
         className="h-auto w-full drop-shadow-xl"
@@ -173,4 +193,4 @@ export function Wheel({
       </svg>
     </div>
   );
-}
+};
