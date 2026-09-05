@@ -1,16 +1,56 @@
 /**
- * Forma mínima de lo que devuelve la API, solo con los campos que la app usa
- * hoy. Es una copia deliberada, no la fuente de verdad: el esquema vive en
- * apps/la-reta-web/lib/db/schema.ts.
+ * Forma de lo que devuelve /api/v1, solo con los campos que la app usa hoy.
  *
- * Cuando la app crezca, esto debería salir a un paquete compartido
- * (packages/api-contract) que ambos lados importen, para que un cambio de
+ * Es una copia deliberada, no la fuente de verdad: el esquema vive en
+ * apps/la-reta-web/lib/db/schema.ts. Cuando la app crezca esto debería salir a
+ * packages/api-contract e importarse desde los dos lados, para que un cambio de
  * columna rompa el build en vez de fallar en runtime.
  */
 
-export type Position = "GK" | "DEF" | "MID" | "FWD" | string;
+/**
+ * Posiciones concretas, en códigos FIFA. Es el mismo conjunto que el enum
+ * `position` de Postgres (ver POSITIONS en apps/la-reta-web/lib/constants.ts):
+ * las fichas de la web enseñan el código, no el nombre de la línea, y la app
+ * habla el mismo idioma.
+ */
+export type Position =
+  | "GK"
+  | "RB"
+  | "RWB"
+  | "CB"
+  | "LB"
+  | "LWB"
+  | "CDM"
+  | "CM"
+  | "CAM"
+  | "RM"
+  | "LM"
+  | "RW"
+  | "LW"
+  | "CF"
+  | "ST";
 
-export interface Player {
+export const STAT_KEYS = [
+  "pace",
+  "shooting",
+  "passing",
+  "dribbling",
+  "defending",
+  "physical",
+] as const;
+
+export type StatKey = (typeof STAT_KEYS)[number];
+
+export const STAT_ABBR: Record<StatKey, string> = {
+  pace: "RIT",
+  shooting: "TIR",
+  passing: "PAS",
+  dribbling: "REG",
+  defending: "DEF",
+  physical: "FIS",
+};
+
+export interface Player extends Record<StatKey, number> {
   id: number;
   name: string;
   displayName: string;
@@ -19,6 +59,9 @@ export interface Player {
   nationality: string;
   photoUrl: string | null;
   age: number;
+  heightCm: number;
+  weightKg: number;
+  preferredFoot: "left" | "right" | "both";
   overall: number;
 }
 
@@ -28,12 +71,42 @@ export interface MatchTeam {
   score: number;
 }
 
+export interface Scorer {
+  playerId: number | null;
+  name: string;
+  displayName: string;
+  team: string;
+  goals: number;
+  assists: number;
+  isGuest: boolean;
+}
+
+export type VoteCategory = "figura" | "gol" | "error";
+
+/** Una línea del recuento de votos de un partido (/api/v1/matches/:id/votes). */
+export interface VoteTally {
+  category: VoteCategory;
+  playerId: number | null;
+  guestName: string | null;
+  name: string;
+  count: number;
+}
+
+export interface MatchVotes {
+  tally: VoteTally[];
+}
+
 export interface Match {
   id: number;
-  createdAt: string;
-  teamAName: string | null;
-  teamBName: string | null;
-  scoreA: number | null;
-  scoreB: number | null;
+  playedAt: string;
+  teamAName: string;
+  teamBName: string;
+  scoreA: number;
+  scoreB: number;
+  /** Qué tan parejo se sintió, 0 (paliza) … 100 (parejísimo). */
+  balance: number;
   teams: MatchTeam[] | null;
+  /** Nota libre que escribió quien registró el partido. */
+  notes: string | null;
+  scorers: Scorer[];
 }

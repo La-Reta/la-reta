@@ -1,136 +1,178 @@
-import {
-  ActivityIndicator,
-  FlatList,
-  RefreshControl,
-  StyleSheet,
-  View,
-} from "react-native";
-import { SafeAreaView } from "react-native-safe-area-context";
+import { useRouter } from "expo-router";
+import { ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
-import { ThemedText } from "@/components/themed-text";
-import { ThemedView } from "@/components/themed-view";
-import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
-import { useApi } from "@/hooks/use-api";
-import type { Player } from "@/lib/types";
+import { isClerkConfigured } from "@/components/auth-provider";
+import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
+import { BrandMark, Wordmark } from "@/components/brand-mark";
+import { Notice } from "@/components/notice";
+import { StatStrip } from "@/components/stat-strip";
+import { Button } from "@/components/ui/button";
+import { Row } from "@/components/ui/row";
+import { Section } from "@/components/ui/section";
+import { Text } from "@/components/ui/text";
+import { MaxContentWidth, Palette, Spacing } from "@/constants/theme";
+import { useReta } from "@/hooks/use-reta";
 
 /**
- * Primera vista contra la API real: GET /api/v1/players.
+ * Portada para quien todavía no ha entrado.
  *
- * Es la prueba de que el contrato funciona desde un cliente nativo — misma
- * ruta, mismo JSON y mismos códigos de estado que consume la web.
+ * Enseña **prueba, no contenido**. Las cifras agregadas —cuánta gente, cuántos
+ * partidos, cuántos goles— demuestran que la reta existe y está viva; la ficha
+ * del crack, el goleador y el último marcador viven dentro, porque son
+ * justamente aquello a lo que se entra. Cuando esta pantalla los enseñaba,
+ * entrar dejaba de tener sentido.
+ *
+ * El orden de los botones tampoco es estético. La acción que queremos que se
+ * elija —crear cuenta— va a la derecha, que en lectura de izquierda a derecha
+ * es la dirección de "seguir", y en sólido para que gane por peso; iniciar
+ * sesión queda a la izquierda en cristal. Los dos flotan abajo, dentro del arco
+ * del pulgar.
  */
-export default function PlayersScreen() {
-  const { data, error, loading, refetch } = useApi<Player[]>("/api/v1/players");
+
+const INSIDE = [
+  {
+    icon: "jersey" as const,
+    title: "Tu ficha con stats",
+    detail: "Reclama tu carta y mira cómo se mueve tu overall reta a reta.",
+  },
+  {
+    icon: "ball" as const,
+    title: "Equipos parejos",
+    detail:
+      "Se arman igualando nivel y cubriendo cada posición, no por orden de llegada.",
+  },
+  {
+    icon: "trophy" as const,
+    title: "Marcador y MVP",
+    detail:
+      "Goles, asistencias, historial de partidos y la votación de cada reta.",
+  },
+];
+
+export default function WelcomeScreen() {
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { players, summary, error, refetch } = useReta();
+
+  const pending = players === null;
+  const barHeight = 54 + Spacing.two * 2;
 
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView edges={["top"]} style={styles.safeArea}>
-        <ThemedText style={styles.title} type="title">
-          Jugadores
-        </ThemedText>
+    <View style={{ flex: 1, backgroundColor: Palette.paper }}>
+      {isClerkConfigured ? <SignedInRedirect /> : null}
 
-        {error !== null && (
-          <ThemedView style={styles.notice} type="backgroundElement">
-            <ThemedText type="smallBold">No se pudo cargar</ThemedText>
-            <ThemedText themeColor="textSecondary" type="small">
-              {error}
-            </ThemedText>
-          </ThemedView>
-        )}
+      <ScrollView
+        contentContainerStyle={{
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: MaxContentWidth,
+          gap: Spacing.five,
+          paddingHorizontal: Spacing.four,
+          paddingTop: insets.top + Spacing.four,
+          paddingBottom: barHeight + insets.bottom + Spacing.five,
+        }}
+        contentInsetAdjustmentBehavior="never"
+        showsVerticalScrollIndicator={false}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.two,
+          }}
+        >
+          <BrandMark size={30} />
+          <Wordmark size={16} />
+        </View>
 
-        {loading && data === null ? (
-          <View style={styles.centered}>
-            <ActivityIndicator />
-          </View>
-        ) : (
-          <FlatList
-            contentContainerStyle={styles.listContent}
-            data={data ?? []}
-            keyExtractor={(player) => String(player.id)}
-            ListEmptyComponent={
-              error === null ? (
-                <ThemedText
-                  style={styles.empty}
-                  themeColor="textSecondary"
-                  type="small"
-                >
-                  Sin jugadores todavía.
-                </ThemedText>
-              ) : null
-            }
-            refreshControl={
-              <RefreshControl onRefresh={refetch} refreshing={loading} />
-            }
-            renderItem={({ item }) => <PlayerRow player={item} />}
+        <View style={{ gap: Spacing.three }}>
+          <Text tone="accent" variant="eyebrow">
+            Manager de fútbol amateur
+          </Text>
+          <Text variant="hero">Arma la reta como un club</Text>
+          <Text tone="muted" variant="body">
+            Fichas con stats, equipos parejos y el marcador en vivo. Lo que ya
+            vive en la web, ahora en la cancha.
+          </Text>
+        </View>
+
+        <StatStrip
+          fields={["squad", "matches", "goals"]}
+          pending={pending}
+          summary={summary}
+        />
+
+        {error === null ? null : (
+          <Notice
+            actionLabel="Reintentar"
+            detail={error}
+            onAction={refetch}
+            title="No pudimos leer los datos de la reta"
           />
         )}
-      </SafeAreaView>
-    </ThemedView>
-  );
-}
 
-function PlayerRow({ player }: { player: Player }) {
-  const positions = [player.position, player.position2]
-    .filter(Boolean)
-    .join(" / ");
+        <Section title="Lo que hay dentro">
+          <View>
+            {INSIDE.map((item, index) => (
+              <Row
+                detail={item.detail}
+                icon={item.icon}
+                key={item.title}
+                last={index === INSIDE.length - 1}
+                title={item.title}
+              />
+            ))}
+          </View>
+        </Section>
 
-  return (
-    <ThemedView style={styles.row} type="backgroundElement">
-      <View style={styles.rowMain}>
-        <ThemedText type="smallBold">{player.displayName}</ThemedText>
-        <ThemedText themeColor="textSecondary" type="small">
-          {positions} · {player.age} años
-        </ThemedText>
+        <View style={{ gap: Spacing.three }}>
+          <Button
+            label="Entrar sin cuenta"
+            onPress={() => router.replace("/inicio")}
+            variant="ghost"
+          />
+          <Text style={{ textAlign: "center" }} tone="faint" variant="caption">
+            {pending
+              ? "Buscando la reta…"
+              : `Datos en vivo · ${summary.squad} jugadores registrados`}
+          </Text>
+        </View>
+      </ScrollView>
+
+      <View
+        style={{
+          position: "absolute",
+          left: 0,
+          right: 0,
+          bottom: 0,
+          alignItems: "center",
+          paddingHorizontal: Spacing.four,
+          paddingBottom: insets.bottom + Spacing.three,
+        }}
+      >
+        <View
+          style={{
+            flexDirection: "row",
+            gap: Spacing.two,
+            width: "100%",
+            maxWidth: MaxContentWidth - Spacing.four * 2,
+          }}
+        >
+          <Button
+            flex={1}
+            label="Iniciar sesión"
+            onPress={() => router.push("/sign-in")}
+            variant="glass"
+          />
+          <Button
+            flex={1.3}
+            label="Crear cuenta"
+            onPress={() => router.push("/sign-up")}
+            variant="primary"
+          />
+        </View>
       </View>
-      <ThemedText type="title">{player.overall}</ThemedText>
-    </ThemedView>
+    </View>
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  safeArea: {
-    flex: 1,
-    alignSelf: "center",
-    width: "100%",
-    maxWidth: MaxContentWidth,
-    paddingHorizontal: Spacing.four,
-  },
-  title: {
-    paddingVertical: Spacing.three,
-  },
-  centered: {
-    flex: 1,
-    alignItems: "center",
-    justifyContent: "center",
-  },
-  listContent: {
-    gap: Spacing.two,
-    // La tab bar flota sobre el contenido: sin este hueco el último elemento
-    // queda debajo del glass.
-    paddingBottom: BottomTabInset + Spacing.four,
-  },
-  row: {
-    flexDirection: "row",
-    alignItems: "center",
-    gap: Spacing.three,
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-  rowMain: {
-    flex: 1,
-    gap: Spacing.one,
-  },
-  notice: {
-    padding: Spacing.three,
-    borderRadius: Spacing.three,
-    gap: Spacing.one,
-    marginBottom: Spacing.three,
-  },
-  empty: {
-    paddingVertical: Spacing.five,
-    textAlign: "center",
-  },
-});

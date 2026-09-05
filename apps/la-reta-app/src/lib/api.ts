@@ -14,6 +14,15 @@ import * as SecureStore from "expo-secure-store";
 
 const PIN_TOKEN_KEY = "reta.pinToken";
 
+/**
+ * `expo-secure-store` es nativo: en web no hay keychain y sus métodos revientan
+ * ("getValueWithKeyAsync is not a function"), lo que tumbaba *toda* petición,
+ * incluidas las públicas. En un navegador el gate de PIN tampoco hace falta —
+ * ahí manda la cookie httpOnly de la web—, así que se desactiva en vez de
+ * inventarle un almacén menos seguro.
+ */
+const HAS_KEYCHAIN = process.env.EXPO_OS !== "web";
+
 /** Configurable por entorno; en dev apunta al `next dev` de la máquina. */
 export const API_URL =
   process.env.EXPO_PUBLIC_API_URL ?? "http://localhost:3000";
@@ -41,10 +50,14 @@ export function setSessionTokenProvider(
 }
 
 export async function getPinToken(): Promise<string | null> {
+  if (!HAS_KEYCHAIN) return null;
+
   return SecureStore.getItemAsync(PIN_TOKEN_KEY);
 }
 
 export async function clearPinToken(): Promise<void> {
+  if (!HAS_KEYCHAIN) return;
+
   await SecureStore.deleteItemAsync(PIN_TOKEN_KEY);
 }
 
@@ -114,6 +127,12 @@ export async function exchangePin(
   pin: string,
   scope: "admin" | "live"
 ): Promise<void> {
+  if (!HAS_KEYCHAIN) {
+    throw new Error(
+      "El canje de PIN solo funciona en la app nativa: en web no hay keychain donde guardar el token."
+    );
+  }
+
   const { token } = await request<{ token: string; expiresIn: number }>(
     "/api/v1/auth/pin",
     {

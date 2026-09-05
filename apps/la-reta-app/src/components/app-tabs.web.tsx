@@ -5,39 +5,90 @@ import {
   Tabs,
   type TabTriggerSlotProps,
 } from "expo-router/ui";
-import { Pressable, StyleSheet, View } from "react-native";
+import { Pressable, View } from "react-native";
 
-import { ThemedText } from "./themed-text";
-import { ThemedView } from "./themed-view";
-
-import { MaxContentWidth, Spacing } from "@/constants/theme";
+import { BrandMark, Wordmark } from "@/components/brand-mark";
+import { Text } from "@/components/ui/text";
+import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 
 /**
- * Barra para web. `NativeTabs` sólo existe en iOS/Android, así que aquí se
- * arma con la API headless de expo-router. No intenta imitar el liquid glass:
- * en un navegador ese material no existe y el resultado sería una copia peor.
+ * Navegación para web. `NativeTabs` solo existe en iOS y Android, así que aquí
+ * se arma con la API sin estilos de expo-router.
+ *
+ * No intenta imitar el liquid glass ni la barra inferior: en un navegador ese
+ * material no existe y una barra pegada abajo no es la convención. Se traduce a
+ * lo que sí lo es —una barra superior con la marca a la izquierda— manteniendo
+ * los mismos cinco destinos.
+ *
+ * Los `TabTrigger` tienen que ser hijos directos del elemento que envuelve
+ * `TabList asChild`: el parser de expo-router desenvuelve exactamente una capa
+ * y con un `View` de más deja de encontrarlos, y el navegador arranca sin
+ * ninguna pantalla.
  */
+
+const DESTINATIONS = [
+  { name: "(inicio)", href: "/inicio", label: "Inicio" },
+  { name: "(plantilla)", href: "/plantilla", label: "Plantilla" },
+  { name: "(reta)", href: "/reta", label: "Armar" },
+  { name: "(partidos)", href: "/partidos", label: "Partidos" },
+  { name: "(perfil)", href: "/perfil", label: "Perfil" },
+] as const;
+
 export default function AppTabs() {
   return (
     <Tabs>
-      <TabSlot style={styles.slot} />
       <TabList asChild>
-        <View style={styles.tabListContainer}>
-          <ThemedView type="backgroundElement" style={styles.innerContainer}>
-            <ThemedText type="smallBold" style={styles.brandText}>
-              La Reta
-            </ThemedText>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            gap: Spacing.two,
+            width: "100%",
+            maxWidth: MaxContentWidth,
+            alignSelf: "center",
+            paddingHorizontal: Spacing.four,
+            paddingVertical: Spacing.two,
+            borderBottomWidth: 1,
+            borderBottomColor: Palette.hairline,
+            backgroundColor: Palette.paper,
+          }}
+        >
+          <Brand />
 
-            <TabTrigger asChild href="/" name="index">
-              <TabButton>Jugadores</TabButton>
+          {DESTINATIONS.map((destination) => (
+            <TabTrigger
+              asChild
+              href={destination.href}
+              key={destination.name}
+              name={destination.name}
+            >
+              <TabButton>{destination.label}</TabButton>
             </TabTrigger>
-            <TabTrigger asChild href="/api" name="api">
-              <TabButton>API</TabButton>
-            </TabTrigger>
-          </ThemedView>
+          ))}
         </View>
       </TabList>
+
+      {/* Después de la barra para que ocupe lo que queda: el orden en el árbol
+          es el orden en pantalla, y con el slot delante la barra caía fuera de
+          la ventana. */}
+      <TabSlot style={{ flex: 1 }} />
     </Tabs>
+  );
+}
+
+function Brand() {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.two,
+        marginRight: "auto",
+      }}
+    >
+      <BrandMark size={24} />
+      <Wordmark size={13} />
+    </View>
   );
 }
 
@@ -45,54 +96,20 @@ function TabButton({ children, isFocused, ...props }: TabTriggerSlotProps) {
   return (
     <Pressable
       {...props}
-      style={({ pressed }) => (pressed ? styles.pressed : undefined)}
+      style={({ pressed }) => ({ opacity: pressed ? 0.6 : 1 })}
     >
-      <ThemedView
-        type={isFocused ? "backgroundSelected" : "backgroundElement"}
-        style={styles.tabButtonView}
+      <View
+        style={{
+          paddingVertical: Spacing.one,
+          paddingHorizontal: Spacing.three,
+          borderRadius: Radius.pill,
+          backgroundColor: isFocused ? Palette.accentSoft : "transparent",
+        }}
       >
-        <ThemedText
-          type="small"
-          themeColor={isFocused ? "text" : "textSecondary"}
-        >
+        <Text tone={isFocused ? "accent" : "muted"} variant="caption">
           {children}
-        </ThemedText>
-      </ThemedView>
+        </Text>
+      </View>
     </Pressable>
   );
 }
-
-const styles = StyleSheet.create({
-  slot: {
-    height: "100%",
-  },
-  tabListContainer: {
-    position: "absolute",
-    width: "100%",
-    padding: Spacing.three,
-    justifyContent: "center",
-    alignItems: "center",
-    flexDirection: "row",
-  },
-  innerContainer: {
-    paddingVertical: Spacing.two,
-    paddingHorizontal: Spacing.five,
-    borderRadius: Spacing.five,
-    flexDirection: "row",
-    alignItems: "center",
-    flexGrow: 1,
-    gap: Spacing.two,
-    maxWidth: MaxContentWidth,
-  },
-  brandText: {
-    marginRight: "auto",
-  },
-  pressed: {
-    opacity: 0.7,
-  },
-  tabButtonView: {
-    paddingVertical: Spacing.one,
-    paddingHorizontal: Spacing.three,
-    borderRadius: Spacing.three,
-  },
-});
