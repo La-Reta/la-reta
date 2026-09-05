@@ -33,6 +33,12 @@ Secrets live in **`.env`** (gitignored), not `.env.local`. Next loads `.env` on 
 
 `db:seed` deletes `players` (cascades to everything FK'd to a player: `match_goals`, `casaca_assignments`, `player_stat_history`, `player_comments`, `generated_reta_players`) but NOT `matches`/`ideas`/`reta_words` — re-seeding accumulates those. **Do not re-seed or run DML against real data.** Schema changes must be additive (new migrations in `drizzle/`, `db:push`); never rewrite seeded/user rows.
 
+## Deploy (Vercel)
+
+El proyecto de Vercel apunta a **Root Directory = `apps/la-reta-web`**, no a la raíz del repo. Es un ajuste del dashboard (la API es `PATCH /v9/projects/<id>` con `rootDirectory`); no se puede fijar desde `vercel.json`, que es lo único que se lee _desde_ ese directorio. Con la raíz mal puesta el build pasa pero el deploy muere con «The Next.js output directory ".next" was not found», porque turbo deja el `.next` dentro de la app y Vercel lo busca arriba.
+
+Lo demás sí vive en el repo, en `vercel.json`, y **gana sobre los overrides del dashboard**: framework y `npx turbo run build --filter=la-reta-web` (turbo se encuentra la raíz solo desde el workspace). Install y Output Directory van en blanco a propósito: el default de Vercel ya instala el workspace completo desde la raíz.
+
 ## Architecture
 
 FIFA-style dashboard for organizing pickup football ("la reta"). **Next 16 App Router + Server Components/Actions · Drizzle ORM + Neon serverless Postgres · Clerk auth · Vercel Blob uploads · Jotai · TanStack Query (one flow only) · shadcn/ui + Base UI (`base-lyra`) · Tailwind v4.**
