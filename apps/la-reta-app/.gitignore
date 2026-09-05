@@ -10,6 +10,13 @@ web-build/
 expo-env.d.ts
 
 # Native
+# `ios/` y `android/` los genera `expo prebuild` a partir de app.json y los
+# plugins, así que se quedan fuera del repo: versionarlos invita a editarlos a
+# mano y perder esos cambios en el siguiente prebuild. La configuración vive en
+# app.json, que sí está versionado.
+/ios
+/android
+
 *.orig.*
 *.jks
 *.p8

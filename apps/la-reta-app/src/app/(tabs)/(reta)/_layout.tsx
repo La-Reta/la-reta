@@ -6,6 +6,7 @@ export default function RetaLayout() {
   return (
     <TabStack>
       <Stack.Screen name="reta" options={{ title: "Armar reta" }} />
+      <Stack.Screen name="convocatoria" options={{ title: "Convocatoria" }} />
     </TabStack>
   );
 }

@@ -33,6 +33,7 @@ import {
   type GoalEntry,
 } from "@/lib/players";
 import { cardTier, TIER_LABEL } from "@/lib/ratings";
+import { standingLine } from "@/lib/teams";
 
 /**
  * Ficha completa de un jugador.
@@ -368,7 +369,7 @@ function GoalRow({
       >
         <View style={{ flex: 1, gap: Spacing.half }}>
           <Text numberOfLines={1} variant="bodyStrong">
-            {entry.teamAName} {entry.scoreA}–{entry.scoreB} {entry.teamBName}
+            {standingLine(entry.teams, entry.team)}
           </Text>
           <Text tone="muted" variant="caption">
             {formatMatchDate(entry.playedAt)}

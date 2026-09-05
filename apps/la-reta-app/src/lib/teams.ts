@@ -1,31 +1,22 @@
+import {
+  TEAM_COLORS,
+  TEAM_KEYS,
+  isTeamKey,
+  type TeamKey,
+} from "@repo/reta/teams";
+
 import type { Match, MatchTeam } from "@/lib/types";
 
 /**
- * Identidad de los equipos de una reta, portada de apps/la-reta-web/lib/teams.ts.
+ * Los equipos de un partido, del lado de la app.
  *
- * Cada equipo es una letra y su color es el mismo en los dos clientes: si en la
- * web el equipo C es verde, aquí también, o el mismo partido contado en dos
- * pantallas parecería otro.
+ * Las letras y los colores ya no se copian de la web: los dos clientes los
+ * importan de `@repo/reta`, así que el equipo C es el mismo verde en los dos y
+ * no hay dos tablas que mantener a la par. Aquí queda lo que solo la app usa:
+ * reconstruir los equipos de un partido y contarlos.
  */
 
-export const TEAM_KEYS = ["A", "B", "C", "D", "E", "F"] as const;
-export type TeamKey = (typeof TEAM_KEYS)[number];
-
-export const TEAM_COLORS: Record<TeamKey, string> = {
-  A: "#0EA5E9",
-  B: "#F43F5E",
-  C: "#22C55E",
-  D: "#F59E0B",
-  E: "#A855F7",
-  F: "#14B8A6",
-};
-
-export function isTeamKey(value: unknown): value is TeamKey {
-  return (
-    typeof value === "string" &&
-    (TEAM_KEYS as readonly string[]).includes(value)
-  );
-}
+export { TEAM_COLORS, TEAM_KEYS, isTeamKey, type TeamKey };
 
 export function teamColor(key: string): string {
   return isTeamKey(key) ? TEAM_COLORS[key] : TEAM_COLORS.A;
@@ -60,4 +51,78 @@ export function balanceLabel(balance: number): string {
   if (balance < 55) return "Desigual";
   if (balance < 80) return "Pareja";
   return "Parejísima";
+}
+
+export interface RankedTeam extends MatchTeam {
+  /** Puesto empezando en 1. Los empatados comparten puesto, como en una tabla. */
+  rank: number;
+  /** Nadie marcó más. En un empate arriba lo son todos los que comparten el 1. */
+  isWinner: boolean;
+}
+
+/**
+ * Los equipos ordenados por goles, con su puesto.
+ *
+ * Una reta de tres o más no produce un marcador, produce una tabla, y ahí el
+ * orden en que la base guardó los equipos no significa nada. Antes cualquier
+ * vista tomaba el primero de `matchTeams` como ganador: en el 0–0–0 del 6 de
+ * agosto eso coronaba a Jochis por haber sido dado de alta primero.
+ */
+export function rankTeams(teams: MatchTeam[]): RankedTeam[] {
+  const sorted = [...teams].sort((a, b) => b.score - a.score);
+  const top = sorted[0]?.score ?? 0;
+
+  return sorted.map((team) => ({
+    ...team,
+    // En una lista ya ordenada, el primer índice con estos goles es el puesto.
+    rank: sorted.findIndex((other) => other.score === team.score) + 1,
+    isWinner: team.score === top,
+  }));
+}
+
+export function rankedTeams(match: Match): RankedTeam[] {
+  return rankTeams(matchTeams(match));
+}
+
+/** Todos los goles del partido, también los del tercer equipo. */
+export function teamsGoals(teams: MatchTeam[]): number {
+  return teams.reduce((total, team) => total + team.score, 0);
+}
+
+export function matchGoals(match: Match): number {
+  return teamsGoals(matchTeams(match));
+}
+
+/**
+ * El resultado en una línea, para donde no cabe una tabla.
+ *
+ * Un duelo se dice con guion —"Jochis FC 8–1 Wapos FC"— y una reta de tres se
+ * dice enumerando por puesto, que es como se cuenta en voz alta.
+ */
+export function scoreLine(teams: MatchTeam[]): string {
+  if (teams.length === 2) {
+    const [home, away] = teams;
+    return `${home.name} ${home.score}–${away.score} ${away.name}`;
+  }
+
+  return rankTeams(teams)
+    .map((team) => `${team.name} ${team.score}`)
+    .join(" · ");
+}
+
+/**
+ * El partido contado desde un equipo: "Cariñosas FC 6 · 2º de 3".
+ *
+ * En la ficha de un jugador la fila habla de él, no del acta. Con dos equipos
+ * el marcador entero cabe y se lee mejor; con tres se desbordaba el renglón y,
+ * peor, enseñaba el 8–1 de otros dos y no decía en cuál de los tres estuvo.
+ */
+export function standingLine(teams: MatchTeam[], key: string | null): string {
+  if (teams.length === 2 || key === null) return scoreLine(teams);
+
+  const ranked = rankTeams(teams);
+  const own = ranked.find((team) => team.key === key);
+  if (own === undefined) return scoreLine(teams);
+
+  return `${own.name} ${own.score} · ${own.rank}º de ${ranked.length}`;
 }

@@ -26,7 +26,15 @@ export type IconName =
   | "people"
   | "star"
   | "flame"
-  | "close";
+  | "external"
+  | "close"
+  | "check"
+  | "share"
+  | "shuffle"
+  | "search"
+  | "sliders"
+  | "alphabet"
+  | "pin";
 
 export type IconProps = {
   name: IconName;
@@ -52,6 +60,68 @@ export function Icon({
 
   return (
     <Svg height={size} viewBox="0 0 24 24" width={size}>
+      {name === "pin" ? (
+        <>
+          <Path
+            d="M12 21.5c4-4.4 6-7.9 6-10.5a6 6 0 1 0-12 0c0 2.6 2 6.1 6 10.5Z"
+            {...stroke}
+          />
+          <Circle cx={12} cy={10.8} r={2.4} {...stroke} />
+        </>
+      ) : null}
+
+      {name === "alphabet" ? (
+        <>
+          {/* Una "A" y una flecha: el glifo de ordenar alfabéticamente. */}
+          <Path d="M3.5 17.5 L7.5 6.5 L11.5 17.5" {...stroke} />
+          <Path d="M5 13.5 H10" {...stroke} />
+          <Path d="M17 5.5 V18" {...stroke} />
+          <Path d="M14.3 15.3 L17 18 L19.7 15.3" {...stroke} />
+        </>
+      ) : null}
+
+      {name === "search" ? (
+        <>
+          <Circle cx={11} cy={11} r={7} {...stroke} />
+          <Path d="M16.2 16.2 L21 21" {...stroke} />
+        </>
+      ) : null}
+
+      {name === "sliders" ? (
+        <>
+          {/* Tres carriles con su tirador, el glifo de filtro que todo el
+              mundo ya reconoce de las apps que usa a diario. */}
+          <Path d="M4 7 H20" {...stroke} />
+          <Path d="M4 12 H20" {...stroke} />
+          <Path d="M4 17 H20" {...stroke} />
+          <Circle cx={9} cy={7} r={2.1} {...stroke} />
+          <Circle cx={15} cy={12} r={2.1} {...stroke} />
+          <Circle cx={8} cy={17} r={2.1} {...stroke} />
+        </>
+      ) : null}
+
+      {name === "share" ? (
+        <>
+          {/* La flecha que sale de la caja: el gesto de compartir de iOS. */}
+          <Path d="M12 3 V14.5" {...stroke} />
+          <Path d="M8.5 6.5 L12 3 L15.5 6.5" {...stroke} />
+          <Path d="M8 10.5 H5 V20 H19 V10.5 H16" {...stroke} />
+        </>
+      ) : null}
+
+      {name === "shuffle" ? (
+        <>
+          <Path d="M3 6.5 H6.5 L17 17.5 H20" {...stroke} />
+          <Path d="M3 17.5 H6.5 L17 6.5 H20" {...stroke} />
+          <Path d="M17.5 4 L20 6.5 L17.5 9" {...stroke} />
+          <Path d="M17.5 15 L20 17.5 L17.5 20" {...stroke} />
+        </>
+      ) : null}
+
+      {name === "check" ? (
+        <Path d="M4.5 12.5 L9.5 17.5 L19.5 6.5" {...stroke} />
+      ) : null}
+
       {name === "ball" ? (
         <>
           <Circle cx={12} cy={12} r={9} {...stroke} />
@@ -113,6 +183,18 @@ export function Icon({
         <>
           <Path d="M4 12 H19" {...stroke} />
           <Path d="M13 6 L19 12 L13 18" {...stroke} />
+        </>
+      ) : null}
+
+      {/*
+        "Esto sale de la app". Es la flecha en diagonal a secas, sin el
+        marquito que suele acompañarla: a los 12 pt que mide en las fichas de
+        acceso, el recuadro se convierte en una mancha y deja de leerse.
+      */}
+      {name === "external" ? (
+        <>
+          <Path d="M6.5 17.5 L17 7" {...stroke} />
+          <Path d="M9 7 H17 V15" {...stroke} />
         </>
       ) : null}
 

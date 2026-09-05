@@ -52,3 +52,7 @@ expo-env.d.ts
 # TypeScript
 *.tsbuildinfo
 next-env.d.ts
+
+# Skia web: canvaskit.wasm son 7.7 MB que regenera el postinstall de
+# la-reta-app (`setup-skia-web public`), así que no viaja en el repo.
+apps/la-reta-app/public/canvaskit.wasm

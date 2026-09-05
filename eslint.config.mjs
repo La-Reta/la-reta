@@ -11,6 +11,12 @@ export default [
   {
     ignores: [
       "apps/la-reta-app/**",
+      // packages/reta viaja a los dos clientes, y uno de ellos corre sobre
+      // Hermes. El preset empuja APIs que ahí no están garantizadas —pide
+      // `toSorted()` donde hay que usar `[...x].sort()`— y arrastra los mismos
+      // plugins de navegador/Node que la app. Se comprueba con `tsc` y con su
+      // propia autocomprobación: `npm run test -w @repo/reta`.
+      "packages/reta/**",
       // Skills vendorizadas (upstream de Clerk, Neon y Vercel): no son
       // código nuestro y no las cubre ningún tsconfig.
       ".agents/**",

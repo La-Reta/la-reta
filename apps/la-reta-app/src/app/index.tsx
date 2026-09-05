@@ -1,6 +1,7 @@
 import { useRouter } from "expo-router";
 import { ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
+import Svg, { Defs, LinearGradient, Rect, Stop } from "react-native-svg";
 
 import { isClerkConfigured } from "@/components/auth-provider";
 import { SignedInRedirect } from "@/components/auth/signed-in-redirect";
@@ -28,7 +29,17 @@ import { useReta } from "@/hooks/use-reta";
  * es la dirección de "seguir", y en sólido para que gane por peso; iniciar
  * sesión queda a la izquierda en cristal. Los dos flotan abajo, dentro del arco
  * del pulgar.
+ *
+ * Y por eso mismo la barra se apoya en un **degradado de papel**. Flotando sin
+ * nada detrás, el contenido seguía pasando por debajo y "Iniciar sesión" —que
+ * es cristal, es decir, translúcido por definición— se leía sobre el texto de
+ * la lista. El degradado sube desde el papel opaco hasta transparente en unos
+ * 72 pt: la barra queda sobre fondo limpio, el contenido se desvanece en vez
+ * de cortarse contra un filete, y no hay que oscurecer nada para lograrlo.
  */
+
+/** Lo que tarda el papel en desvanecerse por encima de la barra. */
+const SCRIM_FADE = 72;
 
 const INSIDE = [
   {
@@ -139,6 +150,35 @@ export default function WelcomeScreen() {
           </Text>
         </View>
       </ScrollView>
+
+      {/*
+        Dos piezas y no un degradado de punta a punta: el tramo que va detrás de
+        los botones es papel macizo —da igual cuánto mida el hueco seguro del
+        teléfono— y el degradado solo cubre los 72 pt de arriba, donde el
+        contenido tiene que desaparecer.
+      */}
+      <View
+        pointerEvents="none"
+        style={{ position: "absolute", left: 0, right: 0, bottom: 0 }}
+      >
+        <Svg height={SCRIM_FADE} width="100%">
+          <Defs>
+            <LinearGradient id="welcome-scrim" x1="0" x2="0" y1="0" y2="1">
+              <Stop offset="0" stopColor={Palette.paper} stopOpacity={0} />
+              <Stop offset="0.5" stopColor={Palette.paper} stopOpacity={0.55} />
+              <Stop offset="0.8" stopColor={Palette.paper} stopOpacity={0.9} />
+              <Stop offset="1" stopColor={Palette.paper} stopOpacity={1} />
+            </LinearGradient>
+          </Defs>
+          <Rect fill="url(#welcome-scrim)" height="100%" width="100%" />
+        </Svg>
+        <View
+          style={{
+            height: barHeight + insets.bottom,
+            backgroundColor: Palette.paper,
+          }}
+        />
+      </View>
 
       <View
         style={{

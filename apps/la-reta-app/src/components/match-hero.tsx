@@ -1,9 +1,16 @@
 import { View } from "react-native";
 
+import { MatchPhoto } from "@/components/match-photo";
 import { Text } from "@/components/ui/text";
-import { Display, Palette, Spacing } from "@/constants/theme";
+import { Display, Palette, Radius, Spacing } from "@/constants/theme";
 import { formatMatchDate } from "@/lib/dates";
-import { balanceLabel, matchTeams, teamColor } from "@/lib/teams";
+import {
+  balanceLabel,
+  matchGoals,
+  rankedTeams,
+  teamColor,
+  type RankedTeam,
+} from "@/lib/teams";
 import type { Match } from "@/lib/types";
 
 /**
@@ -14,75 +21,103 @@ import type { Match } from "@/lib/types";
  * colores por equipo. Se veía como cualquier plantilla: la app había pasado de
  * un acento a ocho colores y perdido lo que la distinguía. Aquí el color de
  * equipo se queda en un filete de 3 pt —identifica sin decorar— y el peso lo
- * lleva la tipografía, igual que en la tira de cifras de Inicio.
+ * lleva la tipografía, igual que en la tira de cifras de Inicio. Ese filete es
+ * además el que amarra cada fila con su bloque de goleadores más abajo, que
+ * usa el mismo color: en una reta de tres es lo único que dice de qué equipo
+ * era el que marcó.
  *
- * Quien ganó se marca con tinta plena; los demás quedan en gris. No hace falta
- * un adorno para decir quién fue primero.
+ * Con tres o más equipos esto es una tabla, así que lleva puesto. Y quien ganó
+ * se marca con tinta plena; los demás quedan en gris. No hace falta un adorno
+ * para decir quién fue primero.
+ *
+ * La foto abre la ficha, entera y con su proporción —aquí no es un adorno de
+ * cabecera sino el documento del partido, y recortarla a una franja para que
+ * cuadre sería tirar justo lo que se vino a ver—. Va debajo el marcador, sin
+ * nada escrito encima de la imagen: el degradado oscuro con la cifra grande
+ * superpuesta es exactamente la plantilla que esta pantalla ya descartó una
+ * vez.
  */
 export function MatchHero({ match }: { match: Match }) {
-  const teams = matchTeams(match);
-  const ranked = [...teams].sort((a, b) => b.score - a.score);
-  const total = ranked.reduce((sum, team) => sum + team.score, 0);
+  const ranked = rankedTeams(match);
+  const total = matchGoals(match);
+  /** Un duelo no necesita tabla: con dos filas el orden ya es el puesto. */
+  const showRank = ranked.length > 2;
+  const shared = ranked.filter((team) => team.isWinner).length > 1;
 
   return (
     <View style={{ gap: Spacing.three }}>
+      <MatchPhoto
+        alt={`Foto del partido del ${formatMatchDate(match.playedAt)}`}
+        mode="full"
+        radius={Radius.lg}
+        url={match.photoUrl}
+      />
+
       <Text tone="muted" variant="eyebrow">
         {formatMatchDate(match.playedAt)} · {balanceLabel(match.balance)}
+        {shared ? " · Empate arriba" : ""}
       </Text>
 
       <View style={{ borderTopWidth: 1, borderTopColor: Palette.hairline }}>
-        {ranked.map((team, index) => {
-          const winner = index === 0;
-
-          return (
-            <View
-              key={team.key}
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                gap: Spacing.three,
-                paddingVertical: Spacing.three,
-                borderBottomWidth: 1,
-                borderBottomColor: Palette.hairline,
-              }}
-            >
-              <View
-                style={{
-                  width: 3,
-                  height: 30,
-                  borderRadius: 2,
-                  backgroundColor: teamColor(team.key),
-                }}
-              />
-
-              <Text
-                numberOfLines={1}
-                style={{ flex: 1 }}
-                tone={winner ? "ink" : "muted"}
-                variant="bodyStrong"
-              >
-                {team.name}
-              </Text>
-
-              <Text
-                style={{
-                  color: winner ? Palette.ink : Palette.inkFaint,
-                  fontFamily: Display.bold,
-                  fontSize: 40,
-                  lineHeight: 48,
-                  fontVariant: ["tabular-nums"],
-                }}
-              >
-                {team.score}
-              </Text>
-            </View>
-          );
-        })}
+        {ranked.map((team) => (
+          <TeamRow key={team.key} showRank={showRank} team={team} />
+        ))}
       </View>
 
       <Text tone="faint" variant="caption">
         {total} {total === 1 ? "gol" : "goles"} · {ranked.length} equipos ·
         balance {match.balance}/100
+      </Text>
+    </View>
+  );
+}
+
+function TeamRow({ team, showRank }: { team: RankedTeam; showRank: boolean }) {
+  return (
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.three,
+        paddingVertical: Spacing.three,
+        borderBottomWidth: 1,
+        borderBottomColor: Palette.hairline,
+      }}
+    >
+      {showRank ? (
+        <Text style={{ width: 14 }} tone="faint" variant="eyebrow">
+          {team.rank}
+        </Text>
+      ) : null}
+
+      <View
+        style={{
+          width: 3,
+          height: 30,
+          borderRadius: 2,
+          backgroundColor: teamColor(team.key),
+        }}
+      />
+
+      <Text
+        numberOfLines={1}
+        style={{ flex: 1 }}
+        tone={team.isWinner ? "ink" : "muted"}
+        variant="bodyStrong"
+      >
+        {team.name}
+      </Text>
+
+      <Text
+        style={{
+          color: team.isWinner ? Palette.ink : Palette.inkFaint,
+          fontFamily: Display.bold,
+          fontSize: 40,
+          lineHeight: 48,
+          fontVariant: ["tabular-nums"],
+        }}
+      >
+        {team.score}
       </Text>
     </View>
   );

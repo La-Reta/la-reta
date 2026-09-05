@@ -2,11 +2,13 @@ import { useRouter } from "expo-router";
 import { RefreshControl, ScrollView, View } from "react-native";
 
 import { CrackCard } from "@/components/crack-card";
+import { GoalsTrend } from "@/components/goals-trend";
 import { MatchCard } from "@/components/match-card";
 import { MatchdayBanner } from "@/components/matchday-banner";
 import { Notice } from "@/components/notice";
 import { PlayerRow } from "@/components/player-row";
 import { QuickActions } from "@/components/quick-actions";
+import { ScorerRace, SCORER_RACE_SIZE } from "@/components/scorer-race";
 import { StatStrip } from "@/components/stat-strip";
 import { Section } from "@/components/ui/section";
 import {
@@ -27,6 +29,21 @@ const RANKING_SIZE = 5;
  * Primero cuándo se juega, porque es el único dato que caduca. Después **el
  * último partido**: es a lo que se abre la app —a ver cómo quedó—, así que va
  * antes que el crack, que sigue siendo el mismo de la semana pasada.
+ *
+ * Las dos gráficas van separadas a propósito, cada una pegada al bloque del
+ * que es continuación. **Goleadores** cae justo después del último partido:
+ * acabas de ver quién marcó anoche y la pregunta siguiente es quién lleva la
+ * temporada. **Goles por reta** cierra la pantalla, detrás del ranking, porque
+ * es la vista más lejana de todas —la forma del año— y funciona como punto
+ * final, no como titular.
+ *
+ * Juntas eran un muro: dos lienzos seguidos con el mismo verde se leían como un
+ * solo bloque y el ojo los saltaba. Repartidas, el scroll alterna tarjeta,
+ * gráfica, tarjeta, lista, gráfica, y cada cambio de material vuelve a pedir
+ * atención.
+ *
+ * Y son solo dos. Una tercera empujaría el ranking fuera de la pantalla para
+ * repetir con dibujos lo que las listas ya dicen con nombres.
  */
 export default function InicioScreen() {
   const router = useRouter();
@@ -95,6 +112,10 @@ export default function InicioScreen() {
         </Section>
       )}
 
+      <Section meta={`Top ${SCORER_RACE_SIZE}`} title="Goleadores">
+        <ScorerRace matches={matches} />
+      </Section>
+
       <Section meta="Mayor overall" title="El crack">
         <CrackCard
           onPress={
@@ -118,6 +139,10 @@ export default function InicioScreen() {
           </View>
         </Section>
       )}
+
+      <Section meta={`${matches?.length ?? 0} jornadas`} title="Goles por reta">
+        <GoalsTrend matches={matches} />
+      </Section>
     </ScrollView>
   );
 }

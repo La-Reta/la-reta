@@ -1,3 +1,5 @@
+import type { Position } from "@repo/reta/positions";
+
 /**
  * Forma de lo que devuelve /api/v1, solo con los campos que la app usa hoy.
  *
@@ -8,27 +10,12 @@
  */
 
 /**
- * Posiciones concretas, en códigos FIFA. Es el mismo conjunto que el enum
- * `position` de Postgres (ver POSITIONS en apps/la-reta-web/lib/constants.ts):
- * las fichas de la web enseñan el código, no el nombre de la línea, y la app
- * habla el mismo idioma.
+ * Las posiciones y su reparto por líneas viven en `@repo/reta`: son las mismas
+ * que el enum `position` de Postgres y las que usa el repartidor de equipos, y
+ * tenerlas copiadas aquí significaba que una posición nueva en el servidor
+ * dejaba a la app hablando otro idioma.
  */
-export type Position =
-  | "GK"
-  | "RB"
-  | "RWB"
-  | "CB"
-  | "LB"
-  | "LWB"
-  | "CDM"
-  | "CM"
-  | "CAM"
-  | "RM"
-  | "LM"
-  | "RW"
-  | "LW"
-  | "CF"
-  | "ST";
+export type { Position };
 
 export const STAT_KEYS = [
   "pace",
@@ -108,5 +95,7 @@ export interface Match {
   teams: MatchTeam[] | null;
   /** Nota libre que escribió quien registró el partido. */
   notes: string | null;
+  /** Foto del partido (la grupal, casi siempre). Null en los que no la tienen. */
+  photoUrl: string | null;
   scorers: Scorer[];
 }

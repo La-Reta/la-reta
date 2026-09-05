@@ -1,5 +1,5 @@
 import { useMemo } from "react";
-import { StyleSheet, View } from "react-native";
+import { StyleSheet, View, type TextStyle } from "react-native";
 import Svg, {
   Circle,
   Defs,
@@ -9,9 +9,11 @@ import Svg, {
   Stop,
 } from "react-native-svg";
 
+import { RotatingWord } from "@/components/rotating-word";
 import { Icon } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
 import { Display, Palette, Radius, Shadow, Spacing } from "@/constants/theme";
+import { useBannerWords } from "@/hooks/use-banner-words";
 import { nextReta } from "@/lib/reta-date";
 
 /**
@@ -37,15 +39,39 @@ import { nextReta } from "@/lib/reta-date";
  * reserva la caja que Oswald necesita a este tamaño y el número sale cortado
  * por arriba, con medio glifo visible. No hay techo: 72 pt con interlineado de
  * 86 se dibuja entero y en Oswald.
+ *
+ * **«DÍAS» va dentro del mismo `<Text>` que la cifra**, no en una vista
+ * hermana. Estaba en una fila con `alignItems: "flex-end"` y un `paddingBottom`
+ * a ojo, y eso alinea las *cajas de línea*, no las letras: con 72 pt sobre un
+ * interlineado de 86 la caja sobra por abajo, así que la palabra quedaba unos
+ * píxeles alta y la línea base no cuadraba. Anidado, el motor de texto lo
+ * resuelve solo y en las tres plataformas, que es exactamente su trabajo.
  */
 
-const HEIGHT = 188;
+const HEIGHT = 212;
+
+/**
+ * `accentInk` rebajado. Va como color y no como `opacity` porque en un `<Text>`
+ * anidado la opacidad no se hereda de forma fiable en Android.
+ */
+const UNIT_INK = "rgba(236, 253, 245, 0.85)";
+const PREFIX_INK = "rgba(236, 253, 245, 0.6)";
+
+/** La frase, un peldaño por debajo de la cifra y en la misma cara condensada. */
+const phraseStyle = {
+  fontFamily: Display.medium,
+  fontSize: 18,
+  lineHeight: 24,
+  letterSpacing: 1.2,
+  textTransform: "uppercase",
+} satisfies TextStyle;
 
 export function MatchdayBanner() {
   // Se calcula una vez por montaje: el conteo va en días, así que recalcularlo
   // en cada render no cambiaría el número y solo gastaría trabajo.
   const reta = useMemo(() => nextReta(), []);
   const today = reta.daysUntil === 0;
+  const words = useBannerWords();
 
   return (
     <View
@@ -113,40 +139,47 @@ export function MatchdayBanner() {
         </View>
 
         <View style={{ gap: Spacing.one }}>
+          {/*
+            La frase que escribe la gente. Solo gira la última palabra, así que
+            «La Reta» es un hermano fijo y no entra en la animación: si girara
+            la línea entera, el ojo perdería el punto de anclaje en cada relevo.
+          */}
           <View
             style={{
               flexDirection: "row",
-              alignItems: "flex-end",
-              gap: Spacing.two,
+              alignItems: "center",
+              gap: Spacing.one,
             }}
           >
-            <Text
-              style={{
-                color: Palette.accentInk,
-                fontFamily: Display.bold,
-                fontSize: today ? 56 : 72,
-                lineHeight: today ? 68 : 86,
-                letterSpacing: 1,
-              }}
-            >
-              {today ? "HOY" : reta.daysUntil}
-            </Text>
+            <Text style={[phraseStyle, { color: PREFIX_INK }]}>La Reta</Text>
+            <RotatingWord
+              style={[phraseStyle, { color: Palette.accentInk, flexShrink: 1 }]}
+              words={words}
+            />
+          </View>
+
+          <Text
+            style={{
+              color: Palette.accentInk,
+              fontFamily: Display.bold,
+              fontSize: today ? 56 : 72,
+              lineHeight: today ? 68 : 86,
+              letterSpacing: 1,
+            }}
+          >
+            {today ? "HOY" : reta.daysUntil}
             {today ? null : (
               <Text
                 style={{
-                  color: Palette.accentInk,
-                  fontFamily: Display.bold,
+                  color: UNIT_INK,
                   fontSize: 26,
-                  lineHeight: 32,
                   letterSpacing: 1.5,
-                  opacity: 0.9,
-                  paddingBottom: Spacing.two,
                 }}
               >
-                {reta.daysUntil === 1 ? "DÍA" : "DÍAS"}
+                {reta.daysUntil === 1 ? " DÍA" : " DÍAS"}
               </Text>
             )}
-          </View>
+          </Text>
 
           <Text style={{ opacity: 0.9 }} tone="onAccent" variant="caption">
             {reta.label} · 7:00 pm
