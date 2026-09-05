@@ -1,3 +1,11 @@
+/* eslint-disable sonarjs/no-duplicate-string --
+ * Los estados de idea ("nueva", "planeada", …) se repiten como **claves** de
+ * tres `Record<IdeaStatus, …>`: la etiqueta, la clase y el punto de color.
+ * Sacarlas a constantes obligaría a escribir `[STATUS_NUEVA]: "…"` en cada
+ * tabla, que se lee peor y no gana nada: el tipo `IdeaStatus` ya obliga a que
+ * estén las cinco y solo esas.
+ */
+
 /**
  * Constantes de dominio que usan el esquema, el motor de rating y la interfaz.
  *
@@ -7,6 +15,8 @@
  * haya un solo sitio donde añadir una posición nueva.
  */
 
+import type { Position, PositionGroup } from "@repo/reta/positions";
+
 export {
   POSITIONS,
   isPosition,
@@ -14,7 +24,6 @@ export {
   type Position,
   type PositionGroup,
 } from "@repo/reta/positions";
-import { type Position, type PositionGroup } from "@repo/reta/positions";
 
 export const FEET = ["left", "right", "both"] as const;
 export type Foot = (typeof FEET)[number];
@@ -26,12 +35,16 @@ export const GROUP_LABEL: Record<PositionGroup, string> = {
   FWD: "Delantero",
 };
 
-/** Marker color per line, chosen for contrast against the green pitch. */
+/**
+ * Marker color per line, chosen for contrast against the green pitch.
+ *
+ * In Tailwind names: GK amber, DEF sky, MID violet, FWD rose.
+ */
 export const GROUP_COLOR: Record<PositionGroup, string> = {
-  GK: "#f59e0b", // amber
-  DEF: "#0ea5e9", // sky
-  MID: "#8b5cf6", // violet
-  FWD: "#f43f5e", // rose
+  GK: "#f59e0b",
+  DEF: "#0ea5e9",
+  MID: "#8b5cf6",
+  FWD: "#f43f5e",
 };
 
 /**
@@ -145,7 +158,12 @@ export const IDEA_STATUS_LABEL: Record<IdeaStatus, string> = {
   descartada: "Descartada",
 };
 
-// Tailwind classes per status badge (literal so they're emitted).
+/**
+ * Tailwind classes per status badge.
+ *
+ * Written out in full — the class names have to appear literally in the source
+ * for Tailwind's scanner to emit them, so these cannot be built by template.
+ */
 export const IDEA_STATUS_CLASS: Record<IdeaStatus, string> = {
   nueva: "bg-sky-500/15 text-sky-600 dark:text-sky-400",
   planeada: "bg-violet-500/15 text-violet-600 dark:text-violet-400",
@@ -154,7 +172,9 @@ export const IDEA_STATUS_CLASS: Record<IdeaStatus, string> = {
   descartada: "bg-muted text-muted-foreground",
 };
 
-/** Color sólido del estado, para puntos y barras de acento en las listas. */
+/**
+Color sólido del estado, para puntos y barras de acento en las listas.
+*/
 export const IDEA_STATUS_DOT: Record<IdeaStatus, string> = {
   nueva: "bg-sky-500",
   planeada: "bg-violet-500",
@@ -163,7 +183,9 @@ export const IDEA_STATUS_DOT: Record<IdeaStatus, string> = {
   descartada: "bg-muted-foreground/40",
 };
 
-/** Estados terminales: ya no son trabajo pendiente, se muestran atenuados. */
+/**
+Estados terminales: ya no son trabajo pendiente, se muestran atenuados.
+*/
 export const IDEA_STATUS_DONE: Record<IdeaStatus, boolean> = {
   nueva: false,
   planeada: false,
@@ -254,8 +276,12 @@ export const SIGNUP_STATUS_CLASS: Record<SignupStatus, string> = {
   rechazado: "bg-muted text-muted-foreground",
 };
 
-/** Emojis offered in the comment reaction picker. */
+/**
+Emojis offered in the comment reaction picker.
+*/
 export const REACTION_EMOJIS = ["⚽", "🔥", "👏", "😂", "💪", "🐐"] as const;
 
-/** Max distinct emojis per comment (each one can still be reacted infinitely). */
+/**
+Max distinct emojis per comment (each one can still be reacted infinitely).
+*/
 export const MAX_DISTINCT_REACTIONS = 15;

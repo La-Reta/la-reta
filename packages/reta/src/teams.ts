@@ -28,25 +28,35 @@ export const defaultTeamName = (key: TeamKey) => `Equipo ${key}`;
 /**
 Color por equipo — mismo orden en tablero, lista, live y gráficos.
 */
+/**
+ * Color por equipo — mismo orden en tablero, lista, live y gráficos.
+ *
+ * En nombres de Tailwind: A sky, B rose, C emerald, D amber, E violet, F teal.
+ */
 export const TEAM_COLORS: Record<TeamKey, string> = {
-  A: "#0ea5e9", // sky
-  B: "#f43f5e", // rose
-  C: "#22c55e", // emerald
-  D: "#f59e0b", // amber
-  E: "#a855f7", // violet
-  F: "#14b8a6", // teal
+  A: "#0ea5e9",
+  B: "#f43f5e",
+  C: "#22c55e",
+  D: "#f59e0b",
+  E: "#a855f7",
+  F: "#14b8a6",
 };
 
 /**
 Variante clara del color, para textos sobre el fondo azul del tablero.
 */
+/**
+ * Variante clara del color, para textos sobre el fondo azul del tablero.
+ *
+ * Es el escalón 400 de los mismos tonos: sky, rose, green, amber, purple, teal.
+ */
 export const TEAM_COLORS_LIGHT: Record<TeamKey, string> = {
-  A: "#38bdf8", // sky-400
-  B: "#fb7185", // rose-400
-  C: "#4ade80", // green-400
-  D: "#fbbf24", // amber-400
-  E: "#c084fc", // purple-400
-  F: "#2dd4bf", // teal-400
+  A: "#38bdf8",
+  B: "#fb7185",
+  C: "#4ade80",
+  D: "#fbbf24",
+  E: "#c084fc",
+  F: "#2dd4bf",
 };
 
 /**
@@ -55,11 +65,9 @@ export const TEAM_COLORS_LIGHT: Record<TeamKey, string> = {
  * varios partidos: uno por par.
  */
 export function pairsOf<T>(teams: T[]): [T, T][] {
-  const out: [T, T][] = [];
-  for (let index = 0; index < teams.length; index++) {
-    for (let index_ = index + 1; index_ < teams.length; index_++) {
-      out.push([teams[index] as T, teams[index_] as T]);
-    }
-  }
-  return out;
+  // `flatMap` sobre las entradas evita los índices y sus aserciones: cada
+  // pareja sale de dos valores que el propio recorrido ya garantiza.
+  return teams.flatMap((home, index) =>
+    teams.slice(index + 1).map((away): [T, T] => [home, away])
+  );
 }
