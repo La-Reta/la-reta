@@ -1,3 +1,5 @@
+import type { Lineup } from "@repo/reta/balancer";
+
 import { positionGroup, type PositionGroup } from "@/lib/players";
 import type { Player } from "@/lib/types";
 
@@ -76,4 +78,65 @@ export function bestEleven(players: Player[]): LineupSlot[] {
   }
 
   return slots;
+}
+
+/** Profundidad de cada línea sobre la cancha vertical, con la portería abajo. */
+const LINE_TOP: Record<PositionGroup, number> = {
+  GK: 90,
+  DEF: 70,
+  MID: 48,
+  FWD: 24,
+};
+
+const LINE_ORDER: PositionGroup[] = ["GK", "DEF", "MID", "FWD"];
+
+/** Margen lateral: más cerca de la banda y el retrato se sale del césped. */
+const EDGE = 18;
+/** Desde cuántos en una línea hay que escalonarlos para que no se toquen. */
+const STAGGER_FROM = 4;
+const STAGGER = 5;
+
+/**
+ * Coloca a un equipo generado sobre la cancha.
+ *
+ * No usa una formación fija como `bestEleven`: una reta es de seis, siete u
+ * ocho por lado y forzarlos a un 4-3-3 dejaría huecos donde no hay nadie. Aquí
+ * las líneas salen de lo que el repartidor ya decidió —cada jugador trae su
+ * puesto— y cada línea se reparte a lo ancho con la gente que le tocó, así que
+ * un 3-2-1 se dibuja 3-2-1 y un 2-3-2 también.
+ */
+export function teamSlots(lineups: Lineup<Player>[]): LineupSlot[] {
+  const byLine = new Map<PositionGroup, Lineup<Player>[]>();
+  for (const lineup of lineups) {
+    const group = positionGroup(lineup.role);
+    byLine.set(group, [...(byLine.get(group) ?? []), lineup]);
+  }
+
+  const slots: LineupSlot[] = [];
+  for (const group of LINE_ORDER) {
+    const line = byLine.get(group) ?? [];
+
+    line.forEach((lineup, index) => {
+      slots.push({
+        id: String(lineup.player.id),
+        label: lineup.role,
+        group,
+        left: spreadAcross(index, line.length),
+        // Una línea de cuatro o más se escalona: en un ancho de teléfono, cinco
+        // retratos a la misma altura se solapan.
+        top:
+          LINE_TOP[group] +
+          (line.length >= STAGGER_FROM && index % 2 === 1 ? STAGGER : 0),
+        player: lineup.player,
+      });
+    });
+  }
+
+  return slots;
+}
+
+/** Reparte `count` jugadores a lo ancho, centrados y sin pisar la banda. */
+function spreadAcross(index: number, count: number): number {
+  if (count <= 1) return 50;
+  return EDGE + (index * (100 - 2 * EDGE)) / (count - 1);
 }

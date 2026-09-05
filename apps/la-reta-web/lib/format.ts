@@ -9,17 +9,11 @@ export function flagEmoji(iso2: string | null | undefined): string {
 }
 
 /**
- * The positions a player can fill: primary plus an optional, distinct secondary.
- * Structural input so it works with rows, form state, or partial objects.
+ * Las posiciones que alguien puede cubrir. Vive en `@repo/reta` porque el
+ * balanceador y los filtros de la app la necesitan igual; se reexporta para no
+ * tocar los sitios que ya la importan de aquí.
  */
-export function playerPositions<T extends string>(p: {
-  position: T;
-  position2?: T | null;
-}): T[] {
-  return p.position2 && p.position2 !== p.position
-    ? [p.position, p.position2]
-    : [p.position];
-}
+export { playerPositions } from "@repo/reta/positions";
 
 /** Seconds → "M:SS" (or "H:MM:SS" past an hour). */
 export function formatDuration(totalSec: number): string {

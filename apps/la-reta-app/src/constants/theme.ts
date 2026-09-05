@@ -170,4 +170,11 @@ export const Motion = {
  * sobre el contenido, así que sin este colchón la última fila queda debajo.
  */
 export const BottomTabInset = Platform.select({ ios: 56, android: 80 }) ?? 0;
+
+/**
+ * Hueco extra que pide el accesorio de la barra —el botón de acción— sobre el
+ * área segura, en puntos. Solo lo necesitan las pantallas que publican una
+ * acción; las demás no dibujan accesorio y les basta `BottomTabInset`.
+ */
+export const AccessoryInset = 72;
 export const MaxContentWidth = 720;

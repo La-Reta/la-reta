@@ -1,31 +1,35 @@
-import * as WebBrowser from "expo-web-browser";
-import { useCallback, useMemo } from "react";
+import { useRouter } from "expo-router";
+import { useMemo } from "react";
 import { ScrollView, View } from "react-native";
+import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PitchLineup } from "@/components/pitch-lineup";
-import { Button } from "@/components/ui/button";
+import { useTabAction } from "@/components/tab-action";
 import { Section } from "@/components/ui/section";
 import { Surface } from "@/components/ui/surface";
 import { Text } from "@/components/ui/text";
 import {
-  BottomTabInset,
+  AccessoryInset,
   MaxContentWidth,
   Palette,
   Radius,
   Spacing,
 } from "@/constants/theme";
 import { useReta } from "@/hooks/use-reta";
-import { API_URL } from "@/lib/api";
 import { bestEleven } from "@/lib/lineup";
 
 /**
  * Armar la reta.
  *
- * El balanceador vive hoy en la web y mover ese algoritmo al móvil es un
- * trabajo aparte, así que esta pantalla hace tres cosas honestas: dice cuánta
- * plantilla hay para repartir, enseña el once ideal sobre la cancha —el mismo
- * 4-3-3 que la web— y abre el armador real en el navegador, en vez de fingir un
- * botón que no arma nada.
+ * Es la portada del armador, y está ordenada como una explicación: primero
+ * **cómo se arma**, que es lo que contesta a quien llega sin saber qué hace
+ * esta pestaña; después el **once ideal**, que enseña de qué está hecha la
+ * plantilla; y al final la tarjeta con cuánta gente hay.
+ *
+ * Aquí no se arma nada: se decide entrar a armar. Esa acción vive en el cristal
+ * de la barra de pestañas —el sitio que iOS 26 reserva para la acción de la
+ * pantalla— y no en una tarjeta, así que no depende de haber llegado al final
+ * del scroll. El reparto de verdad vive en `convocatoria`.
  */
 
 const STEPS = [
@@ -46,6 +50,8 @@ const STEPS = [
 ];
 
 export default function RetaScreen() {
+  const insets = useSafeAreaInsets();
+  const router = useRouter();
   const { players, summary } = useReta();
 
   // El mismo 4-3-3 que la web. Cuando exista el armador nativo, esta cancha
@@ -53,11 +59,17 @@ export default function RetaScreen() {
   // componente son los mismos.
   const eleven = useMemo(() => bestEleven(players ?? []), [players]);
 
-  const openBuilder = useCallback(() => {
-    WebBrowser.openBrowserAsync(`${API_URL}/teams`);
-  }, []);
-
   const squadLabel = players === null ? "—" : summary.squad;
+
+  // La acción vive en el cristal de la barra, no en la tarjeta: es la única de
+  // la pantalla y allí sigue al pulgar en vez de esperar al final del scroll.
+  useTabAction([
+    {
+      label: "Convocar",
+      icon: "people",
+      onPress: () => router.push("/convocatoria"),
+    },
+  ]);
 
   return (
     <ScrollView
@@ -68,38 +80,12 @@ export default function RetaScreen() {
         gap: Spacing.five,
         paddingHorizontal: Spacing.four,
         paddingTop: Spacing.three,
-        paddingBottom: BottomTabInset + Spacing.five,
+        // El accesorio flota sobre el contenido: sin este colchón, tapaba la
+        // mitad baja de la cancha.
+        paddingBottom: insets.bottom + AccessoryInset + Spacing.five,
       }}
       contentInsetAdjustmentBehavior="automatic"
     >
-      <Surface style={{ gap: Spacing.three, padding: Spacing.four }}>
-        <Text tone="accent" variant="eyebrow">
-          Disponibles
-        </Text>
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "baseline",
-            gap: Spacing.two,
-          }}
-        >
-          <Text variant="stat">{squadLabel}</Text>
-          <Text tone="muted" variant="body">
-            jugadores en la plantilla
-          </Text>
-        </View>
-        <Text tone="muted" variant="caption">
-          Media de {summary.avgOverall || "—"} de overall y{" "}
-          {summary.avgAge || "—"} años.
-        </Text>
-      </Surface>
-
-      {players === null || players.length === 0 ? null : (
-        <Section meta="4-3-3" title="Once ideal">
-          <PitchLineup slots={eleven} />
-        </Section>
-      )}
-
       <Section title="Cómo se arma">
         <View>
           {STEPS.map((step, index) => (
@@ -139,16 +125,33 @@ export default function RetaScreen() {
         </View>
       </Section>
 
-      <View style={{ gap: Spacing.two }}>
-        <Button
-          label="Armar en la web"
-          onPress={openBuilder}
-          variant="primary"
-        />
-        <Text style={{ textAlign: "center" }} tone="faint" variant="caption">
-          El armador nativo llega después; por ahora abre el de siempre.
+      {players === null || players.length === 0 ? null : (
+        <Section meta="4-3-3" title="Once ideal">
+          <PitchLineup slots={eleven} />
+        </Section>
+      )}
+
+      <Surface style={{ gap: Spacing.three, padding: Spacing.four }}>
+        <Text tone="accent" variant="eyebrow">
+          Disponibles
         </Text>
-      </View>
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "baseline",
+            gap: Spacing.two,
+          }}
+        >
+          <Text variant="stat">{squadLabel}</Text>
+          <Text tone="muted" variant="body">
+            jugadores en la plantilla
+          </Text>
+        </View>
+        <Text tone="muted" variant="caption">
+          Media de {summary.avgOverall || "—"} de overall y{" "}
+          {summary.avgAge || "—"} años.
+        </Text>
+      </Surface>
     </ScrollView>
   );
 }

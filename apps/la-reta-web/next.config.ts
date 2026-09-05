@@ -1,6 +1,9 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
+  // El dominio compartido (@repo/reta) se publica como TypeScript sin compilar,
+  // igual que lo consume Metro en la app: Next tiene que transpilarlo él mismo.
+  transpilePackages: ["@repo/reta"],
   // Las subidas de imagen pasan por el Server Action; el límite por defecto es 1MB.
   experimental: { serverActions: { bodySizeLimit: "8mb" } },
   images: {

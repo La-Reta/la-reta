@@ -27,3 +27,17 @@ export function formatMatchDate(iso: string): string {
 
   return `${day} ${MONTHS[month - 1]} ${year}`;
 }
+
+/**
+ * "20 ago", sin año.
+ *
+ * Es la fecha de un eje o de una etiqueta apretada, donde el año ya lo pone el
+ * contexto y cuatro cifras más obligarían a girar el texto.
+ */
+export function formatShortDate(iso: string): string {
+  const [, month, day] = iso.slice(0, 10).split("-").map(Number);
+
+  if (!month || !day) return iso;
+
+  return `${day} ${MONTHS[month - 1]}`;
+}

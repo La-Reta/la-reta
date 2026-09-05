@@ -1,55 +1,28 @@
 /**
- * Identidad de los equipos de una reta. La app soporta N equipos (default 2):
- * cada equipo es una letra ("A", "B", "C", …) que se usa igual en el generador,
- * en el live, en `generated_reta_players.team` y en `match_goals.team`.
+ * Los equipos de una reta, del lado de la web.
+ *
+ * Las letras, los colores y los duelos viven en `@repo/reta` —la app móvil
+ * pinta los mismos—; aquí queda solo lo que necesita la forma de los partidos
+ * guardados, que es cosa del esquema de esta app.
  */
-export const TEAM_KEYS = ["A", "B", "C", "D", "E", "F"] as const;
-export type TeamKey = (typeof TEAM_KEYS)[number];
-
-export const DEFAULT_TEAM_COUNT = 2;
-export const MAX_TEAMS = TEAM_KEYS.length;
-
-/** Las primeras `n` letras, acotadas a [2, MAX_TEAMS]. */
-export function teamKeys(n: number): TeamKey[] {
-  return TEAM_KEYS.slice(0, Math.max(2, Math.min(MAX_TEAMS, Math.floor(n))));
-}
-
-export const isTeamKey = (v: unknown): v is TeamKey =>
-  typeof v === "string" && (TEAM_KEYS as readonly string[]).includes(v);
-
-export const defaultTeamName = (key: TeamKey) => `Equipo ${key}`;
-
-/** Color por equipo — mismo orden en tablero, lista, live y gráficos. */
-export const TEAM_COLORS: Record<TeamKey, string> = {
-  A: "#0ea5e9", // sky
-  B: "#f43f5e", // rose
-  C: "#22c55e", // emerald
-  D: "#f59e0b", // amber
-  E: "#a855f7", // violet
-  F: "#14b8a6", // teal
-};
-
-/** Variante clara del color, para textos sobre el fondo azul del tablero. */
-export const TEAM_COLORS_LIGHT: Record<TeamKey, string> = {
-  A: "#38bdf8", // sky-400
-  B: "#fb7185", // rose-400
-  C: "#4ade80", // green-400
-  D: "#fbbf24", // amber-400
-  E: "#c084fc", // purple-400
-  F: "#2dd4bf", // teal-400
-};
-
-/**
- * Todos los duelos posibles entre N equipos (2 → 1 duelo, 3 → 3, 4 → 6). Un
- * partido siempre es de dos lados, así que una reta de 3+ se registra como
- * varios partidos: uno por par.
- */
-export function pairsOf<T>(teams: T[]): [T, T][] {
-  const out: [T, T][] = [];
-  for (let i = 0; i < teams.length; i++)
-    for (let j = i + 1; j < teams.length; j++) out.push([teams[i], teams[j]]);
-  return out;
-}
+export {
+  DEFAULT_TEAM_COUNT,
+  MAX_TEAMS,
+  TEAM_COLORS,
+  TEAM_COLORS_LIGHT,
+  TEAM_KEYS,
+  defaultTeamName,
+  isTeamKey,
+  pairsOf,
+  teamKeys,
+  type TeamKey,
+} from "@repo/reta/teams";
+import {
+  TEAM_KEYS,
+  defaultTeamName,
+  isTeamKey,
+  type TeamKey,
+} from "@repo/reta/teams";
 
 /** Un equipo dentro de un partido ya registrado, con sus goles. */
 export type MatchTeamRow = { key: TeamKey; name: string; score: number };

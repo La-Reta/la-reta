@@ -1,8 +1,15 @@
 import {
+  playerPositions,
+  positionGroup,
+  type PositionGroup,
+} from "@repo/reta/positions";
+
+import { matchTeams } from "@/lib/teams";
+import {
   STAT_KEYS,
   type Match,
+  type MatchTeam,
   type Player,
-  type Position,
   type StatKey,
 } from "@/lib/types";
 
@@ -14,29 +21,10 @@ import {
  * palabra sin robarle el sitio al nombre.
  */
 export function formatPositions(player: Player): string {
-  return [player.position, player.position2].filter(Boolean).join(" / ");
+  return playerPositions(player).join(" / ");
 }
 
-export type PositionGroup = "GK" | "DEF" | "MID" | "FWD";
-
-/** Mismo reparto por líneas que la web (lib/constants.ts). */
-const GROUP_BY_POSITION: Record<Position, PositionGroup> = {
-  GK: "GK",
-  RB: "DEF",
-  RWB: "DEF",
-  CB: "DEF",
-  LB: "DEF",
-  LWB: "DEF",
-  CDM: "MID",
-  CM: "MID",
-  CAM: "MID",
-  RM: "MID",
-  LM: "MID",
-  RW: "FWD",
-  LW: "FWD",
-  CF: "FWD",
-  ST: "FWD",
-};
+export { playerPositions, positionGroup, type PositionGroup };
 
 export const GROUP_LABEL: Record<PositionGroup, string> = {
   GK: "Porteros",
@@ -53,8 +41,15 @@ export const GROUP_SHORT: Record<PositionGroup, string> = {
   FWD: "DEL",
 };
 
-export function positionGroup(position: Position): PositionGroup {
-  return GROUP_BY_POSITION[position] ?? "MID";
+/**
+ * Las líneas que cubre, sin repetir.
+ *
+ * Un CB/LB es defensa una sola vez; un GK/CB aparece en portería y en defensa,
+ * que es justo lo que el filtro de la plantilla necesita saber. La web filtra
+ * igual (components/features/players/players-browser).
+ */
+export function playerGroups(player: Player): PositionGroup[] {
+  return [...new Set(playerPositions(player).map(positionGroup))];
 }
 
 export const FOOT_LABEL: Record<Player["preferredFoot"], string> = {
@@ -100,10 +95,13 @@ export function playerTally(
 export interface GoalEntry {
   matchId: number;
   playedAt: string;
-  teamAName: string;
-  teamBName: string;
-  scoreA: number;
-  scoreB: number;
+  /**
+   * Todos los equipos del partido, no solo el par A/B. En una reta de tres el
+   * jugador puede haber estado justo en el que se quedaba fuera del marcador.
+   */
+  teams: MatchTeam[];
+  /** Clave del equipo en el que jugó, cuando el acta la registró. */
+  team: string | null;
   goals: number;
   assists: number;
 }
@@ -123,12 +121,14 @@ export function playerGoalHistory(
   for (const match of matches ?? []) {
     let goals = 0;
     let assists = 0;
+    let team: string | null = null;
     let played = false;
 
     for (const scorer of match.scorers) {
       if (scorer.playerId !== playerId) continue;
       goals += scorer.goals;
       assists += scorer.assists;
+      team = scorer.team;
       played = true;
     }
 
@@ -136,10 +136,8 @@ export function playerGoalHistory(
       entries.push({
         matchId: match.id,
         playedAt: match.playedAt,
-        teamAName: match.teamAName,
-        teamBName: match.teamBName,
-        scoreA: match.scoreA,
-        scoreB: match.scoreB,
+        teams: matchTeams(match),
+        team,
         goals,
         assists,
       });

@@ -1,3 +1,4 @@
+import type { ReactNode } from "react";
 import { View } from "react-native";
 import Svg, {
   Circle,
@@ -30,15 +31,46 @@ import type { LineupSlot } from "@/lib/lineup";
 // Proporción de una cancha real (68 × 105 m) puesta en vertical.
 const W = 680;
 const H = 1050;
+/**
+ * Alto por defecto, en puntos.
+ *
+ * La cancha se mide por el alto y no por el ancho: a ancho completo de teléfono
+ * esa proporción da 546 pt —más de media pantalla— y empujaba fuera de vista
+ * todo lo que iba debajo. Fijando el alto, el ancho sale de la proporción y el
+ * dibujo sigue siendo una cancha de verdad, solo que cabe.
+ */
+const DEFAULT_HEIGHT = 420;
 const LINE = "rgba(255, 255, 255, 0.55)";
 const STRIPES = 8;
 
-export function PitchLineup({ slots }: { slots: LineupSlot[] }) {
+export function PitchLineup({
+  slots,
+  height = DEFAULT_HEIGHT,
+  accent,
+  overlay,
+}: {
+  slots: LineupSlot[];
+  height?: number;
+  /**
+   * Rótulo sobre el césped, centrado arriba. Va dentro de la cancha y no encima
+   * porque en una imagen que se manda al grupo, el nombre del equipo tiene que
+   * viajar con el dibujo: recortada, una cancha sin rótulo no dice de quién es.
+   */
+  overlay?: ReactNode;
+  /**
+   * Color del equipo, como filete superior. No se tiñe el césped: cualquier
+   * color encima del verde da un barro —el azul sale verde azulado, el rojo
+   * marrón— y la cancha deja de parecer una cancha.
+   */
+  accent?: string;
+}) {
   return (
     <View
       style={{
-        width: "100%",
+        height,
         aspectRatio: W / H,
+        maxWidth: "100%",
+        alignSelf: "center",
         borderRadius: Radius.xl,
         borderCurve: "continuous",
         overflow: "hidden",
@@ -148,6 +180,20 @@ export function PitchLineup({ slots }: { slots: LineupSlot[] }) {
           strokeWidth={3}
         />
       </Svg>
+
+      {overlay ? (
+        <View
+          style={{
+            position: "absolute",
+            top: Spacing.three,
+            left: Spacing.three,
+            right: Spacing.three,
+            alignItems: "center",
+          }}
+        >
+          {overlay}
+        </View>
+      ) : null}
 
       {slots.map((slot) => (
         <View

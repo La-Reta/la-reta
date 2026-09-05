@@ -1,4 +1,6 @@
-import type { Match, Player, Scorer } from "@/lib/types";
+import { topScorers } from "@/lib/series";
+import { matchGoals } from "@/lib/teams";
+import type { Match, Player } from "@/lib/types";
 
 /**
  * Las cifras de portada, derivadas de lo que ya devuelve la API.
@@ -30,13 +32,15 @@ export function summarize(
     avgOverall: average(players, (player) => player.overall),
     avgAge: average(players, (player) => player.age),
     matchesPlayed: played.length,
-    goals: played.reduce(
-      (total, match) => total + match.scoreA + match.scoreB,
-      0
-    ),
+    // Por equipo y no por `scoreA + scoreB`: una reta de tres guarda el
+    // tercer marcador aparte, y sumando solo el par se perdían sus goles.
+    goals: played.reduce((total, match) => total + matchGoals(match), 0),
     // La API ya ordena el roster por overall, así que el primero es el crack.
     best: players?.[0] ?? null,
-    topScorer: topScorer(played),
+    // El líder es la primera fila de la tabla de goleadores; calcularlo
+    // aparte era recorrer los mismos partidos dos veces con dos criterios de
+    // desempate distintos.
+    topScorer: topScorers(played, 1)[0] ?? null,
   };
 }
 
@@ -45,36 +49,4 @@ function average(players: Player[] | null, pick: (player: Player) => number) {
 
   const total = players.reduce((sum, player) => sum + pick(player), 0);
   return Math.round(total / players.length);
-}
-
-function topScorer(matches: Match[]): RetaSummary["topScorer"] {
-  const tally = new Map<string, { name: string; goals: number }>();
-
-  for (const match of matches) {
-    for (const scorer of match.scorers) {
-      const key = keyOf(scorer);
-      const current = tally.get(key);
-      if (current) {
-        current.goals += scorer.goals;
-      } else {
-        tally.set(key, { name: scorer.displayName, goals: scorer.goals });
-      }
-    }
-  }
-
-  let leader: { name: string; goals: number } | null = null;
-  for (const entry of tally.values()) {
-    if (entry.goals > 0 && (leader === null || entry.goals > leader.goals)) {
-      leader = entry;
-    }
-  }
-
-  return leader;
-}
-
-/** Los invitados no tienen id, así que se agrupan por nombre. */
-function keyOf(scorer: Scorer): string {
-  return scorer.playerId === null
-    ? `guest:${scorer.displayName}`
-    : `player:${scorer.playerId}`;
 }

@@ -9,7 +9,7 @@ import Animated, {
 
 import { Icon, type IconName } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { Palette, Shadow, Spacing } from "@/constants/theme";
+import { Palette, Spacing } from "@/constants/theme";
 import { API_URL } from "@/lib/api";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
@@ -21,10 +21,22 @@ const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
  * calendario, que es una hoja, y lo que sigue viviendo en la web. Repetir los
  * destinos que ya son pestañas convertiría la fila en decoración.
  *
- * El primero va en verde macizo y el resto en blanco. No es capricho: marca
- * cuál es la acción de la tarjeta —el calendario, que acompaña al banner de la
- * próxima reta— y de paso le da a la fila un punto de entrada claro en vez de
- * cuatro iguales.
+ * **Las cuatro pesan lo mismo.** Antes la primera iba en verde macizo y el
+ * resto en blanco, para señalar cuál acompañaba al banner. Salía caro por dos
+ * lados: sobre el papel hueso, una ficha blanca con filete casi invisible se
+ * lee como algo apagado —o desactivado— al lado de la verde, y aquí no hay
+ * nada apagado: las cuatro son destinos a los que se puede ir. Ahora todas
+ * llevan el verde rebajado detrás del icono, que es el mismo recurso que ya
+ * usan las filas de ajustes y por la misma razón: sobre el papel a pelo, un
+ * trazo de 1.8 se pierde.
+ *
+ * El verde macizo se queda donde significa algo: el banner de la próxima reta,
+ * que es el único bloque de acento de la app.
+ *
+ * Las que salen al navegador lo dicen: llevan la flecha en diagonal en la
+ * esquina y se anuncian como enlace, no como botón. Es la única diferencia
+ * entre unas y otras, y no habla de jerarquía sino de destino —a dónde vas—,
+ * que es justo lo que conviene saber antes de tocar.
  *
  * Con cuatro no hace falta desplazar en un teléfono normal; va en `ScrollView`
  * para que añadir el quinto no obligue a rehacer nada.
@@ -37,8 +49,15 @@ type Action = {
   /** Ruta de la app, o camino de la web que se abre en el navegador. */
   href?: "/calendario" | "/reta";
   webPath?: string;
-  primary?: boolean;
 };
+
+const TILE_SIZE = 68;
+/** Mayor que `Radius.lg`; queda anotado por si algún día se unifica. */
+const TILE_RADIUS = 22;
+/** Deja aire para etiquetas de una palabra larga sin ensanchar la ficha. */
+const TILE_WIDTH = 76;
+/** El acento, rebajado a marca: se ve en la esquina sin pelearse con el icono. */
+const EXTERNAL_MARK = "rgba(0, 122, 85, 0.5)";
 
 const ACTIONS: Action[] = [
   {
@@ -46,7 +65,6 @@ const ACTIONS: Action[] = [
     icon: "calendar",
     label: "Calendario",
     href: "/calendario",
-    primary: true,
   },
   { key: "once", icon: "ball", label: "Once ideal", href: "/reta" },
   { key: "casacas", icon: "jersey", label: "Casacas", webPath: "/casacas" },
@@ -95,12 +113,13 @@ function ActionTile({
     transform: [{ scale: 1 - pressed.value * 0.06 }],
   }));
 
-  const primary = action.primary === true;
+  const external = action.webPath !== undefined;
 
   return (
     <AnimatedPressable
+      accessibilityHint={external ? "Se abre en el navegador" : undefined}
       accessibilityLabel={action.label}
-      accessibilityRole="button"
+      accessibilityRole={external ? "link" : "button"}
       onPress={onPress}
       onPressIn={() => {
         pressed.value = withSpring(1, { damping: 20, stiffness: 400 });
@@ -109,47 +128,50 @@ function ActionTile({
         pressed.value = withSpring(0, { damping: 20, stiffness: 300 });
       }}
       style={[
-        { width: 76, alignItems: "center", gap: Spacing.two },
+        { width: TILE_WIDTH, alignItems: "center", gap: Spacing.two },
         animatedStyle,
       ]}
     >
       <View
         style={{
-          width: 68,
-          height: 68,
-          borderRadius: 22,
+          width: TILE_SIZE,
+          height: TILE_SIZE,
+          borderRadius: TILE_RADIUS,
           borderCurve: "continuous",
           alignItems: "center",
           justifyContent: "center",
-          backgroundColor: primary ? Palette.accent : Palette.surface,
+          backgroundColor: Palette.accentSoft,
           borderWidth: 1,
-          borderColor: primary ? Palette.accent : Palette.hairline,
-          // Sombra normal también en la destacada: `Shadow.accent` dejaba un
-          // halo verde que, al pulsarla, se leía como un brillo encendiéndose
-          // bajo el dedo. El relleno ya la destaca de sobra.
-          boxShadow: Shadow.card,
+          borderColor: Palette.accentLine,
         }}
       >
         <Icon
-          color={primary ? Palette.accentInk : Palette.accent}
+          color={Palette.accent}
           name={action.icon}
           size={26}
           strokeWidth={1.9}
         />
+
+        {/*
+          La marca de salida va dentro de la ficha y no junto a la etiqueta: en
+          la esquina es un detalle que se ve sin leerse, y al lado del texto
+          competiría con el nombre del destino.
+        */}
+        {external ? (
+          <View style={{ position: "absolute", top: 6, right: 6 }}>
+            <Icon
+              color={EXTERNAL_MARK}
+              name="external"
+              size={13}
+              strokeWidth={2.2}
+            />
+          </View>
+        ) : null}
       </View>
 
-      <Text
-        numberOfLines={1}
-        style={{ textAlign: "center" }}
-        tone={primary ? "ink" : "muted"}
-        variant="caption"
-      >
+      <Text numberOfLines={1} style={{ textAlign: "center" }} variant="caption">
         {action.label}
       </Text>
     </AnimatedPressable>
   );
 }
-
-/** El radio de las fichas es mayor que `Radius.lg`; queda anotado por si algún
- * día se unifica con la escala. */
-export const TILE_RADIUS = 22;

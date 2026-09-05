@@ -12,8 +12,9 @@ import Animated, {
 } from "react-native-reanimated";
 
 import { GlassSurface } from "@/components/ui/glass-surface";
+import { Icon, type IconName } from "@/components/ui/icon";
 import { Text } from "@/components/ui/text";
-import { Palette, Radius, Shadow, Spacing } from "@/constants/theme";
+import { Palette, Radius, Shadow, Spacing, Tones } from "@/constants/theme";
 
 const AnimatedPressable = Animated.createAnimatedComponent(Pressable);
 
@@ -27,6 +28,12 @@ export type ButtonProps = {
   size?: ButtonSize;
   disabled?: boolean;
   loading?: boolean;
+  /**
+   * Icono a la izquierda de la etiqueta. Una fila de tres botones de texto se
+   * lee toda igual; con icono, cada acción se reconoce por la forma antes de
+   * leerse, que es lo que hace que el pulgar no dude.
+   */
+  icon?: IconName;
   /** Reparte el ancho cuando varios botones comparten una fila. */
   flex?: number;
   style?: ViewStyle;
@@ -49,6 +56,7 @@ export function Button({
   size = "lg",
   disabled = false,
   loading = false,
+  icon,
   flex,
   style,
 }: ButtonProps) {
@@ -84,12 +92,23 @@ export function Button({
   const roomy = size === "lg" ? Spacing.four : Spacing.three;
   const paddingHorizontal = flex === undefined ? roomy : Spacing.two;
 
+  const tone = toneFor(variant, inert);
+  const iconSize = size === "lg" ? 18 : 15;
+
   const content = (
-    <View style={{ opacity: loading ? 0 : 1 }}>
+    <View
+      style={{
+        flexDirection: "row",
+        alignItems: "center",
+        gap: Spacing.two,
+        opacity: loading ? 0 : 1,
+      }}
+    >
+      {icon ? <Icon color={Tones[tone]} name={icon} size={iconSize} /> : null}
       <Text
         numberOfLines={1}
         style={{ letterSpacing: -0.2 }}
-        tone={toneFor(variant, inert)}
+        tone={tone}
         variant={size === "lg" ? "bodyStrong" : "caption"}
       >
         {label}

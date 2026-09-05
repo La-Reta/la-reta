@@ -1,7 +1,8 @@
 import { API_URL } from "@/lib/api";
 
 /**
- * Resuelve la foto de un jugador a una URL que el móvil pueda pedir.
+ * Resuelve una foto —de jugador o de partido— a una URL que el móvil pueda
+ * pedir.
  *
  * `photoUrl` llega de dos sitios distintos: las subidas nuevas son absolutas
  * (Vercel Blob) y las viejas son rutas del `public/` de la web ("/players/99.webp").

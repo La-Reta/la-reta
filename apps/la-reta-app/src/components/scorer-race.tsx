@@ -1,0 +1,79 @@
+import { View } from "react-native";
+import { CartesianChart, HorizontalBar } from "victory-native";
+
+import { Text } from "@/components/ui/text";
+import { Motion, Palette } from "@/constants/theme";
+import { useChartFont } from "@/hooks/use-chart-font";
+import { topScorers } from "@/lib/series";
+import type { Match } from "@/lib/types";
+
+/** Skia parsea color CSS pero no la palabra `transparent`. */
+const TRANSPARENT = "rgba(0, 0, 0, 0)";
+
+export const SCORER_RACE_SIZE = 5;
+
+/** Alto por barra, más el sitio del eje de goles. */
+const ROW_HEIGHT = 30;
+const AXIS_HEIGHT = 26;
+
+/**
+ * La tabla de goleadores de la temporada.
+ *
+ * Es la estadística que la reta discute sola, y hasta ahora la portada solo
+ * enseñaba al mejor por overall —que es otra cosa: el ranking dice quién juega
+ * mejor, esto dice quién la mete—.
+ *
+ * En barras y no en lista numerada porque aquí la pregunta no es el orden sino
+ * la distancia: una lista "8, 7, 6" y otra "8, 3, 1" se leen igual en texto y
+ * cuentan campeonatos muy distintos.
+ */
+export function ScorerRace({ matches }: { matches: Match[] | null }) {
+  const data = topScorers(matches, SCORER_RACE_SIZE);
+  const font = useChartFont(11);
+
+  if (data.length === 0) {
+    return (
+      <Text tone="faint" variant="caption">
+        Todavía no hay goles registrados.
+      </Text>
+    );
+  }
+
+  return (
+    <View style={{ height: data.length * ROW_HEIGHT + AXIS_HEIGHT }}>
+      <CartesianChart
+        data={data}
+        domainPadding={{ top: 12, bottom: 12, right: 16 }}
+        orientation="horizontal"
+        // En horizontal los papeles se cambian: el eje X lleva los goles y el
+        // Y los nombres.
+        xAxis={{
+          font,
+          labelColor: Palette.inkFaint,
+          lineColor: Palette.line,
+          tickCount: 4,
+          formatXLabel: (value) => String(Math.round(Number(value))),
+        }}
+        xKey="name"
+        yAxis={[
+          {
+            font,
+            labelColor: Palette.inkMuted,
+            lineColor: TRANSPARENT,
+          },
+        ]}
+        yKeys={["goals"]}
+      >
+        {({ points, chartBounds }) => (
+          <HorizontalBar
+            animate={{ type: "timing", duration: Motion.slow }}
+            chartBounds={chartBounds}
+            color={Palette.accent}
+            points={points.goals}
+            roundedCorners={{ topRight: 6, bottomRight: 6 }}
+          />
+        )}
+      </CartesianChart>
+    </View>
+  );
+}

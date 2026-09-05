@@ -1,15 +1,19 @@
+import { VENUE } from "@repo/reta/venue";
 import { useRouter } from "expo-router";
 import { useState } from "react";
 import { Pressable, ScrollView, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 
+import { MapsDialog } from "@/components/maps-dialog";
 import { RetaMonth } from "@/components/reta-month";
+import { Button } from "@/components/ui/button";
 import { Icon } from "@/components/ui/icon";
 import { Section } from "@/components/ui/section";
 import { Text } from "@/components/ui/text";
 import { MaxContentWidth, Palette, Radius, Spacing } from "@/constants/theme";
 import { closeOverlay } from "@/lib/navigation";
 import { countdownLabel, nextReta } from "@/lib/reta-date";
+import { addRetaToCalendar } from "@/lib/reta-calendar";
 
 /**
  * Calendario de retas, en hoja modal.
@@ -26,6 +30,7 @@ export default function CalendarioScreen() {
   const insets = useSafeAreaInsets();
   const reta = nextReta();
   const [offset, setOffset] = useState(0);
+  const [maps, setMaps] = useState(false);
 
   return (
     <ScrollView
@@ -107,9 +112,39 @@ export default function CalendarioScreen() {
         </Pressable>
       </View>
 
+      {/* Las dos cosas que se hacen con una fecha: apuntarla y llegar. Van
+          arriba, junto al día, y no al final: quien abre el calendario ya sabe
+          cuándo es, lo que le falta es meterlo en su semana. */}
+      <View style={{ gap: Spacing.two }}>
+        <View style={{ flexDirection: "row", gap: Spacing.two }}>
+          <Button
+            flex={1}
+            icon="calendar"
+            label="Agregar al calendario"
+            onPress={addRetaToCalendar}
+            size="md"
+            variant="ghost"
+          />
+          <Button
+            flex={1}
+            icon="pin"
+            label="Cómo llegar"
+            onPress={() => setMaps(true)}
+            size="md"
+            variant="ghost"
+          />
+        </View>
+
+        <Text tone="faint" variant="caption">
+          {VENUE.name} · {VENUE.city}
+        </Text>
+      </View>
+
       <Section title="Calendario">
         <RetaMonth offset={offset} onOffsetChange={setOffset} />
       </Section>
+
+      {maps ? <MapsDialog onClose={() => setMaps(false)} /> : null}
     </ScrollView>
   );
 }

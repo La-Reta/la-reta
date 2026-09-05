@@ -1,56 +1,23 @@
 /**
- * Domain constants shared by the DB schema, the rating engine and the UI.
- * Kept dependency-free so it can be imported from both server and client.
+ * Constantes de dominio que usan el esquema, el motor de rating y la interfaz.
+ *
+ * Las posiciones ya no se definen aquí: viven en `@repo/reta` porque la app
+ * móvil necesita exactamente la misma tabla. Se reexportan para que los
+ * cientos de `import { positionGroup } from "@/lib/constants"` sigan valiendo y
+ * haya un solo sitio donde añadir una posición nueva.
  */
 
-// Specific positions, ordered by line. `as const` + tuple so Drizzle's pgEnum
-// and TS unions stay in sync.
-export const POSITIONS = [
-  "GK",
-  "RB",
-  "RWB",
-  "CB",
-  "LB",
-  "LWB",
-  "CDM",
-  "CM",
-  "CAM",
-  "RM",
-  "LM",
-  "RW",
-  "LW",
-  "CF",
-  "ST",
-] as const;
-
-export type Position = (typeof POSITIONS)[number];
+export {
+  POSITIONS,
+  isPosition,
+  positionGroup,
+  type Position,
+  type PositionGroup,
+} from "@repo/reta/positions";
+import { type Position, type PositionGroup } from "@repo/reta/positions";
 
 export const FEET = ["left", "right", "both"] as const;
 export type Foot = (typeof FEET)[number];
-
-export type PositionGroup = "GK" | "DEF" | "MID" | "FWD";
-
-const GROUP_BY_POSITION: Record<Position, PositionGroup> = {
-  GK: "GK",
-  RB: "DEF",
-  RWB: "DEF",
-  CB: "DEF",
-  LB: "DEF",
-  LWB: "DEF",
-  CDM: "MID",
-  CM: "MID",
-  CAM: "MID",
-  RM: "MID",
-  LM: "MID",
-  RW: "FWD",
-  LW: "FWD",
-  CF: "FWD",
-  ST: "FWD",
-};
-
-export function positionGroup(position: Position): PositionGroup {
-  return GROUP_BY_POSITION[position];
-}
 
 export const GROUP_LABEL: Record<PositionGroup, string> = {
   GK: "Portero",
