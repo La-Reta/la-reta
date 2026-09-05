@@ -4,15 +4,16 @@ import { createReport } from "@/app/actions/reports";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Field, FieldLabel } from "@/components/ui/field";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import {
   NativeSelect,
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 import { REPORT_CATEGORIES, REPORT_CATEGORY_LABEL } from "@/lib/constants";
-import { CheckCircle2Icon, LifeBuoyIcon, SendIcon } from "lucide-react";
+import { CheckCircle2Icon, LifeBuoyIcon, SendIcon, XIcon } from "lucide-react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -26,8 +27,9 @@ const EMPTY = {
   relatedPath: "",
 };
 
-export function ReportForm() {
+export const ReportForm = () => {
   const router = useRouter();
+  const fieldId = React.useId();
   const [form, setForm] = React.useState(EMPTY);
   const [sent, setSent] = React.useState(false);
   const [pending, startTransition] = React.useTransition();
@@ -79,19 +81,25 @@ export function ReportForm() {
       <CardContent>
         <form onSubmit={onSubmit} className="grid gap-4">
           <div className="grid gap-4 sm:grid-cols-2">
-            <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs">Título</Label>
+            <Field className="sm:col-span-2">
+              <FieldLabel className="text-xs" htmlFor={`${fieldId}-title`}>
+                Título
+              </FieldLabel>
               <Input
+                id={`${fieldId}-title`}
                 value={form.title}
                 onChange={(event) => set("title", event.target.value)}
                 placeholder="Ej. Necesito reportar un problema con mi perfil"
                 maxLength={140}
                 required
               />
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">Tipo de reporte</Label>
+            </Field>
+            <Field>
+              <FieldLabel className="text-xs" htmlFor={`${fieldId}-category`}>
+                Tipo de reporte
+              </FieldLabel>
               <NativeSelect
+                id={`${fieldId}-category`}
                 className="w-full"
                 value={form.category}
                 onChange={(event) => set("category", event.target.value)}
@@ -102,52 +110,60 @@ export function ReportForm() {
                   </NativeSelectOption>
                 ))}
               </NativeSelect>
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">
+            </Field>
+            <Field>
+              <FieldLabel className="text-xs" htmlFor={`${fieldId}-path`}>
                 Ruta relacionada (opcional)
-              </Label>
+              </FieldLabel>
               <Input
+                id={`${fieldId}-path`}
                 value={form.relatedPath}
                 onChange={(event) => set("relatedPath", event.target.value)}
                 placeholder="/players/3, /ideas..."
                 maxLength={240}
               />
-            </div>
-            <div className="sm:col-span-2">
-              <Label className="mb-1.5 block text-xs">Descripción</Label>
+            </Field>
+            <Field className="sm:col-span-2">
+              <FieldLabel
+                className="text-xs"
+                htmlFor={`${fieldId}-description`}
+              >
+                Descripción
+              </FieldLabel>
               <Textarea
+                id={`${fieldId}-description`}
                 value={form.description}
                 onChange={(event) => set("description", event.target.value)}
                 placeholder="Describe con el mayor contexto posible. Si es algo sensible, evita compartir datos innecesarios."
                 rows={5}
                 required
               />
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">
+            </Field>
+            <Field>
+              <FieldLabel className="text-xs" htmlFor={`${fieldId}-name`}>
                 Tu nombre (opcional)
-              </Label>
+              </FieldLabel>
               <Input
+                id={`${fieldId}-name`}
                 value={form.reporterName}
                 onChange={(event) => set("reporterName", event.target.value)}
                 placeholder="Puedes dejarlo anónimo"
                 maxLength={80}
               />
-            </div>
-            <div>
-              <Label className="mb-1.5 block text-xs">
+            </Field>
+            <Field>
+              <FieldLabel className="text-xs" htmlFor={`${fieldId}-contact`}>
                 Contacto (opcional)
-              </Label>
+              </FieldLabel>
               <Input
+                id={`${fieldId}-contact`}
                 value={form.contact}
                 onChange={(event) => set("contact", event.target.value)}
                 placeholder="WhatsApp, correo o usuario"
                 maxLength={160}
               />
-            </div>
+            </Field>
           </div>
-
           <Alert>
             <AlertDescription className="text-sm">
               Al enviar, guardaremos información técnica básica del navegador.
@@ -155,17 +171,33 @@ export function ReportForm() {
             </AlertDescription>
           </Alert>
 
-          <Button type="submit" disabled={pending} className="w-full sm:w-fit">
-            <SendIcon />
-            {pending ? "Enviando..." : "Enviar reporte"}
-          </Button>
+          <div className="flex flex-col-reverse gap-3 sm:flex-row sm:justify-between">
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => setForm(EMPTY)}
+              className="w-full sm:w-fit"
+              render={<Link href="/" />}
+            >
+              <XIcon />
+              Cancelar
+            </Button>
+            <Button
+              type="submit"
+              disabled={pending}
+              className="w-full sm:w-fit"
+            >
+              <SendIcon />
+              {pending ? "Enviando..." : "Enviar reporte"}
+            </Button>
+          </div>
         </form>
       </CardContent>
     </Card>
   );
-}
+};
 
-function ReportSent({ onReset }: { onReset: () => void }) {
+const ReportSent = ({ onReset }: { readonly onReset: () => void }) => {
   return (
     <Card className="overflow-hidden">
       <CardContent className="flex flex-col items-center gap-4 py-10 text-center">
@@ -188,7 +220,7 @@ function ReportSent({ onReset }: { onReset: () => void }) {
       </CardContent>
     </Card>
   );
-}
+};
 
 function collectClientInfo() {
   const uaData = (
