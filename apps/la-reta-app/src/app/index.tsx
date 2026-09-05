@@ -1,62 +1,88 @@
-import * as Device from 'expo-device';
-import { Platform, StyleSheet } from 'react-native';
-import { SafeAreaView } from 'react-native-safe-area-context';
+import {
+  ActivityIndicator,
+  FlatList,
+  RefreshControl,
+  StyleSheet,
+  View,
+} from "react-native";
+import { SafeAreaView } from "react-native-safe-area-context";
 
-import { AnimatedIcon } from '@/components/animated-icon';
-import { HintRow } from '@/components/hint-row';
-import { ThemedText } from '@/components/themed-text';
-import { ThemedView } from '@/components/themed-view';
-import { WebBadge } from '@/components/web-badge';
-import { BottomTabInset, MaxContentWidth, Spacing } from '@/constants/theme';
+import { ThemedText } from "@/components/themed-text";
+import { ThemedView } from "@/components/themed-view";
+import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { useApi } from "@/hooks/use-api";
+import type { Player } from "@/lib/types";
 
-function getDevMenuHint() {
-  if (Platform.OS === 'web') {
-    return <ThemedText type="small">use browser devtools</ThemedText>;
-  }
-  if (Device.isDevice) {
-    return (
-      <ThemedText type="small">
-        shake device or press <ThemedText type="code">m</ThemedText> in terminal
-      </ThemedText>
-    );
-  }
-  const shortcut = Platform.OS === 'android' ? 'cmd+m (or ctrl+m)' : 'cmd+d';
+/**
+ * Primera vista contra la API real: GET /api/v1/players.
+ *
+ * Es la prueba de que el contrato funciona desde un cliente nativo — misma
+ * ruta, mismo JSON y mismos códigos de estado que consume la web.
+ */
+export default function PlayersScreen() {
+  const { data, error, loading, refetch } = useApi<Player[]>("/api/v1/players");
+
   return (
-    <ThemedText type="small">
-      press <ThemedText type="code">{shortcut}</ThemedText>
-    </ThemedText>
+    <ThemedView style={styles.container}>
+      <SafeAreaView edges={["top"]} style={styles.safeArea}>
+        <ThemedText style={styles.title} type="title">
+          Jugadores
+        </ThemedText>
+
+        {error !== null && (
+          <ThemedView style={styles.notice} type="backgroundElement">
+            <ThemedText type="smallBold">No se pudo cargar</ThemedText>
+            <ThemedText themeColor="textSecondary" type="small">
+              {error}
+            </ThemedText>
+          </ThemedView>
+        )}
+
+        {loading && data === null ? (
+          <View style={styles.centered}>
+            <ActivityIndicator />
+          </View>
+        ) : (
+          <FlatList
+            contentContainerStyle={styles.listContent}
+            data={data ?? []}
+            keyExtractor={(player) => String(player.id)}
+            ListEmptyComponent={
+              error === null ? (
+                <ThemedText
+                  style={styles.empty}
+                  themeColor="textSecondary"
+                  type="small"
+                >
+                  Sin jugadores todavía.
+                </ThemedText>
+              ) : null
+            }
+            refreshControl={
+              <RefreshControl onRefresh={refetch} refreshing={loading} />
+            }
+            renderItem={({ item }) => <PlayerRow player={item} />}
+          />
+        )}
+      </SafeAreaView>
+    </ThemedView>
   );
 }
 
-export default function HomeScreen() {
+function PlayerRow({ player }: { player: Player }) {
+  const positions = [player.position, player.position2]
+    .filter(Boolean)
+    .join(" / ");
+
   return (
-    <ThemedView style={styles.container}>
-      <SafeAreaView style={styles.safeArea}>
-        <ThemedView style={styles.heroSection}>
-          <AnimatedIcon />
-          <ThemedText type="title" style={styles.title}>
-            Welcome to&nbsp;Expo
-          </ThemedText>
-        </ThemedView>
-
-        <ThemedText type="code" style={styles.code}>
-          get started
+    <ThemedView style={styles.row} type="backgroundElement">
+      <View style={styles.rowMain}>
+        <ThemedText type="smallBold">{player.displayName}</ThemedText>
+        <ThemedText themeColor="textSecondary" type="small">
+          {positions} · {player.age} años
         </ThemedText>
-
-        <ThemedView type="backgroundElement" style={styles.stepContainer}>
-          <HintRow
-            title="Try editing"
-            hint={<ThemedText type="code">src/app/index.tsx</ThemedText>}
-          />
-          <HintRow title="Dev tools" hint={getDevMenuHint()} />
-          <HintRow
-            title="Fresh start"
-            hint={<ThemedText type="code">npm run reset-project</ThemedText>}
-          />
-        </ThemedView>
-
-        {Platform.OS === 'web' && <WebBadge />}
-      </SafeAreaView>
+      </View>
+      <ThemedText type="title">{player.overall}</ThemedText>
     </ThemedView>
   );
 }
@@ -64,35 +90,47 @@ export default function HomeScreen() {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    justifyContent: 'center',
-    flexDirection: 'row',
   },
   safeArea: {
     flex: 1,
-    paddingHorizontal: Spacing.four,
-    alignItems: 'center',
-    gap: Spacing.three,
-    paddingBottom: BottomTabInset + Spacing.three,
+    alignSelf: "center",
+    width: "100%",
     maxWidth: MaxContentWidth,
-  },
-  heroSection: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    flex: 1,
     paddingHorizontal: Spacing.four,
-    gap: Spacing.four,
   },
   title: {
-    textAlign: 'center',
+    paddingVertical: Spacing.three,
   },
-  code: {
-    textTransform: 'uppercase',
+  centered: {
+    flex: 1,
+    alignItems: "center",
+    justifyContent: "center",
   },
-  stepContainer: {
+  listContent: {
+    gap: Spacing.two,
+    // La tab bar flota sobre el contenido: sin este hueco el último elemento
+    // queda debajo del glass.
+    paddingBottom: BottomTabInset + Spacing.four,
+  },
+  row: {
+    flexDirection: "row",
+    alignItems: "center",
     gap: Spacing.three,
-    alignSelf: 'stretch',
-    paddingHorizontal: Spacing.three,
-    paddingVertical: Spacing.four,
-    borderRadius: Spacing.four,
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+  },
+  rowMain: {
+    flex: 1,
+    gap: Spacing.one,
+  },
+  notice: {
+    padding: Spacing.three,
+    borderRadius: Spacing.three,
+    gap: Spacing.one,
+    marginBottom: Spacing.three,
+  },
+  empty: {
+    paddingVertical: Spacing.five,
+    textAlign: "center",
   },
 });

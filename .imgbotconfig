@@ -1,0 +1,12 @@
+{
+  "schedule": "weekly",
+  "ignoredFiles": [
+    "apps/la-reta-web/public/next.svg",
+    "apps/la-reta-web/public/vercel.svg",
+    "apps/la-reta-web/public/globe.svg",
+    "apps/la-reta-web/public/file.svg",
+    "apps/la-reta-web/public/window.svg"
+  ],
+  "aggressiveCompression": "false",
+  "minKBReduced": 10
+}

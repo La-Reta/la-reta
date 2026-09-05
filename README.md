@@ -1,159 +1,127 @@
-# Turborepo starter
+<div align="center">
 
-This Turborepo starter is maintained by the Turborepo core team.
+# ⚽ Reta Fútbol
 
-## Using this example
+**A FIFA-style manager for organizing pickup football ("la reta").**
 
-Run the following command:
+Players as FIFA-style cards, attribute ratings, professional-looking profiles, a live scoreboard, and a balanced-team generator — on the web and on your phone.
 
-```sh
-npx create-turbo@latest
+[![Turborepo](https://img.shields.io/badge/Turborepo-monorepo-EF4444?logo=turborepo&logoColor=white)](https://turborepo.dev) [![Next.js](https://img.shields.io/badge/Next.js-16-black?logo=next.js)](https://nextjs.org) [![Expo](https://img.shields.io/badge/Expo-SDK%2057-000020?logo=expo&logoColor=white)](https://expo.dev) [![TypeScript](https://img.shields.io/badge/TypeScript-7-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org) [![Neon](https://img.shields.io/badge/Neon-Postgres-00E599?logo=postgresql&logoColor=white)](https://neon.tech) [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+
+</div>
+
+> This is a **just-for-fun** project. No profit motive, nothing but good vibes and a well-organized kickabout. Contributions are welcome — see [CONTRIBUTING.md](./CONTRIBUTING.md).
+
+---
+
+## 📦 What's in this monorepo
+
+| Workspace | What it is | Docs |
+| --- | --- | --- |
+| `apps/la-reta-web` | The Next.js 16 web app — dashboard, admin, database, `/api/v1` | [README](./apps/la-reta-web/README.md) |
+| `apps/la-reta-app` | The Expo / React Native mobile client | [README](./apps/la-reta-app/README.md) |
+| `packages/ui` | Shared React components | — |
+| `packages/typescript-config` | Shared `tsconfig` bases | — |
+
+The web app owns the database and is the source of truth; the mobile app talks to it through `apps/la-reta-web/app/api/v1`.
+
+## ✨ Features
+
+- **FIFA-style player cards** with position-weighted overall and card tiers (bronze / silver / gold / special).
+- **Player profiles** — attributes, radar chart, stat history, goal history, and open reviews with star ratings and emoji reactions.
+- **Balanced team generator** — splits selected players into even sides, spreads positions sensibly (it's 7-a-side, so exact spots stay loose), and shuffles for variety between generations. Add last-minute **guests** on the fly.
+- **Live scoreboard** (`/live`) — track goals in real time and save the match.
+- **"Casacas" wheel** (`/casacas`) — a spin-the-wheel that randomly picks who washes the bibs each reta, never repeating the last two.
+- **Photos** — upload a match photo (poster-style header) and player pictures, stored on Vercel Blob.
+- **Community touches** — a rotating "La Reta ____" banner, ideas board, reports/help inbox, and player sign-up requests.
+- **Accounts** — sign in with [Clerk](https://clerk.com); comments and some actions require a session.
+- **Admin area** (`/admin`) — PIN-gated management of players, matches, ideas, reports, sign-ups, and moderation (archive comments without deleting them).
+
+## 🧱 Stack
+
+- **[Turborepo](https://turborepo.dev)** + npm workspaces (single lockfile at the root)
+- **Web:** [Next.js 16](https://nextjs.org) (App Router, Server Components & Server Actions) · [shadcn/ui](https://ui.shadcn.com) + [Base UI](https://base-ui.com) · [Tailwind CSS v4](https://tailwindcss.com)
+- **Mobile:** [Expo SDK 57](https://expo.dev) · [Expo Router](https://docs.expo.dev/router/introduction/) · [NativeWind v5](https://www.nativewind.dev)
+- **Data:** [Drizzle ORM](https://orm.drizzle.team) + [Neon](https://neon.tech) (serverless Postgres)
+- **Auth:** [Clerk](https://clerk.com) on both clients
+- **Media:** [Vercel Blob](https://vercel.com/docs/vercel-blob) for image uploads (public store)
+- **Quality:** [Ultracite](https://www.ultracite.ai) (ESLint + Prettier + Stylelint) with Husky + lint-staged
+
+## 🚀 Getting started
+
+### Prerequisites
+
+- **Node.js 24+** and **npm 12+**
+- A free **[Neon](https://neon.tech)** Postgres database
+- _Optional:_ a **[Clerk](https://clerk.com)** app (accounts/sign-in) and a **public [Vercel Blob](https://vercel.com/docs/vercel-blob)** store (image uploads) — the app runs without them, those features just stay off.
+- _For mobile:_ the [Expo Go](https://expo.dev/go) app, or an iOS Simulator / Android emulator.
+
+### Setup
+
+```bash
+# 1. Clone and install (one install for every workspace)
+git clone https://github.com/mrluisfer/la-reta.git
+cd la-reta
+npm install
+
+# 2. Configure the web environment
+cp apps/la-reta-web/.env.example apps/la-reta-web/.env.local
+#    then paste your Neon connection string
+
+# 3. Create the schema and seed sample data
+npm run db:push -w la-reta-web    # sync the Drizzle schema to Neon
+npm run db:seed -w la-reta-web    # insert the sample roster (⚠️ see below)
+
+# 4. Run it
+npm run dev                       # every app, through Turborepo
+npm run dev:web                   # just the web app  → http://localhost:3000
+npm run dev:app                   # just the Expo app → press i / a / w
 ```
 
-## What's inside?
+Environment variables are documented in the [web app README](./apps/la-reta-web/README.md#environment-variables).
 
-This Turborepo includes the following packages/apps:
+## 📜 Root scripts
 
-### Apps and Packages
+| Script | What it does |
+| --- | --- |
+| `npm run dev` | Run every workspace's dev task (Turborepo) |
+| `npm run dev:web` | Only the Next.js app |
+| `npm run dev:app` | Only the Expo app |
+| `npm run build` | Build every workspace |
+| `npm run check` | Ultracite: lint + format + styles (the pre-commit gate) |
+| `npm run fix` | Ultracite autofix |
+| `npm run lint` | Per-workspace linters (`expo lint` for the mobile app) |
+| `npm run check-types` | TypeScript across the monorepo |
 
-- `docs`: a [Next.js](https://nextjs.org/) app
-- `web`: another [Next.js](https://nextjs.org/) app
-- `@repo/ui`: a stub React component library shared by both `web` and `docs` applications
-- `@repo/eslint-config`: `eslint` configurations (includes `@next/eslint-plugin-next` and `eslint-config-prettier`)
-- `@repo/typescript-config`: `tsconfig.json`s used throughout the monorepo
+Workspace-specific scripts (`db:push`, `db:seed`, `ios`, `android`, …) live in each app and run with `-w <workspace>`, e.g. `npm run db:studio -w la-reta-web`.
 
-Each package/app is 100% [TypeScript](https://www.typescriptlang.org/).
+> ⚠️ **Data safety:** `db:seed` **deletes** the `players` table (cascading to `match_goals`). Never run it — or any destructive DML — against real data. Schema changes must be **additive**.
 
-### Utilities
+## 🗂️ Repo layout
 
-This Turborepo has some additional tools already setup for you:
-
-- [TypeScript](https://www.typescriptlang.org/) for static type checking
-- [ESLint](https://eslint.org/) for code linting
-- [Prettier](https://prettier.io) for code formatting
-
-### Build
-
-To build all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo build
+```bash
+apps/
+  la-reta-web/        Next.js 16 app — app/, components/, lib/, drizzle/
+  la-reta-app/        Expo app — src/app (routes), src/components, src/hooks
+packages/
+  ui/                 Shared React components
+  typescript-config/  Shared tsconfig bases
+docs/
+  agents/             Conventions for AI agents (issues, triage, domain docs)
+.github/              Issue templates & pull request template
 ```
 
-Without global `turbo`, use your package manager:
+## 🤝 Contributing
 
-```sh
-cd my-turborepo
-npx turbo build
-npm exec turbo build
-npm exec turbo build
-```
+Contributions of all sizes are welcome! Please read **[CONTRIBUTING.md](./CONTRIBUTING.md)** and our **[Code of Conduct](./CODE_OF_CONDUCT.md)** first. Good first steps:
 
-You can build a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
+- Open an [issue](https://github.com/mrluisfer/la-reta/issues) for a bug or idea.
+- Pick something small and send a focused pull request.
 
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
+Security reports go through [SECURITY.md](./SECURITY.md), not public issues.
 
-```sh
-turbo build --filter=docs
-```
+> ⚠️ **Heads-up for contributors:** the web app is Next.js **16** and the mobile app is Expo **SDK 57** — several APIs differ from older versions. Read [`AGENTS.md`](./AGENTS.md) and the per-app `AGENTS.md` before writing framework code.
 
-Without global `turbo`:
+## 📄 License
 
-```sh
-npx turbo build --filter=docs
-npm exec turbo build --filter=docs
-npm exec turbo build --filter=docs
-```
-
-### Develop
-
-To develop all apps and packages, run the following command:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo dev
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo dev
-npm exec turbo dev
-npm exec turbo dev
-```
-
-You can develop a specific package by using a [filter](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters):
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo dev --filter=web
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo dev --filter=web
-npm exec turbo dev --filter=web
-npm exec turbo dev --filter=web
-```
-
-### Remote Caching
-
-> [!TIP]
-> Vercel Remote Cache is free for all plans. Get started today at [vercel.com](https://vercel.com/signup?utm_source=remote-cache-sdk&utm_campaign=free_remote_cache).
-
-Turborepo can use a technique known as [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching) to share cache artifacts across machines, enabling you to share build caches with your team and CI/CD pipelines.
-
-By default, Turborepo will cache locally. To enable Remote Caching you will need an account with Vercel. If you don't have an account you can [create one](https://vercel.com/signup?utm_source=turborepo-examples), then enter the following commands:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed (recommended):
-
-```sh
-cd my-turborepo
-turbo login
-```
-
-Without global `turbo`, use your package manager:
-
-```sh
-cd my-turborepo
-npx turbo login
-npm exec turbo login
-npm exec turbo login
-```
-
-This will authenticate the Turborepo CLI with your [Vercel account](https://vercel.com/docs/concepts/personal-accounts/overview).
-
-Next, you can link your Turborepo to your Remote Cache by running the following command from the root of your Turborepo:
-
-With [global `turbo`](https://turborepo.dev/docs/getting-started/installation#global-installation) installed:
-
-```sh
-turbo link
-```
-
-Without global `turbo`:
-
-```sh
-npx turbo link
-npm exec turbo link
-npm exec turbo link
-```
-
-## Useful Links
-
-Learn more about the power of Turborepo:
-
-- [Tasks](https://turborepo.dev/docs/crafting-your-repository/running-tasks)
-- [Caching](https://turborepo.dev/docs/crafting-your-repository/caching)
-- [Remote Caching](https://turborepo.dev/docs/core-concepts/remote-caching)
-- [Filtering](https://turborepo.dev/docs/crafting-your-repository/running-tasks#using-filters)
-- [Configuration Options](https://turborepo.dev/docs/reference/configuration)
-- [CLI Usage](https://turborepo.dev/docs/reference/command-line-reference)
+[MIT](./LICENSE) © Luis Alvarez
