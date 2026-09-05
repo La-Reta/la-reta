@@ -22,20 +22,27 @@ function assert(condition: boolean, message: string): void {
   }
 }
 
-const L = (
+function lineup(
   id: number,
   overall: number,
   role: Position
-): Lineup<BalancerPlayer> => ({
-  player: { id, overall, position: role, position2: null },
-  role,
-});
+): Lineup<BalancerPlayer> {
+  return { player: { id, overall, position: role, position2: null }, role };
+}
 
 function checkBoardEdits(): void {
   const teams: BalancedTeams<BalancerPlayer> = {
     teams: [
-      { key: "A", lineups: [L(1, 40, "GK"), L(2, 50, "CB")], rating: 45 },
-      { key: "B", lineups: [L(3, 60, "GK"), L(4, 80, "ST")], rating: 70 },
+      {
+        key: "A",
+        lineups: [lineup(1, 40, "GK"), lineup(2, 50, "CB")],
+        rating: 45,
+      },
+      {
+        key: "B",
+        lineups: [lineup(3, 60, "GK"), lineup(4, 80, "ST")],
+        rating: 70,
+      },
     ],
     diff: 25,
   };
@@ -43,14 +50,14 @@ function checkBoardEdits(): void {
   // Cambio entre equipos: el ocupante se muda, el puesto se queda, las medias
   // se recalculan.
   const swapped = swapPlayers(teams, 2, 4);
+  const movedIn = swapped.teams[0]?.lineups[1];
+  const movedOut = swapped.teams[1]?.lineups[1];
   assert(
-    swapped.teams[0]?.lineups[1]?.player.id === 4 &&
-      swapped.teams[0]?.lineups[1]?.role === "CB",
+    movedIn?.player.id === 4 && movedIn.role === "CB",
     "el ocupante cambia y el puesto se conserva"
   );
   assert(
-    swapped.teams[1]?.lineups[1]?.player.id === 2 &&
-      swapped.teams[1]?.lineups[1]?.role === "ST",
+    movedOut?.player.id === 2 && movedOut.role === "ST",
     "el otro lado refleja el cambio"
   );
   assert(
@@ -87,32 +94,42 @@ function checkSignature(): void {
   );
 }
 
-const pool: BalancerPlayer[] = Array.from({ length: 18 }, (_, index) => {
+const POOL_SIZE = 18;
+
+/**
+ * Medias repartidas y un portero cada seis, para que el reparto tenga
+ * materia con la que trabajar.
+ */
+function poolPlayer(index: number): BalancerPlayer {
   return {
     id: index + 1,
     overall: 50 + ((index * 7) % 40),
     position: index % 6 === 0 ? "GK" : "CM",
     position2: null,
   };
-});
+}
+
+const pool: BalancerPlayer[] = Array.from({ length: POOL_SIZE }, (_, index) =>
+  poolPlayer(index)
+);
 
 function checkSplits(): void {
   for (const count of [2, 3, 4]) {
-    const res = balanceTeams(pool, count);
-    assert(res.teams.length === count, `${count} equipos generados`);
+    const split = balanceTeams(pool, count);
+    assert(split.teams.length === count, `${count} equipos generados`);
 
-    const sizes = res.teams.map((t) => t.lineups.length);
+    const sizes = split.teams.map((t) => t.lineups.length);
     assert(
       Math.max(...sizes) - Math.min(...sizes) <= 1,
       `${count}: tamaños parejos`
     );
     assert(
-      res.teams.flatMap((t) => t.lineups).length === pool.length,
+      split.teams.flatMap((t) => t.lineups).length === pool.length,
       `${count}: nadie se pierde ni se duplica`
     );
-    assert(res.diff <= 4, `${count}: diff razonable (${res.diff})`);
+    assert(split.diff <= 4, `${count}: diff razonable (${split.diff})`);
 
-    const gkTeams = res.teams.filter((t) =>
+    const gkTeams = split.teams.filter((t) =>
       t.lineups.some((l) => l.role === "GK")
     ).length;
     assert(gkTeams === Math.min(count, 3), `${count}: un portero por equipo`);
@@ -136,7 +153,7 @@ function checkMemory(): void {
 
   let repeats = 0;
   const rounds = 30;
-  for (let index = 0; index < rounds; index++) {
+  for (let index = 0; index < rounds; index += 1) {
     const next = balanceTeamsVaried(pool, [{ sides }], 2);
     const nextSignature = splitSignature(
       next.teams.map((t) => t.lineups.map((l) => l.player.id))
@@ -149,9 +166,11 @@ function checkMemory(): void {
 
   // Un historial viejo pesa menos que uno fresco: la misma firma castigada en
   // la posición 0 y en la 20 no puede dar el mismo resultado.
-  const stale: { sides: number[][] }[] = Array.from({ length: 20 }, () => ({
-    sides,
-  }));
+  const STALE_ROUNDS = 20;
+  const stale: { sides: number[][] }[] = Array.from(
+    { length: STALE_ROUNDS },
+    () => ({ sides })
+  );
   const withStale = balanceTeamsVaried(pool, stale, 2);
   assert(
     withStale.teams.length === 2,
@@ -169,5 +188,5 @@ checkSignature();
 checkSplits();
 checkMemory();
 
-// biome-ignore lint/suspicious/noConsole: es un script de comprobación
+// Es un script de comprobación: la salida es el resultado.
 console.log("ok");
