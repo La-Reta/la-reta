@@ -1,5 +1,6 @@
 "use client";
 
+import Image from "next/image";
 import { setMatchPhoto } from "@/app/actions/matches";
 import { uploadImage } from "@/app/actions/uploads";
 import {
@@ -27,13 +28,13 @@ import { toast } from "sonner";
  * Con 2 equipos es el duelo de siempre; con 3+ (una reta con rotación) se
  * convierte en una fila de marcadores, uno por equipo.
  */
-function Scoreboard({
+const Scoreboard = ({
   teams,
   onPhoto,
 }: {
-  teams: MatchTeamRow[];
-  onPhoto: boolean;
-}) {
+  readonly teams: MatchTeamRow[];
+  readonly onPhoto: boolean;
+}) => {
   if (teams.length === 2) {
     return (
       <div className="grid grid-cols-[1fr_auto_1fr] items-center gap-3 sm:gap-6">
@@ -71,9 +72,9 @@ function Scoreboard({
       ))}
     </div>
   );
-}
+};
 
-function ResultBadge({ winner }: { winner: string | null }) {
+const ResultBadge = ({ winner }: { readonly winner: string | null }) => {
   return (
     <Badge variant="secondary">
       {winner ? (
@@ -86,7 +87,7 @@ function ResultBadge({ winner }: { winner: string | null }) {
       )}
     </Badge>
   );
-}
+};
 
 /**
  * Match header. When there's a photo it becomes the card background with a
@@ -94,7 +95,7 @@ function ResultBadge({ winner }: { winner: string | null }) {
  * and dark). Without a photo it's a plain card in theme colors. Admin upload /
  * remove controls sit in the top corner.
  */
-export function MatchHero({
+export const MatchHero = ({
   matchId,
   teams,
   dateLabel,
@@ -102,14 +103,14 @@ export function MatchHero({
   photoUrl,
   admin,
 }: {
-  matchId: number;
+  readonly matchId: number;
   /** Los equipos del partido con sus goles (2 … 6). */
-  teams: MatchTeamRow[];
-  dateLabel: string;
-  winner: string | null;
-  photoUrl: string | null;
-  admin: boolean;
-}) {
+  readonly teams: MatchTeamRow[];
+  readonly dateLabel: string;
+  readonly winner: string | null;
+  readonly photoUrl: string | null;
+  readonly admin: boolean;
+}) => {
   const router = useRouter();
   const [busy, setBusy] = React.useState(false);
   const inputRef = React.useRef<HTMLInputElement>(null);
@@ -138,8 +139,9 @@ export function MatchHero({
     }
   }
 
+  // Sin confirm(): el botón ya está detrás de un AlertDialog, así que el
+  // nativo salía como segunda confirmación encima de la primera.
   async function remove() {
-    if (!confirm("¿Quitar la foto del partido?")) return;
     setBusy(true);
     const res = await setMatchPhoto(matchId, null);
     setBusy(false);
@@ -156,6 +158,7 @@ export function MatchHero({
       ref={inputRef}
       type="file"
       accept="image/*"
+      aria-label="Foto del partido"
       className="hidden"
       onChange={onPick}
     />
@@ -167,76 +170,71 @@ export function MatchHero({
     </Badge>
   );
 
-  const heroImageActions = (
-    <>
-      {admin ? (
-        <div className="flex items-center justify-end gap-2">
-          {hasPhoto ? (
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={() => inputRef.current?.click()}
-            >
-              <ImagePlusIcon />
-              {busy ? "Subiendo…" : "Cambiar"}
-            </Button>
-          ) : (
-            <Button
-              variant="secondary"
-              disabled={busy}
-              onClick={() => inputRef.current?.click()}
-            >
-              <ImagePlusIcon />
-              {busy ? "Subiendo…" : "Subir foto"}
-            </Button>
-          )}
+  const heroImageActions = admin ? (
+    <div className="flex items-center justify-end gap-2">
+      {hasPhoto ? (
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          <ImagePlusIcon />
+          {busy ? "Subiendo…" : "Cambiar"}
+        </Button>
+      ) : (
+        <Button
+          variant="secondary"
+          disabled={busy}
+          onClick={() => inputRef.current?.click()}
+        >
+          <ImagePlusIcon />
+          {busy ? "Subiendo…" : "Subir foto"}
+        </Button>
+      )}
 
-          <AlertDialog>
-            <AlertDialogTrigger
-              render={
-                <Button
-                  variant="destructive"
-                  size="icon"
-                  disabled={busy}
-                  aria-label="Quitar foto"
-                />
-              }
-            >
-              <Trash2Icon />
-            </AlertDialogTrigger>
-            <AlertDialogContent>
-              <AlertDialogHeader>
-                <AlertDialogTitle>
-                  Deseas eliminar la fotografia?
-                </AlertDialogTitle>
-                <AlertDialogDescription>
-                  No podrias recuperar la imagen, revisa que la imagen sea la
-                  que realmente quieres eliminar.
-                </AlertDialogDescription>
-              </AlertDialogHeader>
-              <AlertDialogFooter>
-                <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                <AlertDialogAction onClick={remove}>
-                  Confirmar
-                </AlertDialogAction>
-              </AlertDialogFooter>
-            </AlertDialogContent>
-          </AlertDialog>
-        </div>
-      ) : null}
-    </>
-  );
+      <AlertDialog>
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="destructive"
+              size="icon"
+              disabled={busy}
+              aria-label="Quitar foto"
+            />
+          }
+        >
+          <Trash2Icon />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>¿Quitar la foto del partido?</AlertDialogTitle>
+            <AlertDialogDescription>
+              No podrás recuperar la imagen. Revisa que sea la que realmente
+              quieres eliminar.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={remove}>Confirmar</AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  ) : null;
 
   if (hasPhoto) {
     return (
       <>
         <Card className="relative isolate mb-2 min-h-[200px] justify-end overflow-hidden pt-0 text-white sm:min-h-[260px]">
           {hiddenInput}
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={photoUrl!}
+          {/* next/image: optimiza y sirve el tamaño que toca. El host de
+              Vercel Blob ya está en remotePatterns de next.config. */}
+          <Image
+            src={photoUrl as string}
             alt={teams.map((t) => t.name).join(" vs ")}
-            className="absolute inset-0 -z-10 h-full w-full object-cover"
+            fill
+            sizes="(max-width: 640px) 100vw, 1024px"
+            className="absolute inset-0 -z-10 object-cover"
           />
           <div className="absolute inset-0 -z-10 bg-gradient-to-t from-black/80 via-black/35 to-transparent" />
 
@@ -273,4 +271,4 @@ export function MatchHero({
       {heroImageActions}
     </>
   );
-}
+};

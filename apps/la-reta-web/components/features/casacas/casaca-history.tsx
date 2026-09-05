@@ -3,6 +3,7 @@
 import { deleteCasacaAssignment } from "@/app/actions/casacas";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import {
   Card,
@@ -14,18 +15,26 @@ import {
 import { initials } from "@/lib/format";
 import type { CasacaAssignmentRow } from "@/lib/queries";
 import { Trash2Icon } from "lucide-react";
+
+// Locale y zona horaria explícitas: sin ellas el servidor formatea con las
+// suyas y el navegador con las del usuario, y React marca hydration mismatch.
+const CASACA_DATE_FORMAT = new Intl.DateTimeFormat("es-MX", {
+  day: "numeric",
+  month: "short",
+  timeZone: "America/Mexico_City",
+});
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function CasacaHistory({
+export const CasacaHistory = ({
   assignments,
   admin = false,
 }: {
-  assignments: CasacaAssignmentRow[];
+  readonly assignments: CasacaAssignmentRow[];
   /** Solo el admin puede borrar un turno (no apareció, no aceptó, …). */
-  admin?: boolean;
-}) {
+  readonly admin?: boolean;
+}) => {
   return (
     <Card className="h-fit">
       <CardHeader>
@@ -60,10 +69,7 @@ export function CasacaHistory({
                     ) : null}
                   </p>
                   <p className="text-muted-foreground truncate text-xs">
-                    {new Date(a.createdAt).toLocaleDateString("es-MX", {
-                      day: "numeric",
-                      month: "short",
-                    })}
+                    {CASACA_DATE_FORMAT.format(new Date(a.createdAt))}
                     {a.spunByName ? ` · por ${a.spunByName}` : null}
                   </p>
                 </div>
@@ -76,42 +82,49 @@ export function CasacaHistory({
       </CardContent>
     </Card>
   );
-}
+};
 
 /**
  * Borra un turno del historial. Al quitarlo, esa persona vuelve al sorteo (la
  * ruleta solo excluye a los dos turnos más recientes que queden).
  */
-function DeleteTurnButton({ assignment }: { assignment: CasacaAssignmentRow }) {
+const DeleteTurnButton = ({
+  assignment,
+}: {
+  readonly assignment: CasacaAssignmentRow;
+}) => {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
+  function remove() {
+    startTransition(async () => {
+      const res = await deleteCasacaAssignment(assignment.id);
+      if (res.ok) {
+        toast.success("Turno eliminado");
+        router.refresh();
+      } else {
+        toast.error(res.error);
+      }
+    });
+  }
+
   return (
-    <Button
-      variant="destructive"
-      size="icon-sm"
-      className="shrink-0"
-      aria-label={`Eliminar el turno de ${assignment.displayName}`}
-      disabled={pending}
-      onClick={() => {
-        if (
-          !confirm(
-            `¿Eliminar el turno de ${assignment.displayName}? Volverá a entrar al sorteo.`,
-          )
-        )
-          return;
-        startTransition(async () => {
-          const res = await deleteCasacaAssignment(assignment.id);
-          if (res.ok) {
-            toast.success("Turno eliminado");
-            router.refresh();
-          } else {
-            toast.error(res.error);
-          }
-        });
-      }}
-    >
-      <Trash2Icon />
-    </Button>
+    <ConfirmDialog
+      pending={pending}
+      onConfirm={remove}
+      title="¿Eliminar este turno?"
+      description={`${assignment.displayName} volverá a entrar al sorteo de casacas.`}
+      trigger={
+        <Button
+          variant="destructive"
+          size="icon-sm"
+          className="shrink-0"
+          aria-label={`Eliminar el turno de ${assignment.displayName}`}
+          disabled={pending}
+        >
+          <Trash2Icon />
+        </Button>
+      }
+    />
   );
-}
+};

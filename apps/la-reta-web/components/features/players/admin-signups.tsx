@@ -2,6 +2,7 @@
 
 import { deleteSignup, updateSignupStatus } from "@/app/actions/player-signups";
 import { Badge } from "@/components/ui/badge";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader } from "@/components/ui/card";
 import {
@@ -25,7 +26,11 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function AdminSignups({ signups }: { signups: PlayerSignup[] }) {
+export const AdminSignups = ({
+  signups,
+}: {
+  readonly signups: PlayerSignup[];
+}) => {
   if (signups.length === 0) {
     return (
       <p className="bg-card text-muted-foreground ring-foreground/10 rounded-lg p-8 text-center text-sm ring-1">
@@ -41,9 +46,9 @@ export function AdminSignups({ signups }: { signups: PlayerSignup[] }) {
       ))}
     </div>
   );
-}
+};
 
-function SignupCard({ signup }: { signup: PlayerSignup }) {
+const SignupCard = ({ signup }: { readonly signup: PlayerSignup }) => {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
@@ -63,7 +68,6 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
   }
 
   function remove() {
-    if (!confirm(`¿Eliminar la solicitud de ${signup.name}?`)) return;
     startTransition(async () => {
       const res = await deleteSignup(signup.id);
       if (res.ok) {
@@ -89,8 +93,8 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
           </div>
           <span
             className={cn(
-              "shrink-0 rounded-sm px-1.5 py-0.5 text-[10px] font-medium",
-              SIGNUP_STATUS_CLASS[signup.status],
+              "shrink-0 rounded-sm px-1.5 py-0.5 text-xs font-medium",
+              SIGNUP_STATUS_CLASS[signup.status]
             )}
           >
             {SIGNUP_STATUS_LABEL[signup.status]}
@@ -131,7 +135,7 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
         ) : null}
 
         {/* Contexto de cliente, compacto */}
-        <p className="text-muted-foreground/80 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-[10px]">
+        <p className="text-muted-foreground/80 flex flex-wrap items-center gap-x-2 gap-y-0.5 text-xs">
           <GlobeIcon className="size-3" />
           {[
             signup.country?.toUpperCase(),
@@ -160,7 +164,7 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
             aria-label="Estado"
             className={cn(
               "h-9 text-xs",
-              signup.status === "registrado" ? "flex-1" : "w-auto",
+              signup.status === "registrado" ? "flex-1" : "w-auto"
             )}
             value={signup.status}
             disabled={pending}
@@ -172,20 +176,27 @@ function SignupCard({ signup }: { signup: PlayerSignup }) {
               </NativeSelectOption>
             ))}
           </NativeSelect>
-          <Button
-            size="icon"
-            variant="destructive"
-            disabled={pending}
-            onClick={remove}
-            aria-label="Eliminar solicitud"
-          >
-            <Trash2Icon />
-          </Button>
+          <ConfirmDialog
+            pending={pending}
+            onConfirm={remove}
+            title="¿Eliminar esta solicitud?"
+            description={`La solicitud de ${signup.name} desaparece de la lista. No se puede deshacer.`}
+            trigger={
+              <Button
+                size="icon"
+                variant="destructive"
+                disabled={pending}
+                aria-label="Eliminar solicitud"
+              >
+                <Trash2Icon />
+              </Button>
+            }
+          />
         </div>
       </CardContent>
     </Card>
   );
-}
+};
 
 const FOOT_LABEL: Record<string, string> = {
   left: "Izquierdo",
@@ -193,19 +204,19 @@ const FOOT_LABEL: Record<string, string> = {
   both: "Ambos",
 };
 
-function Info({
+const Info = ({
   label,
   value,
   full,
 }: {
-  label: string;
-  value: string;
-  full?: boolean;
-}) {
+  readonly label: string;
+  readonly value: string;
+  readonly full?: boolean;
+}) => {
   return (
     <div className={cn("min-w-0", full && "col-span-2")}>
-      <dt className="text-[10px] uppercase">{label}</dt>
+      <dt className="text-xs uppercase">{label}</dt>
       <dd className="text-foreground truncate font-medium">{value}</dd>
     </div>
   );
-}
+};

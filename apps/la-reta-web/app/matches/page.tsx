@@ -16,11 +16,12 @@ import {
 } from "@/lib/queries";
 import type { TeamKey } from "@/lib/teams";
 import { Metadata } from "next";
+import { PageTransition } from "@/components/app/page-transition";
 
 export const metadata: Metadata = { title: "Partidos · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function MatchesPage() {
+const MatchesPage = async () => {
   const [players, matches, scorers, admin, retas] = await Promise.all([
     getPlayers(),
     getMatches(),
@@ -50,26 +51,36 @@ export default async function MatchesPage() {
   }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 lg:max-w-6xl 2xl:max-w-7xl">
-      <PageHeader
-        title="Partidos"
-        description="Registra los resultados de la reta y lleva la tabla de goleadores."
-      />
+    <PageTransition>
+      <div className="mx-auto max-w-5xl space-y-6 lg:max-w-6xl 2xl:max-w-7xl">
+        <PageHeader
+          title="Partidos"
+          description="Registra los resultados de la reta y lleva la tabla de goleadores."
+        />
 
-      <RetaMatchForm retas={retaOptions} players={formPlayers} admin={admin} />
+        <RetaMatchForm
+          retas={retaOptions}
+          players={formPlayers}
+          admin={admin}
+        />
 
-      <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
-        <section className="space-y-3">
-          <SectionHeading title="Historial" count={matches.length} />
-          <MatchHistoryList matches={matches} admin={admin} />
-          {matches.length > 0 && <MatchesChart matches={matches} />}
-        </section>
+        <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
+          <section className="space-y-3">
+            <SectionHeading title="Historial" count={matches.length} />
+            <MatchHistoryList matches={matches} admin={admin} />
+            {matches.length > 0 && <MatchesChart matches={matches} />}
+          </section>
 
-        <section className="space-y-3 lg:sticky lg:top-6">
-          <SectionHeading title="Goles y asistencias" />
-          <TopScorersCard scorers={scorers} />
-        </section>
+          {/* top-16, no top-6: el header es sticky (h-12) y con 6 la tabla de
+            goleadores se metía debajo al hacer scroll. */}
+          <section className="space-y-3 lg:sticky lg:top-16">
+            <SectionHeading title="Goles y asistencias" />
+            <TopScorersCard scorers={scorers} />
+          </section>
+        </div>
       </div>
-    </div>
+    </PageTransition>
   );
-}
+};
+
+export default MatchesPage;

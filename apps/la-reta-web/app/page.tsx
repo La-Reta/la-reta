@@ -29,7 +29,7 @@ import Link from "next/link";
 
 export const dynamic = "force-dynamic";
 
-export default async function DashboardPage() {
+const DashboardPage = async () => {
   const [players, bannerWords, topScorers, matches] = await Promise.all([
     getPlayers(),
     getBannerWords(),
@@ -43,7 +43,7 @@ export default async function DashboardPage() {
 
   const total = players.length;
   const avgOverall = Math.round(
-    players.reduce((a, p) => a + p.overall, 0) / total,
+    players.reduce((a, p) => a + p.overall, 0) / total
   );
   const avgAge = Math.round(players.reduce((a, p) => a + p.age, 0) / total);
   const best = players[0];
@@ -58,22 +58,24 @@ export default async function DashboardPage() {
   // Everyone tied for the most goals — the spotlight rotates through them.
   // Independiente del orden de la tabla (getTopScorers ordena por G+A).
   const maxGoals = Math.max(0, ...topScorers.map((s) => s.goals));
-  const tiedScorers = topScorers
-    .filter((s) => s.goals === maxGoals && s.goals > 0)
-    .map((s) => ({
-      player: players.find((p) => p.id === s.playerId),
-      goals: s.goals,
-      matches: s.matches,
-    }))
-    .filter(
-      (
-        s,
-      ): s is {
-        player: (typeof players)[number];
-        goals: number;
-        matches: number;
-      } => s.player != null,
-    );
+  const tiedScorers: {
+    player: (typeof players)[number];
+    goals: number;
+    matches: number;
+  }[] = [];
+  const playersById = new Map(players.map((p) => [p.id, p]));
+  for (const scorer of topScorers) {
+    // playerId es null en los invitados: esos no tienen ficha que mostrar.
+    if (scorer.goals !== maxGoals || scorer.goals === 0) continue;
+    if (scorer.playerId == null) continue;
+    const player = playersById.get(scorer.playerId);
+    if (!player) continue;
+    tiedScorers.push({
+      player,
+      goals: scorer.goals,
+      matches: scorer.matches,
+    });
+  }
 
   return (
     <div className="space-y-6 xl:container xl:mx-auto">
@@ -95,6 +97,7 @@ export default async function DashboardPage() {
       {/* Destacados: crack + goleador + jugadores (horizontal en desktop) */}
       <div className="grid gap-6 lg:grid-cols-2 xl:grid-cols-3">
         <Spotlight
+          highlight
           title="El crack"
           subtitle="Mayor overall de la plantilla"
           player={best}
@@ -139,10 +142,12 @@ export default async function DashboardPage() {
       </div>
     </div>
   );
-}
+};
+
+export default DashboardPage;
 
 /** Compact 6-attribute strip used in the "El crack" spotlight footer. */
-function StatStrip({ player }: { player: Player }) {
+const StatStrip = ({ player }: { readonly player: Player }) => {
   return (
     <div className="grid w-full grid-cols-6 gap-1">
       {STAT_KEYS.map((k) => (
@@ -150,16 +155,16 @@ function StatStrip({ player }: { player: Player }) {
           <p className="font-mono text-sm leading-none font-bold tabular-nums">
             {player[k]}
           </p>
-          <p className="text-muted-foreground mt-0.5 text-[9px] font-semibold tracking-wide">
+          <p className="text-muted-foreground mt-0.5 text-xs font-semibold tracking-wide">
             {STAT_ABBR[k]}
           </p>
         </div>
       ))}
     </div>
   );
-}
+};
 
-function EmptyState() {
+const EmptyState = () => {
   return (
     <div className="mx-auto max-w-md py-24 text-center">
       <ShieldHalfIcon className="text-muted-foreground mx-auto size-10" />
@@ -173,4 +178,4 @@ function EmptyState() {
       </Button>
     </div>
   );
-}
+};

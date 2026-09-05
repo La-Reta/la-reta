@@ -5,23 +5,27 @@ import { Button } from "../ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
 
 /** One auth CTA: a Clerk modal trigger styled as a tooltip'd button. */
-function AuthAction({
+const AuthAction = ({
   wrapper: Wrapper,
   icon,
   label,
   variant,
   tooltip,
 }: {
-  wrapper: typeof SignInButton;
-  icon: React.ReactNode;
-  label: string;
-  variant: ButtonVariant;
-  tooltip: string;
-}) {
+  readonly wrapper: typeof SignInButton;
+  readonly icon: React.ReactNode;
+  readonly label: string;
+  readonly variant: ButtonVariant;
+  readonly tooltip: string;
+}) => {
   return (
     <Tooltip>
       <Wrapper mode="modal">
-        <TooltipTrigger render={<Button variant={variant}></Button>}>
+        {/* En móvil el botón se queda solo con el icono: sin aria-label un
+            lector de pantalla lo anunciaría como "botón" a secas. */}
+        <TooltipTrigger
+          render={<Button variant={variant} aria-label={label} />}
+        >
           {icon}
           <span className="hidden md:inline-flex">{label}</span>
         </TooltipTrigger>
@@ -29,10 +33,10 @@ function AuthAction({
       <TooltipContent>{tooltip}</TooltipContent>
     </Tooltip>
   );
-}
+};
 
 /** Header auth controls: sign-in / sign-up CTAs when signed out, avatar when in. */
-export function HeaderAuth() {
+export const HeaderAuth = () => {
   return (
     <>
       <Show when="signed-out">
@@ -56,4 +60,4 @@ export function HeaderAuth() {
       </Show>
     </>
   );
-}
+};

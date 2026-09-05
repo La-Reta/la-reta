@@ -19,6 +19,7 @@ import {
 import type { Report } from "@/lib/db/schema";
 import { formatCompactDate } from "@/lib/dates";
 import { cn } from "@/lib/utils";
+import { ConfirmDialog } from "@/components/shared/confirm-dialog";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -27,9 +28,9 @@ import {
 } from "@/components/ui/native-select";
 import { Textarea } from "@/components/ui/textarea";
 
-export function AdminReports({ reports }: { reports: Report[] }) {
+export const AdminReports = ({ reports }: { readonly reports: Report[] }) => {
   const [selectedId, setSelectedId] = React.useState<number | null>(
-    reports[0]?.id ?? null,
+    reports[0]?.id ?? null
   );
   const selected = reports.find((report) => report.id === selectedId) ?? null;
 
@@ -51,7 +52,7 @@ export function AdminReports({ reports }: { reports: Report[] }) {
             onClick={() => setSelectedId(report.id)}
             className={cn(
               "flex w-full min-w-0 flex-col gap-1 px-3 py-2.5 text-left transition-colors",
-              report.id === selectedId ? "bg-muted" : "hover:bg-muted/50",
+              report.id === selectedId ? "bg-muted" : "hover:bg-muted/50"
             )}
           >
             <span className="line-clamp-1 text-sm font-medium">
@@ -61,7 +62,7 @@ export function AdminReports({ reports }: { reports: Report[] }) {
               <Pill className={REPORT_STATUS_CLASS[report.status]}>
                 {REPORT_STATUS_LABEL[report.status]}
               </Pill>
-              <span className="text-muted-foreground text-[10px]">
+              <span className="text-muted-foreground text-xs">
                 {formatCompactDate(report.createdAt)}
               </span>
             </span>
@@ -82,17 +83,19 @@ export function AdminReports({ reports }: { reports: Report[] }) {
       )}
     </div>
   );
-}
+};
 
-function ReportEditor({
+const ReportEditor = ({
   report,
   onDeleted,
 }: {
-  report: Report;
-  onDeleted: () => void;
-}) {
+  readonly report: Report;
+  readonly onDeleted: () => void;
+}) => {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
+  const statusId = React.useId();
+  const notesId = React.useId();
   const [draft, setDraft] = React.useState({
     status: report.status,
     adminNotes: report.adminNotes ?? "",
@@ -111,7 +114,6 @@ function ReportEditor({
   }
 
   function remove() {
-    if (!confirm(`¿Eliminar el reporte "${report.title}"?`)) return;
     startTransition(async () => {
       const res = await deleteReport(report.id);
       if (res.ok) {
@@ -183,10 +185,13 @@ function ReportEditor({
 
       <div className="grid gap-4">
         <div>
-          <Label className="mb-1.5 block text-xs">Estado</Label>
+          <Label htmlFor={statusId} className="mb-1.5 block text-xs">
+            Estado
+          </Label>
           <NativeSelect
             className="w-full"
             value={draft.status}
+            id={statusId}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -202,9 +207,12 @@ function ReportEditor({
           </NativeSelect>
         </div>
         <div>
-          <Label className="mb-1.5 block text-xs">Notas internas</Label>
+          <Label htmlFor={notesId} className="mb-1.5 block text-xs">
+            Notas internas
+          </Label>
           <Textarea
             value={draft.adminNotes}
+            id={notesId}
             onChange={(event) =>
               setDraft((current) => ({
                 ...current,
@@ -220,31 +228,39 @@ function ReportEditor({
       <div className="flex flex-wrap items-center gap-2">
         <Button onClick={save} disabled={pending}>
           <SaveIcon />
-          {pending ? "Guardando..." : "Guardar"}
+          {pending ? "Guardando…" : "Guardar"}
         </Button>
-        <Button variant="destructive" onClick={remove} disabled={pending}>
-          <Trash2Icon />
-          Eliminar
-        </Button>
+        <ConfirmDialog
+          pending={pending}
+          onConfirm={remove}
+          title="¿Eliminar este reporte?"
+          description={`“${report.title}” se borra de la bandeja de reportes. No se puede deshacer.`}
+          trigger={
+            <Button variant="destructive" disabled={pending}>
+              <Trash2Icon />
+              Eliminar
+            </Button>
+          }
+        />
       </div>
     </div>
   );
-}
+};
 
-function InfoPanel({
+const InfoPanel = ({
   icon: Icon,
   title,
   items,
   longValue,
 }: {
-  icon: React.ComponentType<React.ComponentProps<"svg">>;
-  title: string;
-  items: Array<[string, string | number | null]>;
-  longValue?: string | null;
-}) {
+  readonly icon: React.ComponentType<React.ComponentProps<"svg">>;
+  readonly title: string;
+  readonly items: Array<[string, string | number | null]>;
+  readonly longValue?: string | null;
+}) => {
   return (
     <div className="bg-muted/30 min-w-0 rounded-lg border p-3">
-      <div className="text-muted-foreground flex items-center gap-1.5 text-[10px] font-semibold uppercase">
+      <div className="text-muted-foreground flex items-center gap-1.5 text-xs font-semibold uppercase">
         <Icon className="size-3.5" />
         {title}
       </div>
@@ -254,44 +270,44 @@ function InfoPanel({
         ))}
       </div>
       {longValue ? (
-        <p className="text-muted-foreground mt-2 line-clamp-3 text-[11px] break-all">
+        <p className="text-muted-foreground mt-2 line-clamp-3 text-xs break-all">
           {longValue}
         </p>
       ) : null}
     </div>
   );
-}
+};
 
-function ClientInfo({
+const ClientInfo = ({
   label,
   value,
 }: {
-  label: string;
-  value: string | number | null;
-}) {
+  readonly label: string;
+  readonly value: string | number | null;
+}) => {
   return (
     <div className="min-w-0">
-      <p className="text-muted-foreground text-[10px] uppercase">{label}</p>
+      <p className="text-muted-foreground text-xs uppercase">{label}</p>
       <p className="font-medium break-words">{value ?? "—"}</p>
     </div>
   );
-}
+};
 
-function Pill({
+const Pill = ({
   className,
   children,
 }: {
-  className?: string;
-  children: React.ReactNode;
-}) {
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}) => {
   return (
     <span
       className={cn(
-        "inline-flex rounded-sm px-1.5 py-0.5 text-[10px] font-medium",
-        className,
+        "inline-flex rounded-sm px-1.5 py-0.5 text-xs font-medium",
+        className
       )}
     >
       {children}
     </span>
   );
-}
+};

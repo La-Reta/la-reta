@@ -1,3 +1,4 @@
+import { PageTransition } from "@/components/app/page-transition";
 import ScorersSection from "@/components/features/matches/detail/scorers-section";
 import { MatchScorersChart } from "@/components/features/matches/match-detail-charts";
 import { MatchHero } from "@/components/features/matches/match-hero";
@@ -78,27 +79,27 @@ function topScorer(scorers: Scorer[]) {
     .sort((a, b) => b.goals - a.goals)[0];
 }
 
-function StatTile({
+const StatTile = ({
   icon,
   label,
   value,
   detail,
   tone = "primary",
 }: {
-  icon: ReactNode;
-  label: string;
-  value: string;
-  detail?: string;
-  tone?: keyof typeof STAT_TONES;
-}) {
+  readonly icon: ReactNode;
+  readonly label: string;
+  readonly value: string;
+  readonly detail?: string;
+  readonly tone?: keyof typeof STAT_TONES;
+}) => {
   return (
     <Card size="sm">
       <CardContent className="space-y-2">
-        <div className="text-muted-foreground flex items-center gap-2 text-[10px] font-semibold uppercase">
+        <div className="text-muted-foreground flex items-center gap-2 text-xs font-semibold uppercase">
           <span
             className={cn(
               "flex size-6 items-center justify-center rounded-md [&_svg]:size-3.5",
-              STAT_TONES[tone],
+              STAT_TONES[tone]
             )}
           >
             {icon}
@@ -112,25 +113,25 @@ function StatTile({
       </CardContent>
     </Card>
   );
-}
+};
 
-function TeamFigureCard({
+const TeamFigureCard = ({
   teamName,
   score,
   scorers,
   color,
   cleanSheet,
 }: {
-  teamName: string;
-  score: number;
-  scorers: Scorer[];
-  color: string;
-  cleanSheet: boolean;
-}) {
+  readonly teamName: string;
+  readonly score: number;
+  readonly scorers: Scorer[];
+  readonly color: string;
+  readonly cleanSheet: boolean;
+}) => {
   const figure = topScorer(scorers);
   const registeredGoals = scorers.reduce(
     (sum, scorer) => sum + scorer.goals,
-    0,
+    0
   );
   const totalAssists = scorers.reduce((sum, s) => sum + s.assists, 0);
   const guestGoals = scorers
@@ -206,23 +207,23 @@ function TeamFigureCard({
       </CardContent>
     </Card>
   );
-}
+};
 
 // Team accent for the roster bars/dot; unassigned falls back to primary.
-function TeamRosterCard({
+const TeamRosterCard = ({
   title,
   scorers,
   maxGoals,
   color,
 }: {
-  title: string;
-  scorers: Scorer[];
-  maxGoals: number;
+  readonly title: string;
+  readonly scorers: Scorer[];
+  readonly maxGoals: number;
   /** Color del equipo; sin él (p. ej. "sin equipo") usa el primario. */
-  color?: string;
-}) {
+  readonly color?: string;
+}) => {
   // Sorted by goals so the numbered rank reflects the scoring order.
-  const ranked = [...scorers].sort((a, b) => b.goals - a.goals);
+  const ranked = scorers.toSorted((a, b) => b.goals - a.goals);
   const totalGoals = scorers.reduce((sum, s) => sum + s.goals, 0);
 
   return (
@@ -237,7 +238,7 @@ function TeamRosterCard({
             <span className="truncate">{title}</span>
           </CardTitle>
           <div className="flex flex-wrap items-center justify-end gap-2">
-            <Badge variant={"default"} className="shrink-0 tabular-nums">
+            <Badge variant="default" className="shrink-0 tabular-nums">
               {totalGoals > 0
                 ? `${totalGoals} gol${totalGoals === 1 ? "" : "es"}`
                 : "Sin goles"}
@@ -257,11 +258,11 @@ function TeamRosterCard({
           <ul className="space-y-1.5">
             {ranked.map((scorer, idx) => (
               <li
-                key={`${title}-${scorer.playerId ?? `guest-${idx}`}`}
+                key={`${title}-${scorer.playerId ?? scorer.displayName}`}
                 className="space-y-1.5"
               >
                 <div className="flex items-center gap-2">
-                  <span className="text-muted-foreground w-3 shrink-0 text-center font-mono text-[11px] font-semibold tabular-nums">
+                  <span className="text-muted-foreground w-3 shrink-0 text-center font-mono text-xs font-semibold tabular-nums">
                     {idx + 1}
                   </span>
                   {scorer.isGuest ? (
@@ -269,7 +270,7 @@ function TeamRosterCard({
                     // tarjeta es angosta y el nombre es lo que importa.
                     <span className="min-w-0 flex-1 truncate text-sm font-medium">
                       {scorer.name}
-                      <span className="text-muted-foreground ml-1 text-[10px] font-normal">
+                      <span className="text-muted-foreground ml-1 text-xs font-normal">
                         inv.
                       </span>
                     </span>
@@ -321,13 +322,13 @@ function TeamRosterCard({
       </CardContent>
     </Card>
   );
-}
+};
 
-export default async function MatchDetailPage({
+const MatchDetailPage = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
-}) {
+  readonly params: Promise<{ id: string }>;
+}) => {
   const { id } = await params;
   const [match, admin, { userId }] = await Promise.all([
     getMatchById(Number(id)),
@@ -376,10 +377,10 @@ export default async function MatchDetailPage({
     scorers: match.scorers.filter((scorer) => scorer.team === team.key),
   }));
   const unassignedScorers = match.scorers.filter(
-    (scorer) => !teams.some((t) => t.key === scorer.team),
+    (scorer) => !teams.some((t) => t.key === scorer.team)
   );
   // Distancia entre el primero y el segundo, sean 2 o 6 equipos.
-  const ranked = [...teams].sort((a, b) => b.score - a.score);
+  const ranked = teams.toSorted((a, b) => b.score - a.score);
   const scoreGap = ranked.length > 1 ? ranked[0].score - ranked[1].score : 0;
   const pace = matchPace(totalGoals, match.durationSec);
   const maxScorerGoals = Math.max(1, ...match.scorers.map((s) => s.goals));
@@ -399,207 +400,219 @@ export default async function MatchDetailPage({
   }));
 
   return (
-    <div className="mx-auto max-w-5xl space-y-6 lg:container">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <Breadcrumb>
-          <BreadcrumbList>
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/">Home</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbLink href="/matches">Partidos</BreadcrumbLink>
-            </BreadcrumbItem>
-            <BreadcrumbSeparator />
-            <BreadcrumbItem>
-              <BreadcrumbPage>Detalle del partido</BreadcrumbPage>
-            </BreadcrumbItem>
-          </BreadcrumbList>
-        </Breadcrumb>
-        {admin ? (
-          <Button
-            variant="default"
-            render={<Link href={`/matches/${match.id}/edit`} />}
-          >
-            <PencilIcon />
-            Editar información
-          </Button>
-        ) : null}
-      </div>
-
-      <MatchHero
-        matchId={match.id}
-        teams={teams}
-        dateLabel={formatShortDateOnly(match.playedAt)}
-        winner={winner}
-        photoUrl={match.photoUrl}
-        admin={admin}
-      />
-
-      {match.notes ? (
-        <h2 className="text-muted-foreground text-center text-sm font-semibold uppercase transition hover:text-black">
-          {match.notes}
-        </h2>
-      ) : null}
-
-      <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
-        <StatTile
-          icon={<TargetIcon />}
-          label="Goles totales"
-          value={String(totalGoals)}
-          detail={pace ? `1 gol cada ${pace} min` : "Ritmo pendiente"}
-          tone="primary"
-        />
-        <StatTile
-          icon={<UsersIcon />}
-          label="Goleadores"
-          value={String(scored.length)}
-          detail={
-            guestGoals > 0
-              ? `${guestGoals} gol${guestGoals === 1 ? "" : "es"} de invitados`
-              : `de ${match.scorers.length} jugadores`
-          }
-          tone="emerald"
-        />
-        <StatTile
-          icon={<ScaleIcon />}
-          label="Balance"
-          value={`${match.balance}/100`}
-          detail={balanceLabel(match.balance)}
-          tone={balanceTone(match.balance)}
-        />
-        <StatTile
-          icon={<ClockIcon />}
-          label="Duración"
-          value={
-            match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"
-          }
-          detail={match.durationSec ? "Registrado en vivo" : "Sin reloj"}
-          tone="sky"
-        />
-      </section>
-
-      <MatchMvpVoting
-        matchId={match.id}
-        candidates={voteCandidates}
-        tally={voteTally}
-        myVotes={myVotes}
-        canVote={Boolean(userId)}
-        votingOpen={votingOpen}
-        closesLabel={closesLabel}
-      />
-
-      <SectionHeading title="Los goleadores" />
-
-      <ScorersSection match={match} scored={scored} />
-
-      <section className="grid gap-6 lg:grid-cols-2">
-        {teamSquads.map((team) => (
-          <TeamFigureCard
-            key={team.key}
-            teamName={team.name}
-            score={team.score}
-            scorers={team.scorers}
-            color={TEAM_COLORS[team.key]}
-            // Valla invicta: nadie más anotó en todo el partido.
-            cleanSheet={totalGoals > 0 && totalGoals === team.score}
-          />
-        ))}
-      </section>
-
-      {scorerChartData.length > 0 ? (
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Goleadores del partido</CardTitle>
-          </CardHeader>
-          <CardContent>
-            <MatchScorersChart data={scorerChartData} />
-          </CardContent>
-        </Card>
-      ) : null}
-
-      <section className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
-        <div className="space-y-3">
-          <SectionHeading title="Equipos y goles" />
-          {match.scorers.length === 0 ? (
-            <p className="text-muted-foreground py-8 text-center text-sm">
-              No se registraron jugadores ni goleadores para este partido.
-            </p>
-          ) : (
-            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
-              {teamSquads.map((team) => (
-                <TeamRosterCard
-                  key={team.key}
-                  title={team.name}
-                  scorers={team.scorers}
-                  maxGoals={maxScorerGoals}
-                  color={TEAM_COLORS[team.key]}
-                />
-              ))}
-              {unassignedScorers.length > 0 ? (
-                <TeamRosterCard
-                  title="Sin equipo asignado"
-                  scorers={unassignedScorers}
-                  maxGoals={maxScorerGoals}
-                />
-              ) : null}
-            </div>
-          )}
+    <PageTransition>
+      <div className="mx-auto max-w-5xl space-y-6 lg:container">
+        <div className="flex flex-wrap items-center justify-between gap-3">
+          <Breadcrumb>
+            <BreadcrumbList>
+              <BreadcrumbItem>
+                <BreadcrumbLink render={<Link href="/" />}>Home</BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbLink
+                  render={
+                    <Link href="/matches" transitionTypes={["nav-back"]} />
+                  }
+                >
+                  Partidos
+                </BreadcrumbLink>
+              </BreadcrumbItem>
+              <BreadcrumbSeparator />
+              <BreadcrumbItem>
+                <BreadcrumbPage>Detalle del partido</BreadcrumbPage>
+              </BreadcrumbItem>
+            </BreadcrumbList>
+          </Breadcrumb>
+          {admin ? (
+            <Button
+              variant="default"
+              render={<Link href={`/matches/${match.id}/edit`} />}
+            >
+              <PencilIcon />
+              Editar información
+            </Button>
+          ) : null}
         </div>
 
-        <Card>
-          <CardHeader className="border-b">
-            <CardTitle>Resumen táctico</CardTitle>
-          </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex items-start gap-3">
-              <span className="bg-primary/10 text-primary mt-0.5 flex size-7 items-center justify-center rounded-md [&_svg]:size-4">
-                <ShieldIcon />
-              </span>
-              <div>
-                <p className="text-sm font-semibold">
-                  {winner
-                    ? `${winner} se llevó el partido`
-                    : "Partido empatado"}
-                </p>
-                <p className="text-muted-foreground mt-1 text-xs">
-                  Diferencia de {scoreGap} gol{scoreGap === 1 ? "" : "es"} con
-                  el siguiente.
-                </p>
-              </div>
-            </div>
+        <MatchHero
+          matchId={match.id}
+          teams={teams}
+          dateLabel={formatShortDateOnly(match.playedAt)}
+          winner={winner}
+          photoUrl={match.photoUrl}
+          admin={admin}
+        />
 
-            <div>
-              <div className="mb-1.5 flex items-center justify-between text-xs">
-                <span className="text-muted-foreground">Balance percibido</span>
-                <span className="font-mono font-bold tabular-nums">
-                  {match.balance}%
+        {match.notes ? (
+          <h2 className="text-muted-foreground text-center text-sm font-semibold uppercase transition hover:text-black">
+            {match.notes}
+          </h2>
+        ) : null}
+
+        <section className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+          <StatTile
+            icon={<TargetIcon />}
+            label="Goles totales"
+            value={String(totalGoals)}
+            detail={pace ? `1 gol cada ${pace} min` : "Ritmo pendiente"}
+            tone="primary"
+          />
+          <StatTile
+            icon={<UsersIcon />}
+            label="Goleadores"
+            value={String(scored.length)}
+            detail={
+              guestGoals > 0
+                ? `${guestGoals} gol${guestGoals === 1 ? "" : "es"} de invitados`
+                : `de ${match.scorers.length} jugadores`
+            }
+            tone="emerald"
+          />
+          <StatTile
+            icon={<ScaleIcon />}
+            label="Balance"
+            value={`${match.balance}/100`}
+            detail={balanceLabel(match.balance)}
+            tone={balanceTone(match.balance)}
+          />
+          <StatTile
+            icon={<ClockIcon />}
+            label="Duración"
+            value={
+              match.durationSec ? `${Math.round(match.durationSec / 60)}m` : "—"
+            }
+            detail={match.durationSec ? "Registrado en vivo" : "Sin reloj"}
+            tone="sky"
+          />
+        </section>
+
+        <MatchMvpVoting
+          matchId={match.id}
+          candidates={voteCandidates}
+          tally={voteTally}
+          myVotes={myVotes}
+          canVote={Boolean(userId)}
+          votingOpen={votingOpen}
+          closesLabel={closesLabel}
+        />
+
+        <SectionHeading title="Los goleadores" />
+
+        <ScorersSection match={match} scored={scored} />
+
+        <section className="grid gap-6 lg:grid-cols-2">
+          {teamSquads.map((team) => (
+            <TeamFigureCard
+              key={team.key}
+              teamName={team.name}
+              score={team.score}
+              scorers={team.scorers}
+              color={TEAM_COLORS[team.key]}
+              // Valla invicta: nadie más anotó en todo el partido.
+              cleanSheet={totalGoals > 0 && totalGoals === team.score}
+            />
+          ))}
+        </section>
+
+        {scorerChartData.length > 0 ? (
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Goleadores del partido</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <MatchScorersChart data={scorerChartData} />
+            </CardContent>
+          </Card>
+        ) : null}
+
+        <section className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start">
+          <div className="space-y-3">
+            <SectionHeading title="Equipos y goles" />
+            {match.scorers.length === 0 ? (
+              <p className="text-muted-foreground py-8 text-center text-sm">
+                No se registraron jugadores ni goleadores para este partido.
+              </p>
+            ) : (
+              <div className="grid grid-cols-1 gap-3 sm:grid-cols-2">
+                {teamSquads.map((team) => (
+                  <TeamRosterCard
+                    key={team.key}
+                    title={team.name}
+                    scorers={team.scorers}
+                    maxGoals={maxScorerGoals}
+                    color={TEAM_COLORS[team.key]}
+                  />
+                ))}
+                {unassignedScorers.length > 0 ? (
+                  <TeamRosterCard
+                    title="Sin equipo asignado"
+                    scorers={unassignedScorers}
+                    maxGoals={maxScorerGoals}
+                  />
+                ) : null}
+              </div>
+            )}
+          </div>
+
+          <Card>
+            <CardHeader className="border-b">
+              <CardTitle>Resumen táctico</CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-4">
+              <div className="flex items-start gap-3">
+                <span className="bg-primary/10 text-primary mt-0.5 flex size-7 items-center justify-center rounded-md [&_svg]:size-4">
+                  <ShieldIcon />
                 </span>
+                <div>
+                  <p className="text-sm font-semibold">
+                    {winner
+                      ? `${winner} se llevó el partido`
+                      : "Partido empatado"}
+                  </p>
+                  <p className="text-muted-foreground mt-1 text-xs">
+                    Diferencia de {scoreGap} gol{scoreGap === 1 ? "" : "es"} con
+                    el siguiente.
+                  </p>
+                </div>
               </div>
-              <div className="bg-muted h-2 overflow-hidden rounded-full">
-                <div
-                  className={cn(
-                    "h-full rounded-full",
-                    match.balance >= 60
-                      ? "bg-emerald-500"
-                      : match.balance >= 40
-                        ? "bg-amber-500"
-                        : "bg-rose-500",
-                  )}
-                  style={{ width: `${match.balance}%` }}
-                />
-              </div>
-            </div>
 
-            <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-xs">
-              Este dashboard usa la información registrada del partido:
-              marcador, balance, duración, equipos y goleadores. Para agregar
-              jugadores, asignar equipo o corregir datos, usa la acción de
-              edición.
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-    </div>
+              <div>
+                <div className="mb-1.5 flex items-center justify-between text-xs">
+                  <span className="text-muted-foreground">
+                    Balance percibido
+                  </span>
+                  <span className="font-mono font-bold tabular-nums">
+                    {match.balance}%
+                  </span>
+                </div>
+                <div className="bg-muted h-2 overflow-hidden rounded-full">
+                  <div
+                    className={cn(
+                      "h-full rounded-full",
+                      match.balance >= 60
+                        ? "bg-emerald-500"
+                        : match.balance >= 40
+                          ? "bg-amber-500"
+                          : "bg-rose-500"
+                    )}
+                    style={{ width: `${match.balance}%` }}
+                  />
+                </div>
+              </div>
+
+              <div className="bg-muted/40 text-muted-foreground rounded-lg p-3 text-xs">
+                Este dashboard usa la información registrada del partido:
+                marcador, balance, duración, equipos y goleadores. Para agregar
+                jugadores, asignar equipo o corregir datos, usa la acción de
+                edición.
+              </div>
+            </CardContent>
+          </Card>
+        </section>
+      </div>
+    </PageTransition>
   );
-}
+};
+
+export default MatchDetailPage;

@@ -4,6 +4,13 @@ import { deletePlayers } from "@/app/actions/players";
 import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
 import { Checkbox } from "@/components/ui/checkbox";
+import {
+  Empty,
+  EmptyDescription,
+  EmptyHeader,
+  EmptyMedia,
+  EmptyTitle,
+} from "@/components/ui/empty";
 import { Input } from "@/components/ui/input";
 import { playersKey, usePlayers } from "@/hooks/use-players";
 import {
@@ -17,26 +24,36 @@ import { selectedIdsAtom } from "@/lib/state/atoms";
 import { cn } from "@/lib/utils";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAtom } from "jotai";
-import { ListChecksIcon, SearchIcon } from "lucide-react";
+import { ListChecksIcon, SearchIcon, SearchXIcon, XIcon } from "lucide-react";
 import Link from "next/link";
-import { useRouter } from "next/navigation";
+import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
+import { PlayersFilterBar } from "./filter-bar";
 import { FloatingActionBar } from "./floating-action-bar";
 
-const GROUPS: (PositionGroup | "ALL")[] = ["ALL", "GK", "DEF", "MID", "FWD"];
+/** Espera a que el usuario deje de teclear antes de reescribir la URL. */
+const URL_SYNC_DELAY_MS = 300;
 
-export function PlayersBrowser({
+function isGroup(value: string | null): value is PositionGroup {
+  return (
+    value === "GK" || value === "DEF" || value === "MID" || value === "FWD"
+  );
+}
+
+export const PlayersBrowser = ({
   players: initialPlayers,
   isAdmin = false,
 }: {
-  players: Player[];
-  isAdmin?: boolean;
-}) {
+  readonly players: Player[];
+  readonly isAdmin?: boolean;
+}) => {
   // Server-rendered roster seeds the React Query cache; mutations invalidate it.
   const { data: players } = usePlayers(initialPlayers);
   const queryClient = useQueryClient();
   const router = useRouter();
+  const pathname = usePathname();
+  const searchParams = useSearchParams();
 
   // The QueryClient persists across navigations, so on each RSC navigation
   // (after create/edit/delete elsewhere) push the fresh server data into the
@@ -44,8 +61,65 @@ export function PlayersBrowser({
   React.useEffect(() => {
     queryClient.setQueryData(playersKey, initialPlayers);
   }, [initialPlayers, queryClient]);
-  const [query, setQuery] = React.useState("");
-  const [group, setGroup] = React.useState<PositionGroup | "ALL">("ALL");
+
+  // Los filtros viven en la URL (?q= y ?pos=): así una plantilla filtrada se
+  // comparte por link, el botón "atrás" la deshace y recargar no la pierde.
+  const urlQuery = searchParams.get("q") ?? "";
+  const urlGroup = searchParams.get("pos");
+  const group: PositionGroup | "ALL" = isGroup(urlGroup) ? urlGroup : "ALL";
+
+  // El input se mantiene local para que teclear sea instantáneo; la URL se
+  // actualiza en diferido.
+  const [query, setQuery] = React.useState(urlQuery);
+  // Si la URL cambia por fuera (atrás/adelante, link compartido) el input se
+  // resincroniza durante el render, no en un efecto: hacerlo en un efecto
+  // provoca un render extra con el valor viejo ya pintado.
+  const [syncedQuery, setSyncedQuery] = React.useState(urlQuery);
+  if (urlQuery !== syncedQuery) {
+    setSyncedQuery(urlQuery);
+    setQuery(urlQuery);
+  }
+
+  function writeParams(next: { q?: string; pos?: PositionGroup | "ALL" }) {
+    const params = new URLSearchParams(searchParams.toString());
+
+    if (next.q !== undefined) {
+      if (next.q.trim()) params.set("q", next.q.trim());
+      else params.delete("q");
+    }
+    if (next.pos !== undefined) {
+      if (next.pos === "ALL") params.delete("pos");
+      else params.set("pos", next.pos);
+    }
+
+    const search = params.toString();
+    // replace + scroll:false: filtrar no debe llenar el historial de pasos
+    // intermedios ni saltar al inicio de la galería.
+    router.replace(search ? `${pathname}?${search}` : pathname, {
+      scroll: false,
+    });
+  }
+
+  // El debounce vive en el handler, no en un efecto: así no se resuscribe en
+  // cada render y no hay setState dentro de un efecto.
+  const urlSyncTimer = React.useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  React.useEffect(
+    () => () => {
+      if (urlSyncTimer.current) clearTimeout(urlSyncTimer.current);
+    },
+    []
+  );
+
+  function onQueryChange(value: string) {
+    setQuery(value);
+    if (urlSyncTimer.current) clearTimeout(urlSyncTimer.current);
+    urlSyncTimer.current = setTimeout(
+      () => writeParams({ q: value }),
+      URL_SYNC_DELAY_MS
+    );
+  }
+
   const [selected, setSelected] = React.useState<Set<number>>(new Set());
   const [, setPool] = useAtom(selectedIdsAtom);
 
@@ -62,6 +136,8 @@ export function PlayersBrowser({
       p.displayName.toLowerCase().includes(q);
     return matchesGroup && matchesQuery;
   });
+
+  const hasFilters = query.trim() !== "" || group !== "ALL";
 
   function toggle(id: number) {
     setSelected((prev) => {
@@ -81,8 +157,10 @@ export function PlayersBrowser({
   function toggleAllFiltered() {
     setSelected((prev) => {
       const next = new Set(prev);
-      if (allFilteredSelected) filtered.forEach((p) => next.delete(p.id));
-      else filtered.forEach((p) => next.add(p.id));
+      for (const p of filtered) {
+        if (allFilteredSelected) next.delete(p.id);
+        else next.add(p.id);
+      }
       return next;
     });
   }
@@ -91,11 +169,16 @@ export function PlayersBrowser({
     setSelected(new Set());
   }
 
+  function clearFilters() {
+    setQuery("");
+    writeParams({ q: "", pos: "ALL" });
+  }
+
   function addToTeams() {
     const ids = [...selected];
     setPool((prev) => Array.from(new Set([...prev, ...ids])));
     toast.success(
-      `${ids.length} jugador${ids.length === 1 ? "" : "es"} en el pool · armando equipos`,
+      `${ids.length} jugador${ids.length === 1 ? "" : "es"} en el pool · armando equipos`
     );
     setSelected(new Set());
     router.push("/teams");
@@ -109,7 +192,7 @@ export function PlayersBrowser({
     },
     onSuccess: (res) => {
       toast.success(
-        `${res.count} jugador${res.count === 1 ? "" : "es"} eliminado${res.count === 1 ? "" : "s"}`,
+        `${res.count} jugador${res.count === 1 ? "" : "es"} eliminado${res.count === 1 ? "" : "s"}`
       );
       clear();
       queryClient.invalidateQueries({ queryKey: playersKey });
@@ -124,44 +207,47 @@ export function PlayersBrowser({
 
   return (
     <div className="space-y-4">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-        <div className="relative max-w-xs">
-          <SearchIcon className="text-muted-foreground pointer-events-none absolute top-1/2 left-2.5 size-4 -translate-y-1/2" />
-          <Input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Buscar jugador…"
-            className="pl-8"
-          />
-        </div>
-        <div className="flex flex-wrap items-center justify-end gap-1">
-          {GROUPS.map((g) => (
-            <Button
-              key={g}
-              variant={group === g ? "default" : "outline"}
-              onClick={() => setGroup(g)}
-            >
-              {g === "ALL" ? "Todos" : GROUP_LABEL[g]}
-            </Button>
-          ))}
-          <Button variant="secondary" onClick={toggleAllFiltered}>
-            <ListChecksIcon />
-            {allFilteredSelected ? "Quitar" : "Seleccionar"}
-          </Button>
-        </div>
-      </div>
+      <PlayersFilterBar
+        query={query}
+        group={group}
+        allFilteredSelected={allFilteredSelected}
+        onQueryChange={onQueryChange}
+        onClearQuery={() => {
+          setQuery("");
+          writeParams({ q: "" });
+        }}
+        onGroupChange={(g) => writeParams({ pos: g })}
+        onToggleAll={toggleAllFiltered}
+      />
 
-      <p className="text-muted-foreground text-xs">
-        {filtered.length} jugador{filtered.length === 1 ? "" : "es"}
+      {/* aria-live: al filtrar, un lector de pantalla anuncia cuántos quedan
+          en vez de dejar el cambio en silencio. */}
+      <p aria-live="polite" className="text-muted-foreground text-xs">
+        <span className="tabular-nums">{filtered.length}</span> jugador
+        {filtered.length === 1 ? "" : "es"}
         {selected.size > 0
           ? ` · ${selected.size} seleccionado${selected.size === 1 ? "" : "s"}`
           : ""}
       </p>
 
       {filtered.length === 0 ? (
-        <p className="text-muted-foreground py-16 text-center text-sm">
-          No hay jugadores que coincidan.
-        </p>
+        <Empty className="border">
+          <EmptyHeader>
+            <EmptyMedia variant="icon">
+              <SearchXIcon />
+            </EmptyMedia>
+            <EmptyTitle>No hay jugadores que coincidan</EmptyTitle>
+            <EmptyDescription>
+              Prueba con otro nombre o quita el filtro de posición.
+            </EmptyDescription>
+          </EmptyHeader>
+          {hasFilters ? (
+            <Button variant="outline" onClick={clearFilters}>
+              <XIcon />
+              Limpiar filtros
+            </Button>
+          ) : null}
+        </Empty>
       ) : (
         <div className="3xl:grid-cols-7 4xl:grid-cols-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
           {filtered.map((player) => {
@@ -173,7 +259,7 @@ export function PlayersBrowser({
                   className={cn(
                     "bg-background/85 ring-foreground/10 absolute top-2 left-2 z-10 flex cursor-pointer items-center justify-center rounded-md p-1 shadow ring-1 backdrop-blur transition-opacity",
                     "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-                    isSel && "opacity-100",
+                    isSel && "opacity-100"
                   )}
                   aria-label={`Seleccionar ${player.name}`}
                 >
@@ -184,13 +270,19 @@ export function PlayersBrowser({
                 </label>
                 <Link
                   href={`/players/${player.id}`}
+                  // Marca la dirección: la ficha entra deslizándose desde la
+                  // derecha y la rejilla sale hacia la izquierda.
+                  transitionTypes={["nav-forward"]}
                   className={cn(
-                    "block rounded-xl transition-transform duration-200 hover:-translate-y-1 focus-visible:-translate-y-1 focus-visible:outline-none",
+                    "block rounded-xl transition-transform duration-200 hover:-translate-y-1",
+                    // El foco de teclado necesita un anillo visible: el
+                    // desplazamiento solo no se percibe al tabular.
+                    "focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:-translate-y-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
                     isSel &&
-                      "ring-primary ring-offset-background ring-2 ring-offset-2",
+                      "ring-primary ring-offset-background ring-2 ring-offset-2"
                   )}
                 >
-                  <FifaCard player={player} />
+                  <FifaCard player={player} className="card-shine" />
                 </Link>
               </div>
             );
@@ -213,4 +305,4 @@ export function PlayersBrowser({
       )}
     </div>
   );
-}
+};
