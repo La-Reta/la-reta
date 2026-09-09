@@ -3,73 +3,28 @@
 import { revalidatePath } from "next/cache";
 import { and, eq } from "drizzle-orm";
 import { auth, currentUser } from "@clerk/nextjs/server";
+import type { CommentInput, CommentResult } from "@/lib/comments";
 import { db, playerComments, commentReactions } from "@/lib/db";
+import {
+  clerkDisplayName,
+  isSingleEmoji,
+  normalizeRating,
+  trimmedOrNull,
+  UNAUTHORIZED,
+  validateBody,
+} from "@/lib/comments";
 import { MAX_DISTINCT_REACTIONS } from "@/lib/constants";
 import { isAdmin } from "@/lib/admin";
 
 /**
-Display name for the signed-in Clerk user, or null.
-*/
-function clerkDisplayName(
-  user: Awaited<ReturnType<typeof currentUser>>
-): string | null {
-  if (!user) {
-    return null;
-  }
-  const full = [user.firstName, user.lastName].filter(Boolean).join(" ");
-  // Fallback al email (parte local) cuando no hay username ni nombre.
-  const email = user.primaryEmailAddress?.emailAddress.split("@", 1)[0];
-  // Se busca el primero **no vacío**, no el primero no nulo: Clerk devuelve ""
-  // en los campos que el usuario no rellenó, y con `??` esa cadena vacía se
-  // daría por buena y el autor saldría en blanco.
-  return (
-    [user.username, full, email].find((v) => v != null && v !== "") ?? null
-  );
-}
-
-// Reusar el segmenter (crearlo por llamada es caro).
-const graphemes = new Intl.Segmenter();
-
-/**
- * True when `s` is exactly one emoji (incl. ZWJ/modifier sequences). Usa
- * `Intl.Segmenter` (un solo grapheme cluster) + property Unicode — sin depender
- * de `emoji-regex`. ponytail: keycaps tipo "1️⃣" pueden no pasar; los emojis de
- * reacción habituales (👍❤️😂) sí. Ampliar si hace falta soportarlos.
+ * Las reglas de una reseña —quién la firma, qué emoji entra, cuánto texto cabe—
+ * viven en `lib/comments.ts` y las comparten las reseñas de jugador y las de
+ * partido. Estaban aquí dentro, privadas de este módulo, hasta que apareció el
+ * segundo tipo: dos copias de esas validaciones envejecen por separado, y la
+ * que se quede atrás es la que abre el hueco.
  */
-function isSingleEmoji(s: string): boolean {
-  if (s === "" || s.length > 16) {
-    return false;
-  }
-  const segments = [...graphemes.segment(s)];
-  return segments.length === 1 && /\p{Extended_Pictographic}/u.test(s);
-}
 
-export interface ClientInfo {
-  language?: string;
-  timezone?: string;
-  screen?: string;
-  platform?: string;
-  userAgent?: string;
-}
-
-export interface CommentInput {
-  body: string;
-  rating: number;
-  client: ClientInfo;
-}
-
-type Result = { ok: true } | { ok: false; error: string };
-
-const UNAUTHORIZED = "No autorizado.";
-
-/**
- * Recorta a `max` y convierte el vacío en `null`. Las columnas de metadatos
- * admiten null, y una cadena vacía guardada ocupa lo mismo que un dato y no
- * dice nada.
- */
-function trimmedOrNull(value: string | undefined, max: number): string | null {
-  return value === undefined || value === "" ? null : value.slice(0, max);
-}
+type Result = CommentResult;
 
 export async function addPlayerComment(
   playerId: number,
@@ -81,16 +36,12 @@ export async function addPlayerComment(
     return { ok: false, error: "Inicia sesión para dejar tu reseña." };
   }
 
-  const body = input.body.trim();
-  if (body === "") {
-    return { ok: false, error: "Escribe un comentario." };
+  const checked = validateBody(input.body);
+  if (!checked.ok) {
+    return checked;
   }
-  if (body.length > 500) {
-    return { ok: false, error: "Máximo 500 caracteres." };
-  }
-
-  const rating =
-    input.rating >= 1 && input.rating <= 5 ? Math.round(input.rating) : null;
+  const { body } = checked;
+  const rating = normalizeRating(input.rating);
 
   const user = await currentUser();
 
@@ -99,7 +50,7 @@ export async function addPlayerComment(
     author: clerkDisplayName(user),
     authorImageUrl: user?.imageUrl ?? null,
     authorId: userId,
-    body: body.slice(0, 500),
+    body,
     rating,
     language: trimmedOrNull(input.client.language, 24),
     timezone: trimmedOrNull(input.client.timezone, 64),
@@ -237,3 +188,5 @@ export async function archivePlayerComment(
   revalidatePath(`/players/${playerId}`);
   return { ok: true };
 }
+
+export { type CommentInput, type ClientInfo } from "@/lib/comments";

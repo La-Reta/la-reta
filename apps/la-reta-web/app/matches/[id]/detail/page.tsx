@@ -8,6 +8,7 @@ import {
   MatchMvpVoting,
   type VoteCandidate,
 } from "@/components/features/matches/match-mvp-voting";
+import { MatchReviews } from "@/components/features/matches/match-reviews";
 import { SectionHeading } from "@/components/shared/section-heading";
 import {
   Breadcrumb,
@@ -24,6 +25,9 @@ import { formatLongDate, formatShortDateOnly } from "@/lib/dates";
 import { candidateKey, isVotingOpen, votingClosesAt } from "@/lib/match-votes";
 import {
   getMatchById,
+  getMatchCommentMine,
+  getMatchCommentReactions,
+  getMatchComments,
   getMatchVoteTally,
   getMyMatchVotes,
 } from "@/lib/queries";
@@ -60,10 +64,34 @@ const MatchDetailPage = async ({
   //  Votación de premios (Figura / Golazo / Error)
   // Votar es exclusivo de cuentas: el PIN de admin no vota.
   const voterId = userId ?? null;
-  const [voteTally, myVotes] = await Promise.all([
-    getMatchVoteTally(match.id),
-    getMyMatchVotes(match.id, voterId),
-  ]);
+  const [voteTally, myVotes, reviewRows, reviewReactions, myReactions] =
+    await Promise.all([
+      getMatchVoteTally(match.id),
+      getMyMatchVotes(match.id, voterId),
+      getMatchComments(match.id),
+      getMatchCommentReactions(match.id),
+      // Con sesión, la clave de reacción es el propio userId — la misma que
+      // escribe el servidor al reaccionar.
+      getMatchCommentMine(match.id, voterId ?? ""),
+    ]);
+
+  const reviews = reviewRows.map((row) => ({
+    id: row.id,
+    author: row.author,
+    authorImageUrl: row.authorImageUrl,
+    body: row.body,
+    rating: row.rating,
+    createdAt: row.createdAt.toISOString(),
+    mine: voterId !== null && row.authorId === voterId,
+    reactions: reviewReactions[row.id] ?? {},
+    myReactions: myReactions[row.id] ?? [],
+  }));
+  const ratedReviews = reviews.filter((r) => r.rating !== null);
+  const reviewAverage =
+    ratedReviews.length === 0
+      ? null
+      : ratedReviews.reduce((total, r) => total + (r.rating ?? 0), 0) /
+        ratedReviews.length;
   const votingOpen = isVotingOpen(match.createdAt);
   const closesLabel = formatLongDate(votingClosesAt(match.createdAt));
   // Candidatos = participantes únicos del partido (roster o invitado).
@@ -239,6 +267,22 @@ const MatchDetailPage = async ({
               ) : null}
             </div>
           )}
+        </section>
+
+        {/* Al final a propósito: opinar de la reta se hace después de ver cómo
+            quedó y quién anotó, no antes. */}
+        <section className="space-y-3">
+          <SectionHeading
+            count={reviews.length}
+            title="La reta según ustedes"
+            tone="emerald"
+          />
+          <MatchReviews
+            average={reviewAverage}
+            canReview={Boolean(userId)}
+            matchId={match.id}
+            reviews={reviews}
+          />
         </section>
       </div>
     </PageTransition>
