@@ -1,9 +1,6 @@
-import {
-  positionGroup,
-  type Position,
-  type PositionGroup,
-  type StatKey,
-} from "@/lib/constants";
+import type { PlayerComment } from "@/lib/db/schema";
+import type { Position, PositionGroup, StatKey } from "@/lib/constants";
+import { positionGroup } from "@/lib/constants";
 
 export type Stats = Record<StatKey, number>;
 
@@ -46,7 +43,9 @@ const WEIGHTS: Record<PositionGroup, Stats> = {
   },
 };
 
-/** Position-weighted overall rating, clamped to 1-99. */
+/**
+Position-weighted overall rating, clamped to 1-99.
+*/
 export function computeOverall(position: Position, stats: Stats): number {
   const w = WEIGHTS[positionGroup(position)];
   const raw =
@@ -64,9 +63,15 @@ export type CardTier = "special" | "gold" | "silver" | "bronze";
 // Thresholds calibrated for an amateur "reta" (lower overall levels), so a
 // solid player feels gold instead of everyone looking bronze.
 export function cardTier(overall: number): CardTier {
-  if (overall >= 57) return "special";
-  if (overall >= 40) return "gold";
-  if (overall >= 26) return "silver";
+  if (overall >= 57) {
+    return "special";
+  }
+  if (overall >= 40) {
+    return "gold";
+  }
+  if (overall >= 26) {
+    return "silver";
+  }
   return "bronze";
 }
 
@@ -76,3 +81,19 @@ export const TIER_LABEL: Record<CardTier, string> = {
   silver: "Plata",
   bronze: "Bronce",
 };
+
+/**
+ * Nota media de las reseñas de un jugador, o `null` si nadie ha calificado.
+ *
+ * Un comentario sin estrellas (`rating` nulo) no entra en el promedio: dejar
+ * opinión sin puntuar es válido, y contarlo como un cero hundía la media de
+ * quien solo recibió comentarios de texto.
+ */
+export function averageRating(comments: readonly PlayerComment[]) {
+  const rated = comments.filter((c) => c.rating != null);
+  if (rated.length === 0) {
+    return null;
+  }
+  const total = rated.reduce((sum, c) => sum + (c.rating ?? 0), 0);
+  return { avg: total / rated.length, count: rated.length };
+}

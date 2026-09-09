@@ -24,9 +24,14 @@ export const Providers = ({
   );
 
   return (
+    // `defaultTheme="system"`: con `enableSystem` pero por defecto `dark`, quien
+    // llegaba sin preferencia guardada se quedaba en oscuro aunque su equipo
+    // estuviera en claro, y nunca entraba en el modo que sigue al sistema.
+    // Comprobado: sin `theme` en localStorage y con el sistema en claro, el
+    // <html> salía con la clase `dark`.
     <ThemeProvider
       attribute="class"
-      defaultTheme="dark"
+      defaultTheme="system"
       enableSystem
       disableTransitionOnChange
     >

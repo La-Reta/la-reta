@@ -47,6 +47,16 @@ export const Spotlight = ({
    * como "cambió el contenido", no como "se recargó la tarjeta".
    */
   readonly contentKey?: string | number;
+  /**
+   * Acción secundaria. Va en su propia fila bajo el cuerpo, no junto a "Ver
+   * ficha": la columna de texto mide ~149 px en la rejilla de tres del
+   * escritorio —la carta se lleva 112 de los 277 de la tarjeta— y el botón de
+   * `RotatingScorer` mide 207, así que se salía por la derecha. `whitespace-
+   * nowrap` y `shrink-0` vienen en el `cva` del Button, de modo que ni parte
+   * la línea ni encoge; el sitio tenía que salir de otro lado. Además queda
+   * fuera del `<Crossfade>`, que es lo correcto: el enlace es el mismo para
+   * todos los goleadores empatados y no tiene por qué parpadear al rotar.
+   */
   readonly secondAction?: React.ReactNode;
   /** Aro giratorio alrededor de la tarjeta. Solo para "El crack". */
   readonly highlight?: boolean;
@@ -94,17 +104,14 @@ export const Spotlight = ({
           </span>
         </p>
         {note ? <p className="text-muted-foreground text-xs">{note}</p> : null}
-        <div className="flex flex-wrap items-center justify-start gap-2">
-          <Button
-            className="mt-3"
-            render={<Link href={`/players/${player.id}`} />}
-            variant="default"
-          >
-            Ver ficha
-            <ArrowRightIcon />
-          </Button>
-          {secondAction ?? null}
-        </div>
+        <Button
+          className="mt-3"
+          render={<Link href={`/players/${player.id}`} />}
+          variant="default"
+        >
+          Ver ficha
+          <ArrowRightIcon />
+        </Button>
       </div>
     </>
   );
@@ -125,12 +132,12 @@ export const Spotlight = ({
           {subtitle}
         </CardDescription>
       </CardHeader>
-      {contentKey === undefined ? (
-        <CardContent className={BODY_LAYOUT}>{body}</CardContent>
-      ) : (
-        <CardContent className="flex flex-1 flex-col">
-          {/* aria-live: al rotar, un lector de pantalla anuncia al jugador
-              nuevo en vez de dejar el cambio en silencio. */}
+      <CardContent className="flex flex-1 flex-col gap-3">
+        {contentKey === undefined ? (
+          <div className={BODY_LAYOUT}>{body}</div>
+        ) : (
+          // aria-live: al rotar, un lector de pantalla anuncia al jugador
+          // nuevo en vez de dejar el cambio en silencio.
           <Crossfade
             aria-atomic
             aria-live="polite"
@@ -139,8 +146,9 @@ export const Spotlight = ({
           >
             {body}
           </Crossfade>
-        </CardContent>
-      )}
+        )}
+        {secondAction ?? null}
+      </CardContent>
       {footer ? (
         // <fieldset> pediría un <legend> y trae estilos propios; para un grupo
         // de botones de rotación (no un formulario) role="group" es el patrón

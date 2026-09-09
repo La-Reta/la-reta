@@ -3,7 +3,14 @@ import {
   SPRING_POP,
   SPRING_SNAP,
 } from "@/components/motion/motion-tokens";
-import { GROUP_COLOR, type PositionGroup } from "@/lib/constants";
+import { PlayerHoverCard } from "@/components/shared/player-hover-card";
+import {
+  GROUP_COLOR,
+  type PositionGroup,
+  positionGroup,
+  STAT_ABBR,
+  type StatKey,
+} from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { bestEleven } from "@/lib/lineup";
 import * as m from "motion/react-m";
@@ -20,6 +27,22 @@ const LINE_DELAY: Record<PositionGroup, number> = {
   DEF: 0.12,
   MID: 0.26,
   FWD: 0.4,
+};
+
+/**
+ * Los tres atributos que se enseñan al posar el puntero, por línea. Un portero
+ * y un extremo no se juzgan por lo mismo: enseñar siempre PAC/SHO/PAS dejaba la
+ * mitad de la pizarra con cifras que no dicen nada de ese puesto.
+ *
+ * La línea sale de la posición **del jugador**, no del hueco que ocupa en el
+ * 4-3-3: `bestEleven` mete a quien haga falta donde haga falta, así que a un
+ * extremo puesto de lateral le salían DEF/PHY/PAC mientras su chapa decía RW.
+ */
+const HOVER_STATS: Record<PositionGroup, readonly StatKey[]> = {
+  GK: ["defending", "physical", "passing"],
+  DEF: ["defending", "physical", "pace"],
+  MID: ["passing", "dribbling", "physical"],
+  FWD: ["shooting", "pace", "dribbling"],
 };
 
 /** El trazo de tiza se dibuja solo al entrar la pizarra en pantalla. */
@@ -145,6 +168,7 @@ export const LineupBoard = ({ players }: { readonly players: Player[] }) => {
               className="absolute flex -translate-x-1/2 -translate-y-1/2 items-center justify-center"
               style={{ left: `${slot.x}%`, top: `${slot.y}%` }}
             >
+              {/* eslint-disable-next-line react-doctor/no-tiny-text -- la etiqueta del hueco vacío va dentro de un círculo de 36 px; a 12 px "CDM" no cabe */}
               <span
                 className="grid size-9 place-items-center rounded-full border-2 border-dashed text-[10px] font-semibold text-white/70"
                 style={{ borderColor: "rgba(255,255,255,0.4)" }}
@@ -175,21 +199,45 @@ export const LineupBoard = ({ players }: { readonly players: Player[] }) => {
                 transition={SPRING_SNAP}
                 whileHover={{ y: -5, scale: 1.08 }}
               >
-                <Link
-                  className="group flex flex-col items-center gap-0.5 focus-visible:outline-none"
-                  href={`/players/${p.id}`}
-                  transitionTypes={["nav-forward"]}
+                {/* La ficha al vuelo es la misma del detalle de un partido.
+                    Aquí las tres cifras no pueden ser goles y asistencias —la
+                    pizarra no sabe de partidos—, así que enseña los atributos
+                    que más definen a cada línea: sin eso, la bolita solo dice
+                    un número y un apodo. */}
+                <PlayerHoverCard
+                  displayName={p.displayName}
+                  name={p.name}
+                  nationality={p.nationality}
+                  overall={p.overall}
+                  photoUrl={p.photoUrl}
+                  playerId={p.id}
+                  position={p.position}
+                  stats={HOVER_STATS[positionGroup(p.position)].map((key) => ({
+                    label: STAT_ABBR[key],
+                    value: p[key],
+                  }))}
                 >
-                  <span
-                    className="grid size-9 place-items-center rounded-full border-2 bg-neutral-950/90 font-mono text-sm font-bold text-white shadow-md group-hover:bg-neutral-950 group-focus-visible:ring-2 group-focus-visible:ring-white"
-                    style={{ borderColor: color }}
+                  <Link
+                    className="group flex flex-col items-center gap-0.5 focus-visible:outline-none"
+                    href={`/players/${p.id}`}
+                    transitionTypes={["nav-forward"]}
                   >
-                    {p.overall}
-                  </span>
-                  <span className="flex max-w-20 items-center gap-0.5 truncate rounded-sm bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
-                    <span className="truncate">{p.displayName}</span>
-                  </span>
-                </Link>
+                    <span
+                      className="grid size-9 place-items-center rounded-full border-2 bg-neutral-950/90 font-mono text-sm font-bold text-white shadow-md group-hover:bg-neutral-950 group-focus-visible:ring-2 group-focus-visible:ring-white"
+                      style={{ borderColor: color }}
+                    >
+                      {p.overall}
+                    </span>
+                    {/* El chip del nombre vive dentro de una cancha de 16/10
+                        y se acota a 80 px: a 12 px, "PAULO CÉSAR" ya no cabe y
+                        once chips solapándose tapan las líneas de tiza. La
+                        identidad la lleva el dorsal grande de encima. */}
+                    {}
+                    <span className="flex max-w-20 items-center gap-0.5 truncate rounded-sm bg-black/55 px-1 text-[10px] leading-tight font-semibold text-white uppercase">
+                      <span className="truncate">{p.displayName}</span>
+                    </span>
+                  </Link>
+                </PlayerHoverCard>
               </m.div>
             </m.div>
           </div>

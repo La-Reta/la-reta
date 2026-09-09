@@ -70,7 +70,7 @@ export const RotatingScorer = ({
       player={s.player}
       secondAction={
         <Button
-          className="flex-wrap wrap-break-word"
+          className="w-full"
           render={
             <Link
               href="/matches#top-scorers-content"

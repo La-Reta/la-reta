@@ -6,6 +6,7 @@ import {
 } from "@/components/features/players/player-comments";
 import { PlayerGoalHistory } from "@/components/features/players/player-goal-history";
 import { PlayerHistory } from "@/components/features/players/player-history";
+import { PlayerPositions } from "@/components/features/players/player-positions";
 import { PlayerRadar } from "@/components/features/players/player-radar";
 import {
   ClaimProfileButton,
@@ -14,20 +15,18 @@ import {
 import { SelectForTeamsButton } from "@/components/features/players/select-for-teams-button";
 import { BackButton } from "@/components/shared/back-button";
 import { FifaCard } from "@/components/shared/fifa-card";
-import { Pitch } from "@/components/shared/pitch";
+import { StarRating } from "@/components/shared/star-rating";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { isAdmin } from "@/lib/admin";
 import {
-  GROUP_COLOR,
   GROUP_LABEL,
-  POSITION_NAME,
   positionGroup,
   STAT_KEYS,
   STAT_LABEL,
 } from "@/lib/constants";
-import { flagEmoji, playerPositions } from "@/lib/format";
+import { flagEmoji } from "@/lib/format";
 import {
   getCommentReactions,
   getOwnedPlayerId,
@@ -36,7 +35,7 @@ import {
   getPlayerGoalHistory,
   getPlayerHistory,
 } from "@/lib/queries";
-import { cardTier, TIER_LABEL } from "@/lib/ratings";
+import { averageRating, cardTier, TIER_LABEL } from "@/lib/ratings";
 import { auth } from "@clerk/nextjs/server";
 import { PencilIcon, UserPenIcon } from "lucide-react";
 import Link from "next/link";
@@ -86,6 +85,7 @@ const PlayerDetailPage = async ({
 
   const group = positionGroup(player.position);
   const tier = cardTier(player.overall);
+  const rating = averageRating(comments);
 
   const facts: { label: string; value: string }[] = [
     { label: "Edad", value: `${player.age} años` },
@@ -107,6 +107,25 @@ const PlayerDetailPage = async ({
           <div className="mx-auto w-full max-w-[260px] space-y-3 md:sticky md:top-16 2xl:max-w-[300px]">
             <BackButton />
             <FifaCard className="card-shine" player={player} sizes="300px" />
+
+            {/* La nota de las reseñas, justo bajo la carta: es el único dato de
+                la ficha que ponen los demás, y enterrado al final de la página
+                no lo veía nadie. Enlaza a las reseñas en vez de repetirlas. */}
+            {rating ? (
+              <a
+                className="hover:bg-muted/60 focus-visible:ring-ring flex items-center justify-center gap-2 rounded-lg py-1 transition-colors focus-visible:ring-2 focus-visible:outline-none"
+                href="#resenas"
+              >
+                <StarRating value={rating.avg} />
+                <span className="font-mono text-sm font-bold tabular-nums">
+                  {rating.avg.toFixed(1)}
+                </span>
+              </a>
+            ) : (
+              <p className="text-muted-foreground text-center text-xs">
+                Sin calificaciones
+              </p>
+            )}
           </div>
 
           <div className="space-y-6">
@@ -119,15 +138,19 @@ const PlayerDetailPage = async ({
                 <Badge variant="secondary">{GROUP_LABEL[group]}</Badge>
                 <Badge variant="outline">{TIER_LABEL[tier]}</Badge>
               </div>
-              <h1 className="mt-2 text-3xl font-black tracking-tight">
-                {player.name}
-              </h1>
-              <p className="text-muted-foreground text-sm">
-                Overall{" "}
-                <span className="text-foreground font-bold">
-                  {player.overall}
-                </span>
-              </p>
+              <div className="mt-2 flex flex-wrap items-end justify-between gap-x-4 gap-y-1">
+                <h1 className="text-3xl font-black tracking-tight">
+                  {player.name}
+                </h1>
+                <p className="flex items-baseline gap-1.5">
+                  <span className="font-mono text-3xl leading-none font-black tabular-nums">
+                    {player.overall}
+                  </span>
+                  <span className="text-muted-foreground text-[10px] font-semibold tracking-widest uppercase">
+                    Overall
+                  </span>
+                </p>
+              </div>
             </div>
 
             <div className="flex flex-wrap gap-2">
@@ -143,7 +166,7 @@ const PlayerDetailPage = async ({
                 </Button>
               ) : null}
               {canClaim ? <ClaimProfileButton playerId={player.id} /> : null}
-              <SelectForTeamsButton size="default" id={player.id} />
+              <SelectForTeamsButton id={player.id} size="default" />
               {admin && player.clerkUserId ? (
                 <UnlinkProfileButton playerId={player.id} />
               ) : null}
@@ -159,8 +182,8 @@ const PlayerDetailPage = async ({
               <p className="text-muted-foreground text-xs">
                 Ya tienes un perfil vinculado a tu cuenta.{" "}
                 <Link
-                  href={`/players/${ownedPlayerId}`}
                   className="text-primary underline"
+                  href={`/players/${ownedPlayerId}`}
                 >
                   Ver mi perfil
                 </Link>
@@ -170,7 +193,7 @@ const PlayerDetailPage = async ({
             {/* Datos */}
             <div className="bg-foreground/10 ring-foreground/10 grid grid-cols-2 gap-px overflow-hidden rounded-lg ring-1 sm:grid-cols-3 xl:grid-cols-5">
               {facts.map((f) => (
-                <div key={f.label} className="bg-card p-3">
+                <div className="bg-card p-3" key={f.label}>
                   <p className="text-muted-foreground text-xs uppercase">
                     {f.label}
                   </p>
@@ -187,16 +210,16 @@ const PlayerDetailPage = async ({
                 </CardHeader>
                 <CardContent className="space-y-3">
                   {STAT_KEYS.map((key) => (
-                    <div key={key} className="space-y-1">
+                    <div className="space-y-1" key={key}>
                       <div className="flex items-center justify-between text-xs">
                         <span>{STAT_LABEL[key]}</span>
                         <span className="font-mono font-bold tabular-nums">
                           {player[key]}
                         </span>
                       </div>
-                      <div className="bg-muted h-1.5 overflow-hidden">
+                      <div className="bg-muted h-1.5 overflow-hidden rounded-full">
                         <div
-                          className={`h-full ${statColor(player[key])}`}
+                          className={`stat-bar-fill h-full rounded-full ${statColor(player[key])}`}
                           style={{ width: `${player[key]}%` }}
                         />
                       </div>
@@ -215,83 +238,48 @@ const PlayerDetailPage = async ({
               </Card>
             </div>
 
-            {/* Posición en cancha + historial */}
-            <div className="grid gap-6 lg:grid-cols-2">
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle>Posición en la cancha</CardTitle>
-                </CardHeader>
-                <CardContent className="pt-4">
-                  <Pitch highlight={playerPositions(player)} />
-                  <div className="mt-4 space-y-3 text-sm">
-                    <div className="flex items-start gap-3">
-                      <div
-                        className="mt-1 size-2 shrink-0 rounded-full"
-                        style={{
-                          backgroundColor: GROUP_COLOR[group],
-                        }}
-                      />
-                      <div>
-                        <p className="font-medium">
-                          {POSITION_NAME[player.position]}
-                        </p>
-                        <p className="text-muted-foreground">
-                          Posición principal ({player.position})
-                        </p>
-                      </div>
-                    </div>
-                    {player.position2 ? (
-                      <div className="flex items-start gap-3">
-                        <div
-                          className="mt-1 size-2 shrink-0 rounded-full"
-                          style={{
-                            backgroundColor:
-                              GROUP_COLOR[positionGroup(player.position2)],
-                          }}
-                        />
-                        <div>
-                          <p className="font-medium">
-                            {POSITION_NAME[player.position2]}
-                          </p>
-                          <p className="text-muted-foreground">
-                            Posición secundaria ({player.position2})
-                          </p>
-                        </div>
-                      </div>
-                    ) : null}
-                  </div>
-                </CardContent>
-              </Card>
+            {/* La cancha y el historial ocupan el ancho completo: los dos son
+                paneles de dos columnas por dentro, y metidos en una rejilla de
+                dos los dejaba en tiras de 300 px donde no cabía ninguna. */}
+            <Card className="reveal-on-scroll">
+              <CardHeader className="border-b">
+                <CardTitle>Posición en la cancha</CardTitle>
+              </CardHeader>
+              <CardContent className="pt-4">
+                <PlayerPositions player={player} />
+              </CardContent>
+            </Card>
 
-              <Card>
-                <CardHeader className="border-b">
-                  <CardTitle>Historial de stats</CardTitle>
-                </CardHeader>
-                <CardContent>
-                  <PlayerHistory history={history} />
-                </CardContent>
-              </Card>
+            <Card className="reveal-on-scroll">
+              <CardHeader className="border-b">
+                <CardTitle>Historial de stats</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <PlayerHistory history={history} />
+              </CardContent>
+            </Card>
+
+            <div className="reveal-on-scroll">
+              <PlayerGoalHistory history={goalHistory} />
             </div>
 
-            <PlayerGoalHistory history={goalHistory} />
-
             {/* Comentarios */}
-            <Card>
+            <Card className="reveal-on-scroll scroll-mt-20" id="resenas">
               <CardHeader className="border-b">
                 <CardTitle>
                   Reseñas ·{" "}
                   <CommentsCount
-                    playerId={player.id}
                     initialData={{ comments, reactions }}
+                    playerId={player.id}
                   />
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <PlayerComments
-                  playerId={player.id}
                   comments={comments}
-                  reactions={reactions}
                   isAdmin={admin}
+                  playerId={player.id}
+                  reactions={reactions}
                 />
               </CardContent>
             </Card>
