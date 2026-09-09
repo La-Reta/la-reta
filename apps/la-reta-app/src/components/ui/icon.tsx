@@ -23,11 +23,13 @@ export type IconName =
   | "spark"
   | "pulse"
   | "person"
+  | "person-plus"
   | "people"
   | "star"
   | "flame"
   | "external"
   | "close"
+  | "plus"
   | "check"
   | "share"
   | "shuffle"
@@ -254,6 +256,15 @@ export function Icon({
         </>
       ) : null}
 
+      {/* Los mismos brazos de `close` sin girar, para que las dos aspas midan
+          igual cuando conviven en una misma barra. */}
+      {name === "plus" ? (
+        <>
+          <Path d="M12 5.5 L12 18.5" {...stroke} />
+          <Path d="M5.5 12 L18.5 12" {...stroke} />
+        </>
+      ) : null}
+
       {name === "arrow" ? (
         <>
           <Path d="M4 12 H19" {...stroke} />
@@ -295,6 +306,18 @@ export function Icon({
         <>
           <Circle cx={12} cy={8.5} r={3.5} {...stroke} />
           <Path d="M5 20.5 A7 7 0 0 1 19 20.5" {...stroke} />
+        </>
+      ) : null}
+
+      {/* La misma persona de `people`, corrida a la izquierda para dejarle
+          sitio al aspa. Dice "sumar a alguien", que es lo que hace convocar;
+          un "+" a secas solo dice "algo nuevo". */}
+      {name === "person-plus" ? (
+        <>
+          <Circle cx={9.5} cy={8.5} r={3.3} {...stroke} />
+          <Path d="M3.2 20.5 A6.3 6.3 0 0 1 15.8 20.5" {...stroke} />
+          <Path d="M18.6 4.6 L18.6 10.6" {...stroke} />
+          <Path d="M15.6 7.6 L21.6 7.6" {...stroke} />
         </>
       ) : null}
 

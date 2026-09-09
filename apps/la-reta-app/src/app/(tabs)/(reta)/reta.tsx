@@ -1,16 +1,14 @@
 import { useRouter } from "expo-router";
 import { useMemo } from "react";
 import { ScrollView, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { PitchLineup } from "@/components/pitch-lineup";
-import { useTabAction } from "@/components/tab-action";
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/ui/section";
 import { Surface } from "@/components/ui/surface";
 import { Text } from "@/components/ui/text";
 import {
-  AccessoryInset,
+  BottomTabInset,
   MaxContentWidth,
   Palette,
   Radius,
@@ -27,10 +25,13 @@ import { bestEleven } from "@/lib/lineup";
  * esta pestaña; después el **once ideal**, que enseña de qué está hecha la
  * plantilla; y al final la tarjeta con cuánta gente hay.
  *
- * Aquí no se arma nada: se decide entrar a armar. Esa acción vive en el cristal
- * de la barra de pestañas —el sitio que iOS 26 reserva para la acción de la
- * pantalla— y no en una tarjeta, así que no depende de haber llegado al final
- * del scroll. El reparto de verdad vive en `convocatoria`.
+ * Aquí no se arma nada: se decide entrar a armar. Esa acción es el botón de
+ * convocar de la cabecera (ver el `_layout` de esta pestaña) y no una tarjeta,
+ * así que no depende de haber llegado al final del scroll. Estuvo un tiempo en
+ * el cristal de la barra de pestañas, que es el sitio que iOS 26 reserva para
+ * la acción de la pantalla, pero la píldora ancha se comía la parte baja de la
+ * cancha para repetir lo que la cabecera ya ofrece. El reparto de verdad vive
+ * en `convocatoria`.
  */
 
 const STEPS = [
@@ -51,7 +52,6 @@ const STEPS = [
 ];
 
 export default function RetaScreen() {
-  const insets = useSafeAreaInsets();
   const router = useRouter();
   const { players, summary } = useReta();
 
@@ -62,16 +62,6 @@ export default function RetaScreen() {
 
   const squadLabel = players === null ? "—" : summary.squad;
 
-  // La acción vive en el cristal de la barra, no en la tarjeta: es la única de
-  // la pantalla y allí sigue al pulgar en vez de esperar al final del scroll.
-  useTabAction([
-    {
-      label: "Convocar",
-      icon: "people",
-      onPress: () => router.push("/convocatoria"),
-    },
-  ]);
-
   return (
     <ScrollView
       contentContainerStyle={{
@@ -81,9 +71,7 @@ export default function RetaScreen() {
         gap: Spacing.five,
         paddingHorizontal: Spacing.four,
         paddingTop: Spacing.three,
-        // El accesorio flota sobre el contenido: sin este colchón, tapaba la
-        // mitad baja de la cancha.
-        paddingBottom: insets.bottom + AccessoryInset + Spacing.five,
+        paddingBottom: BottomTabInset + Spacing.five,
       }}
       contentInsetAdjustmentBehavior="automatic"
     >

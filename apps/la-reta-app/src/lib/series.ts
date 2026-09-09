@@ -1,6 +1,6 @@
 import { formatShortDate } from "@/lib/dates";
 import { matchGoals } from "@/lib/teams";
-import type { Match, Scorer, StatSnapshot } from "@/lib/types";
+import type { Match, Player, Scorer, StatSnapshot } from "@/lib/types";
 
 /**
  * Las series que dibujan las gráficas de portada.
@@ -111,6 +111,79 @@ export function topScorers(
         a.name.localeCompare(b.name)
     )
     .slice(0, limit);
+}
+
+export type TiedScorer = {
+  player: Player;
+  goals: number;
+  /** Partidos en los que aparece en el acta, no partidos jugados. */
+  matches: number;
+};
+
+/**
+ * Todos los que empatan en lo más alto de la tabla de goles.
+ *
+ * Es lo que da sentido al carrusel de portada: la reta acaba en empate arriba
+ * más veces de las que parece, y coronar a uno solo por el desempate de
+ * asistencias —que es lo que hace `topScorers`— convertía una decisión de
+ * orden en un veredicto que nadie había dado.
+ *
+ * **El máximo se mide sobre todos, incluidos los invitados, y solo después se
+ * filtra a quien tiene ficha.** Si el que más marcó fue alguien de última hora,
+ * la tarjeta se queda vacía en vez de coronar al segundo: enseñar al de cuatro
+ * goles cuando hay uno de cinco sería un dato falso. Es también lo que hace la
+ * web, así que las dos portadas cuentan lo mismo.
+ *
+ * `matches` cuenta partidos **distintos**: quien juega en dos equipos de la
+ * misma reta deja dos filas en el acta, y sumarlas dobla su cuenta de jornadas.
+ */
+export function tiedTopScorers(
+  matches: Match[] | null,
+  players: Player[] | null
+): TiedScorer[] {
+  const tally = new Map<
+    string,
+    { playerId: number | null; goals: number; matches: Set<number> }
+  >();
+
+  for (const match of matches ?? []) {
+    for (const scorer of match.scorers) {
+      const key = scorerKey(scorer);
+      const current = tally.get(key);
+
+      if (current) {
+        current.goals += scorer.goals;
+        current.matches.add(match.id);
+      } else {
+        tally.set(key, {
+          playerId: scorer.playerId,
+          goals: scorer.goals,
+          matches: new Set([match.id]),
+        });
+      }
+    }
+  }
+
+  const entries = [...tally.values()];
+  const top = Math.max(0, ...entries.map((entry) => entry.goals));
+  if (top === 0) return [];
+
+  const roster = new Map((players ?? []).map((player) => [player.id, player]));
+  const tied: TiedScorer[] = [];
+
+  for (const entry of entries) {
+    if (entry.goals !== top || entry.playerId === null) continue;
+    const player = roster.get(entry.playerId);
+    if (!player) continue;
+    tied.push({ player, goals: top, matches: entry.matches.size });
+  }
+
+  // Orden alfabético y no el del recuento: el `Map` conserva el orden de
+  // aparición en las actas, así que un partido nuevo reordenaba el carrusel y
+  // el punto activo saltaba de jugador sin que nadie tocara nada.
+  return tied.sort((a, b) =>
+    a.player.displayName.localeCompare(b.player.displayName)
+  );
 }
 
 /** Ver `MatchdayGoals`: `CartesianChart` pide `Record<string, unknown>`. */

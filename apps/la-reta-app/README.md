@@ -18,39 +18,91 @@ The [Expo](https://expo.dev) / React Native client (SDK 57). It reads and writes
 
 ## Running it
 
-From the monorepo root (`npm install` there first — never inside this folder):
+This app runs on a **development build**, not Expo Go. Expo Go carries only the native modules Expo ships inside it, and this app needs its own: Skia, `expo-glass-effect`, `@expo/ui`, Clerk's native flows, the iOS 26 tab bar. A development build is that same shell recompiled with _our_ native modules in it — everything else (Fast Refresh, the QR, the dev menu) behaves exactly like Expo Go.
+
+Compile the shell once:
 
 ```bash
-npm run dev:app        # expo start — press i (iOS), a (Android), w (web)
+npm run ios          # builds ios/ and installs it on the simulator (needs Xcode)
+npm run android      # same on the emulator (needs Android Studio and a JDK)
 ```
 
-Or from this workspace: `npm run ios` / `npm run android` / `npm run web`.
+### `npm run ios` asks for a code signing identity, even for the simulator
+
+The Clerk config plugin writes `com.apple.developer.applesignin` into `ios/laretaapp/laretaapp.entitlements`, and that entitlement is on Expo's short list of entitlements that force code signing **even on a simulator build** (`@expo/cli/.../codeSigning/simulatorCodeSigning.js`). On a Mac with no signing identity — `security find-identity -v -p codesigning` says `0 valid identities found` — `npm run ios` stops with `No code signing certificates are available to use.` before xcodebuild ever runs.
+
+The fix is one-time and free: open Xcode → Settings → Accounts, add your Apple ID, and let it create an Apple Development certificate. No paid Developer Program needed for the simulator.
+
+Without any Apple account at all, the simulator build still works if you skip Expo's wrapper and call xcodebuild yourself:
+
+```bash
+xcodebuild -workspace ios/laretaapp.xcworkspace -scheme laretaapp \
+  -destination 'platform=iOS Simulator,name=iPhone 17 Pro' -configuration Debug build
+xcrun simctl install booted <path printed above>/laretaapp.app
+```
+
+Verified on iPhone 17 Pro (iOS 26.5): build succeeds, the dev client launcher opens, finds Metro on the LAN and loads the app.
+
+From then on you only start the bundler — the shell is already installed and reconnects to it:
+
+```bash
+npm run dev:app      # from the monorepo root
+npm run dev          # from this workspace — expo start --dev-client
+```
+
+The first compile takes about ten minutes; the ones after are incremental. On a machine without Xcode, `npm run build:ios` does the same compile on EAS servers and gives back a simulator build.
 
 | Script | What it does |
 | --- | --- |
-| `npm run dev` | `expo start` |
-| `npm run ios` | Start and open the iOS simulator |
-| `npm run android` | Start and open the Android emulator |
-| `npm run web` | Start the web target |
+| `npm run dev` | `expo start --dev-client` — the bundler for a shell that is already installed |
+| `npm run ios` | Compile and install on the iOS simulator |
+| `npm run android` | Compile and install on the Android emulator |
+| `npm run web` | Start the web target — no native shell involved |
+| `npm run prebuild:clean` | Regenerate `ios/` and `android/` from `app.json` |
+| `npm run build:ios` | Development build on EAS servers, iOS simulator |
+| `npm run build:ios:device` | Development build on EAS servers, real iPhone |
+| `npm run build:android` | Development build on EAS servers, APK |
 | `npm run lint` | `expo lint` (this app is outside the root Ultracite ESLint) |
 | `npm run check-types` | `tsc --noEmit` |
 
+> The script is `prebuild:clean` and not `prebuild` on purpose: npm runs a script named `prebuild` automatically before any script named `build`, so the plain name would eventually wipe `ios/` on its own the day this workspace gets a `build` script.
+
+`eas-cli` is a devDependency here rather than a global install, so `npm run build:*` works straight after a clone and stays on the version `eas.json` asks for. In exchange it prints `Found eas-cli in your project dependencies` on every command — that line is expected, not a misconfiguration.
+
 ## Builds and distribution
 
-`eas.json` carries three profiles. JSON takes no comments, so the reasoning lives here.
+`eas.json` carries four build profiles. JSON takes no comments, so the reasoning lives here.
 
 | Profile | What it makes | Who it's for |
 | --- | --- | --- |
-| `development` | Dev client, iOS **Simulator** build | Day-to-day work. Locally this is just `npx expo run:ios`; the profile exists so the build can also run on EAS servers when this machine is busy. |
-| `development:device` | Dev client for a real iPhone | Debugging something that only happens on hardware. Needs a paid Apple account for signing. |
+| `development` | Dev client — iOS **Simulator** app, Android **APK** | Day-to-day work. Locally this is `npm run ios`; the profile exists so the compile can also run on EAS when this machine can't. |
+| `development:device` | Dev client for a real iPhone | Debugging what only happens on hardware. Needs a paid Apple account for signing. |
 | `preview` | Android **APK**, internal distribution | The build the cuadrilla installs. |
 | `production` | Store builds, auto-incremented version | Only if this ever goes to the stores. |
+
+`base` is not a profile you build: it holds `node`, which the other three inherit. It is pinned because the monorepo declares Node 24 and npm 12 and the EAS image would otherwise pick its own default.
+
+### Environment variables never travel to EAS on their own
+
+Local runs read `.env`. **EAS servers never see that file** — it is gitignored, which is the whole point of it. Each profile names an [EAS environment](https://docs.expo.dev/eas/environment-variables/) instead, and the values live on EAS:
+
+```bash
+eas env:set --environment preview --name EXPO_PUBLIC_API_URL --value https://… --visibility plaintext
+eas env:set --environment preview --name EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY --value pk_… --visibility plaintext
+eas env:list preview
+```
+
+`plaintext` is the honest visibility for both: `EXPO_PUBLIC_*` is inlined into the client bundle by definition, so marking them secret would hide them from you and from nobody else.
+
+For `development` this barely matters — the dev client downloads its JavaScript from your Metro, so it reads your `.env` and your machine's IP. For `preview` it matters completely: that APK embeds its bundle, and `EXPO_PUBLIC_API_URL` has to be a host the phone can reach from anywhere, which `http://localhost:3000` is not.
+
+**Nothing is set on EAS yet.** A `preview` build made today installs fine and then fails every request.
 
 ### The asymmetry worth knowing
 
 **Android costs nothing to distribute.** `preview` produces an APK that installs from a link — no store, no Google Play account.
 
-**iOS has no free path for more than a couple of phones.** A free Apple ID expires after 7 days and needs each iPhone plugged into this Mac. TestFlight is the right answer and needs the paid Apple Developer account (99 USD/year). TestFlight is *not* App Store publishing: no public listing, only people you invite, and internal testing (up to 100) skips review.
+**iOS has no free path for more than a couple of phones.** A free Apple ID expires after 7 days and needs each iPhone plugged into this Mac. TestFlight is the right answer and needs the paid Apple Developer account (99 USD/year). TestFlight is _not_ App Store publishing: no public listing, only people you invite, and internal testing (up to 100) skips review.
 
 So Android can ship before deciding anything about the 99 USD.
 
@@ -64,7 +116,7 @@ The native app only needs rebuilding after:
 - changing `app.json`,
 - upgrading the Expo SDK.
 
-Then: `npx expo prebuild --clean` followed by `npx expo run:ios`.
+Then: `npm run prebuild:clean` followed by `npm run ios`. That is the whole cost of the development build — a recompile when the native shell moves, and nothing at all the rest of the time.
 
 > `ios/` and `android/` are generated by prebuild and stay out of git. Edit `app.json` and the config plugins, never the native projects — a prebuild wipes hand edits.
 
@@ -128,12 +180,12 @@ NativeWind v5 is still wired up (`metro.config.js`, `postcss.config.mjs`, `src/g
 
 Both clients talk to the **same Clerk instance**, so an account made on the phone works on the web and the other way round. Put its publishable key in `EXPO_PUBLIC_CLERK_PUBLISHABLE_KEY` (see `.env.example`); without it the app still runs in public mode and the auth screens say what is missing.
 
-The screens are custom (`components/auth-form.tsx`), not Clerk's prebuilt `AuthView`: the prebuilt components need a development build and don't render on web, and this app is developed in Expo Go. That also keeps the editorial look.
+The screens are custom (`components/auth-form.tsx`), not Clerk's prebuilt `AuthView`: the prebuilt components don't render on web, and these keep the editorial look. The development build removes the other reason there used to be — `AuthView` is now an option if the custom screens ever stop paying for themselves.
 
 What the flows do, driven by what the instance actually has enabled:
 
 - **Email + password.** Sign-up needs a 6-digit email code, so it is a two-step screen; the code step reuses the same view.
-- **Google**, via browser SSO (`useSSO`) — the only social path that works in Expo Go. The fully native Google sheet (`useSignInWithGoogle`) needs a dev build; swap it in there if you ever want it.
+- **Google**, via browser SSO (`useSSO`) — the browser hands the session back through the `laretaapp` scheme. The fully native Google sheet (`useSignInWithGoogle`) needed a development build, which this app now has: it is a swap in that same file, and it costs an iOS URL scheme and a client ID per platform.
 - **New-device verification** (`needs_client_trust`) reuses the code step.
 
 Notes for whoever touches this next:
