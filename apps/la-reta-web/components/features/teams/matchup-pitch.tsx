@@ -78,6 +78,7 @@ const Token = ({
   onSwap,
   picked = false,
   onPick,
+  eager = false,
 }: {
   readonly p: Placed;
   readonly x: number;
@@ -87,6 +88,8 @@ const Token = ({
   /** Esta ficha está elegida y espera con quién cambiarse. */
   readonly picked?: boolean;
   readonly onPick?: (id: number) => void;
+  /** Carga la foto sin esperar al viewport. Ver `MatchupPitch`. */
+  readonly eager?: boolean;
 }) => {
   const player = p.lineup.player;
   const swappable = Boolean(onSwap);
@@ -104,12 +107,13 @@ const Token = ({
         >
           {player.photoUrl ? (
             <Image
-              src={player.photoUrl}
               alt=""
-              width={AVATAR_PX}
-              height={AVATAR_PX}
-              unoptimized={!isOptimizablePhoto(player.photoUrl)}
               className="h-full w-full object-cover object-top"
+              height={AVATAR_PX}
+              loading={eager ? "eager" : "lazy"}
+              src={player.photoUrl}
+              unoptimized={!isOptimizablePhoto(player.photoUrl)}
+              width={AVATAR_PX}
             />
           ) : (
             <span className="flex h-full w-full items-center justify-center text-xs font-bold text-white">
@@ -201,6 +205,16 @@ export const MatchupPitch = React.forwardRef<
     readonly colorB?: string;
     /** When set, tokens become draggable and dropping one on another swaps them. */
     readonly onSwap?: (fromId: number, toId: number) => void;
+    /**
+     * Carga las fotos sin esperar al viewport.
+     *
+     * Lo necesita la copia oculta que se exporta a PNG: vive en `left:-10000px`,
+     * así que el `loading="lazy"` por defecto de `next/image` no dispara nunca
+     * —las doce fotos se quedaban en `complete:false`— y `html-to-image` las
+     * esperaba para siempre. El botón se quedaba en "Generando…" y no bajaba
+     * ninguna imagen. En la cancha visible sigue siendo perezoso.
+     */
+    readonly eager?: boolean;
   }
 >(function MatchupPitch(
   {
@@ -213,6 +227,7 @@ export const MatchupPitch = React.forwardRef<
     colorA = TEAM_COLORS_LIGHT.A,
     colorB = TEAM_COLORS_LIGHT.B,
     onSwap,
+    eager = false,
   },
   ref
 ) {
@@ -293,6 +308,7 @@ export const MatchupPitch = React.forwardRef<
       {a.map((p) => (
         <Token
           color={colorA}
+          eager={eager}
           key={p.lineup.player.id}
           onPick={pick}
           onSwap={onSwap}
@@ -305,6 +321,7 @@ export const MatchupPitch = React.forwardRef<
       {b.map((p) => (
         <Token
           color={colorB}
+          eager={eager}
           key={p.lineup.player.id}
           onPick={pick}
           onSwap={onSwap}

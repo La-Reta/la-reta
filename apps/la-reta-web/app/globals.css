@@ -603,12 +603,20 @@
    * corre fuera del hilo principal y sigue al dedo si el usuario devuelve el
    * scroll. El estado inicial (opacity 0) vive DENTRO del @supports: si el
    * navegador no lo soporta, el contenido se queda visible en vez de invisible.
+   *
+   * **El rango termina dentro de `entry`, no en `cover`.** Con `cover 22%` la
+   * animación pedía más scroll del que a veces queda: lo último de una página
+   * —en escritorio, donde el viewport es alto— llega al tope del documento sin
+   * haber alcanzado ese punto y se quedaba a medias, traslúcido para siempre.
+   * `entry 90%` se cumple en cuanto el elemento está dentro, que es una
+   * condición que el final del documento sí satisface. El precio es que la
+   * aparición acaba algo antes; el anterior, que a veces no acababa.
    */
   @supports (animation-timeline: view()) {
     @media (prefers-reduced-motion: no-preference) {
       .reveal-on-scroll {
         animation: reveal-up linear both;
-        animation-range: entry 10% cover 22%;
+        animation-range: entry 10% entry 90%;
         animation-timeline: view();
       }
     }
@@ -736,7 +744,11 @@
   }
 
   /**
-   * Fila de equipo del marcador en vivo (`/live`).
+   * Tinta legible del color de un equipo, sobre el fondo de cada tema.
+   *
+   * Nació para el marcador en vivo y ahora la usa también el marcador de
+   * "Armar equipos", así que el nombre dejó de hablar de `/live`. Cada fila
+   * aporta su `--team` (el 500 de `TEAM_COLORS`) y su `--team-light` (el 400).
    *
    * El marcador era una tarjeta negra fija con textos `white/xx`, así que en
    * tema claro seguía siendo un agujero oscuro en medio de una pantalla blanca.
@@ -758,17 +770,17 @@
    * del 4.5 que pide AA. Al 78% el ámbar cae a 4.07, y al 62% todos pasan de
    * 6.7 pero el color se apaga tanto que los seis equipos se ven casi negros.
    */
-  .live-team-row {
+  .team-ink-row {
     --team-ink: color-mix(in oklab, var(--team) 72%, black);
     --team-veil: 9%;
   }
 
-  .dark .live-team-row {
+  .dark .team-ink-row {
     --team-ink: var(--team-light);
     --team-veil: 16%;
   }
 
-  .live-team-veil {
+  .team-ink-veil {
     background-image: linear-gradient(
       to right,
       color-mix(in oklab, var(--team-ink) var(--team-veil), transparent),
@@ -776,11 +788,11 @@
     );
   }
 
-  .live-team-ink {
+  .team-ink {
     color: var(--team-ink);
   }
 
-  .live-team-dot {
+  .team-ink-dot {
     background-color: var(--team-ink);
   }
 
