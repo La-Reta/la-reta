@@ -1,10 +1,16 @@
-import { Link, useFocusEffect, useRouter } from "expo-router";
-import { useCallback, useDeferredValue, useMemo, useState } from "react";
+import { Link, Stack, useFocusEffect, useRouter } from "expo-router";
+import {
+  Fragment,
+  useCallback,
+  useDeferredValue,
+  useMemo,
+  useState,
+} from "react";
 import { FlatList, RefreshControl, View } from "react-native";
 
 import { FifaCard, FifaCardSkeleton } from "@/components/fifa-card";
 import { RosterControls } from "@/components/roster-controls";
-import { useTabAction } from "@/components/tab-action";
+import { HeaderAction } from "@/components/header-action";
 import { Button } from "@/components/ui/button";
 import { Notice } from "@/components/notice";
 import { Icon } from "@/components/ui/icon";
@@ -86,27 +92,29 @@ export default function PlantillaScreen() {
     }, [])
   );
 
-  // La acción de la pantalla va al cristal de la barra, como "Convocar" en
-  // Armar. Es lo que ya hace la app con la acción principal de cada vista, está
-  // donde el pulgar ya estaba y no tapa cartas — un botón flotante propio se
-  // pelearía con esa misma esquina.
+  // La acción va en la cabecera, como convocar en Armar: es la misma pieza y el
+  // mismo sitio, así que se reconoce de una pantalla a otra sin leerla. Un
+  // botón flotante propio se pelearía con esa esquina y taparía cartas.
   //
   // Con ficha propia la acción **desaparece**: ofrecerle registrarse a quien ya
   // está en la lista es preguntarle si existe. Con la solicitud mandada se
   // queda, pero apagada: quitarla dejaría a alguien tocando donde antes había
   // algo, y dejarla viva llenaría la cola de duplicados del mismo.
-  useTabAction(
-    hasCard
-      ? []
-      : [
-          {
-            label: signupSent ? "Solicitud enviada" : "No estoy",
-            icon: "person",
-            disabled: signupSent,
-            onPress: () => router.push("/registro"),
-          },
-        ]
-  );
+  const headerRight = hasCard
+    ? undefined
+    : () => (
+        <HeaderAction
+          disabled={signupSent}
+          hint={
+            signupSent
+              ? "Ya mandaste la solicitud; falta que la revisen"
+              : "Pide que te añadan a la plantilla"
+          }
+          icon="person-plus"
+          label={signupSent ? "Solicitud enviada" : "No estoy en la plantilla"}
+          onPress={() => router.push("/registro")}
+        />
+      );
 
   const options = useMemo(() => {
     const counts = new Map<PositionGroup, number>();
@@ -151,121 +159,127 @@ export default function PlantillaScreen() {
   }, [players, filter, search, sort]);
 
   return (
-    <FlatList
-      columnWrapperStyle={{ gap: Spacing.three }}
-      contentContainerStyle={{
-        alignSelf: "center",
-        width: "100%",
-        maxWidth: MaxContentWidth,
-        gap: Spacing.three,
-        paddingHorizontal: Spacing.four,
-        paddingBottom: BottomTabInset + Spacing.five,
-      }}
-      aria-busy={pending}
-      contentInsetAdjustmentBehavior="automatic"
-      data={visible}
-      keyExtractor={(player, index) =>
-        player?.id.toString() ?? `hueco-${index}`
-      }
-      ListEmptyComponent={
-        // En la primera carga la rejilla se dibuja en hueco: decir "no hay
-        // jugadores en esta línea" antes de haber preguntado es mentir.
-        pending ? (
-          <View
-            style={{
-              flexDirection: "row",
-              flexWrap: "wrap",
-              gap: Spacing.three,
-            }}
-          >
-            {SKELETON_CARDS.map((key) => (
-              // `flexBasis` corto más `flexGrow` reparte el sobrante: dos por
-              // fila con el mismo hueco que usa `columnWrapperStyle`.
-              <View key={key} style={{ flexBasis: "45%", flexGrow: 1 }}>
-                <FifaCardSkeleton />
-              </View>
-            ))}
-          </View>
-        ) : loading ? null : (
-          <View
-            style={{
-              paddingVertical: Spacing.six,
-              alignItems: "center",
-              gap: Spacing.three,
-            }}
-          >
-            <Icon color={Palette.inkFaint} name="ball" size={32} />
-            <Text tone="faint" variant="caption">
-              {query.trim().length > 0
-                ? `Nadie coincide con “${query.trim()}”.`
-                : "No hay jugadores en esta línea."}
-            </Text>
+    <Fragment>
+      {/* Las opciones se ponen desde aquí y no en el `_layout` porque el botón
+          depende de si ya tienes ficha, que solo sabe esta pantalla. */}
+      <Stack.Screen options={{ headerRight }} />
 
-            {/* Buscarse y no salir es el momento exacto en que alguien
-                descubre que no está. Sin esto, el estado vacío es un
-                callejón. */}
-            {query.trim().length === 0 || signupSent || hasCard ? null : (
-              <Button
-                icon="person"
-                label="No estoy en la plantilla"
-                onPress={() => router.push("/registro")}
-                size="md"
-                variant="ghost"
-              />
-            )}
-          </View>
-        )
-      }
-      ListHeaderComponent={
-        <View style={{ gap: Spacing.three, paddingTop: Spacing.two }}>
-          {error === null ? null : (
-            <Notice
-              actionLabel="Reintentar"
-              detail={error}
-              onAction={refetch}
-              title="No pudimos leer la plantilla"
-            />
-          )}
-          <RosterControls onQuery={setQuery} query={query} sort={sort} />
-          <Segmented onChange={setFilter} options={options} value={filter} />
-        </View>
-      }
-      numColumns={2}
-      refreshControl={
-        <RefreshControl
-          onRefresh={refetch}
-          // La primera carga la cuenta la rejilla en hueco; el indicador de
-          // arriba queda para el refresco a mano.
-          refreshing={loading && !pending}
-          tintColor={Palette.accent}
-        />
-      }
-      renderItem={({ item }) => (
-        <View style={{ flex: 1 }}>
-          {item === null ? null : (
-            // La carta abre la ficha con la transición de zoom de iOS 18: se
-            // agranda hasta ocupar el sitio de la carta grande de la ficha en
-            // vez de entrar deslizándose desde el borde. Necesita un `Link`
-            // (el `router.push` de antes no puede marcar el origen) y sigue
-            // navegando igual donde la transición no exista.
-            //
-            // Forma con `pathname` + `params`: las rutas tipadas validan el
-            // patrón, y una plantilla de cadena con el id numérico no encaja
-            // en ese tipo.
-            <Link
-              asChild
-              href={{
-                pathname: "/jugador/[id]",
-                params: { id: String(item.id) },
+      <FlatList
+        columnWrapperStyle={{ gap: Spacing.three }}
+        contentContainerStyle={{
+          alignSelf: "center",
+          width: "100%",
+          maxWidth: MaxContentWidth,
+          gap: Spacing.three,
+          paddingHorizontal: Spacing.four,
+          paddingBottom: BottomTabInset + Spacing.five,
+        }}
+        aria-busy={pending}
+        contentInsetAdjustmentBehavior="automatic"
+        data={visible}
+        keyExtractor={(player, index) =>
+          player?.id.toString() ?? `hueco-${index}`
+        }
+        ListEmptyComponent={
+          // En la primera carga la rejilla se dibuja en hueco: decir "no hay
+          // jugadores en esta línea" antes de haber preguntado es mentir.
+          pending ? (
+            <View
+              style={{
+                flexDirection: "row",
+                flexWrap: "wrap",
+                gap: Spacing.three,
               }}
             >
-              <Link.AppleZoom>
-                <FifaCard player={item} />
-              </Link.AppleZoom>
-            </Link>
-          )}
-        </View>
-      )}
-    />
+              {SKELETON_CARDS.map((key) => (
+                // `flexBasis` corto más `flexGrow` reparte el sobrante: dos por
+                // fila con el mismo hueco que usa `columnWrapperStyle`.
+                <View key={key} style={{ flexBasis: "45%", flexGrow: 1 }}>
+                  <FifaCardSkeleton />
+                </View>
+              ))}
+            </View>
+          ) : loading ? null : (
+            <View
+              style={{
+                paddingVertical: Spacing.six,
+                alignItems: "center",
+                gap: Spacing.three,
+              }}
+            >
+              <Icon color={Palette.inkFaint} name="ball" size={32} />
+              <Text tone="faint" variant="caption">
+                {query.trim().length > 0
+                  ? `Nadie coincide con “${query.trim()}”.`
+                  : "No hay jugadores en esta línea."}
+              </Text>
+
+              {/* Buscarse y no salir es el momento exacto en que alguien
+                descubre que no está. Sin esto, el estado vacío es un
+                callejón. */}
+              {query.trim().length === 0 || signupSent || hasCard ? null : (
+                <Button
+                  icon="person"
+                  label="No estoy en la plantilla"
+                  onPress={() => router.push("/registro")}
+                  size="md"
+                  variant="ghost"
+                />
+              )}
+            </View>
+          )
+        }
+        ListHeaderComponent={
+          <View style={{ gap: Spacing.three, paddingTop: Spacing.two }}>
+            {error === null ? null : (
+              <Notice
+                actionLabel="Reintentar"
+                detail={error}
+                onAction={refetch}
+                title="No pudimos leer la plantilla"
+              />
+            )}
+            <RosterControls onQuery={setQuery} query={query} sort={sort} />
+            <Segmented onChange={setFilter} options={options} value={filter} />
+          </View>
+        }
+        numColumns={2}
+        refreshControl={
+          <RefreshControl
+            onRefresh={refetch}
+            // La primera carga la cuenta la rejilla en hueco; el indicador de
+            // arriba queda para el refresco a mano.
+            refreshing={loading && !pending}
+            tintColor={Palette.accent}
+          />
+        }
+        renderItem={({ item }) => (
+          <View style={{ flex: 1 }}>
+            {item === null ? null : (
+              // La carta abre la ficha con la transición de zoom de iOS 18: se
+              // agranda hasta ocupar el sitio de la carta grande de la ficha en
+              // vez de entrar deslizándose desde el borde. Necesita un `Link`
+              // (el `router.push` de antes no puede marcar el origen) y sigue
+              // navegando igual donde la transición no exista.
+              //
+              // Forma con `pathname` + `params`: las rutas tipadas validan el
+              // patrón, y una plantilla de cadena con el id numérico no encaja
+              // en ese tipo.
+              <Link
+                asChild
+                href={{
+                  pathname: "/jugador/[id]",
+                  params: { id: String(item.id) },
+                }}
+              >
+                <Link.AppleZoom>
+                  <FifaCard player={item} />
+                </Link.AppleZoom>
+              </Link>
+            )}
+          </View>
+        )}
+      />
+    </Fragment>
   );
 }

@@ -1,15 +1,24 @@
 {
   "cli": {
+    "version": ">= 23.2.0",
     "appVersionSource": "remote"
   },
   "build": {
+    "base": {
+      "node": "24.20.0"
+    },
     "development": {
+      "extends": "base",
       "developmentClient": true,
       "distribution": "internal",
+      "environment": "development",
+      "channel": "development",
       "ios": {
         "simulator": true
       },
-      "channel": "development"
+      "android": {
+        "buildType": "apk"
+      }
     },
     "development:device": {
       "extends": "development",
@@ -18,13 +27,17 @@
       }
     },
     "preview": {
+      "extends": "base",
       "distribution": "internal",
+      "environment": "preview",
       "channel": "preview",
       "android": {
         "buildType": "apk"
       }
     },
     "production": {
+      "extends": "base",
+      "environment": "production",
       "channel": "production",
       "autoIncrement": true
     }

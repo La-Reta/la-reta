@@ -1,40 +1,63 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { MoonIcon, SunIcon } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuRadioGroup,
+  DropdownMenuRadioItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MonitorIcon, MoonIcon, SunIcon } from "lucide-react";
 import { useTheme } from "next-themes";
-import { Tooltip, TooltipContent, TooltipTrigger } from "../ui/tooltip";
+
+const OPTIONS = [
+  { value: "light", label: "Claro", Icon: SunIcon },
+  { value: "dark", label: "Oscuro", Icon: MoonIcon },
+  { value: "system", label: "Automático", Icon: MonitorIcon },
+] as const;
 
 /**
- * El tema resuelto no se conoce en el servidor, así que en vez de esperar a
- * `mounted` (lo que dejaba el icono equivocado en el primer pintado) se pintan
- * los dos iconos y los alterna la variante `dark:` de Tailwind. Sin parpadeo y
- * sin estado extra.
+ * Claro / Oscuro / Automático.
+ *
+ * Era un interruptor de dos posiciones que hacía `setTheme("light" | "dark")`,
+ * así que **no había forma de volver a "automático"**: al primer clic te
+ * quedabas fijado para siempre y la web dejaba de seguir al sistema. Quien
+ * cambia de claro a oscuro al anochecer en su Mac veía la web quedarse como
+ * estaba y parecía que no detectábamos nada.
+ *
+ * Seguir al sistema en vivo ya lo hace `next-themes`: se suscribe a
+ * `matchMedia("(prefers-color-scheme: dark)")` y vuelve a aplicar el tema
+ * cuando cambia, siempre que el tema sea `system`. Lo que faltaba era poder
+ * estar en `system`.
+ *
+ * El icono del disparador se resuelve con la variante `dark:` de Tailwind, no
+ * con `resolvedTheme`: en el servidor no se conoce el tema y usarlo pintaba el
+ * icono equivocado en el primer fotograma.
  */
 export const ThemeToggle = () => {
-  const { setTheme, resolvedTheme } = useTheme();
+  const { theme, setTheme } = useTheme();
 
   return (
-    <Tooltip>
-      <TooltipTrigger
+    <DropdownMenu>
+      <DropdownMenuTrigger
         render={
-          <Button
-            variant="ghost"
-            size="icon-sm"
-            aria-label="Cambiar entre modo claro y oscuro"
-            onClick={() =>
-              setTheme(resolvedTheme === "dark" ? "light" : "dark")
-            }
-          />
+          <Button aria-label="Tema" size="icon-sm" variant="ghost">
+            <SunIcon aria-hidden="true" className="dark:hidden" />
+            <MoonIcon aria-hidden="true" className="hidden dark:block" />
+          </Button>
         }
-      >
-        <MoonIcon className="dark:hidden" aria-hidden="true" />
-        <SunIcon className="hidden dark:block" aria-hidden="true" />
-      </TooltipTrigger>
-      <TooltipContent>
-        <span className="dark:hidden">Cambiar a modo oscuro</span>
-        <span className="hidden dark:inline">Cambiar a modo claro</span>
-      </TooltipContent>
-    </Tooltip>
+      />
+      <DropdownMenuContent align="end" className="w-40">
+        <DropdownMenuRadioGroup onValueChange={setTheme} value={theme}>
+          {OPTIONS.map(({ value, label, Icon }) => (
+            <DropdownMenuRadioItem key={value} value={value}>
+              <Icon aria-hidden="true" />
+              {label}
+            </DropdownMenuRadioItem>
+          ))}
+        </DropdownMenuRadioGroup>
+      </DropdownMenuContent>
+    </DropdownMenu>
   );
 };

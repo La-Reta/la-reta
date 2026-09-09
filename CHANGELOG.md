@@ -21,6 +21,8 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 
 ### ✨ Nuevo
 
+- 📱 **El goleador tiene su tarjeta en Inicio, y no corona a nadie a dedo.** Debajo de _El crack_ sale quien más ha marcado, con su cara, sus goles y en cuántos partidos los hizo. **Cuando hay empate arriba —que pasa más de lo que parece— salen todos**: se pasa de uno a otro deslizando con el dedo, o tocando los puntos de abajo, y va cambiando solo hasta que tú tomas el mando. Toca la tarjeta y abre su ficha. Si quien más marcó fue alguien de última hora sin ficha en la plantilla, lo dice en vez de coronar al segundo.
+
 - 📱 **Las casacas se sortean desde el teléfono.** Ruleta con todos los de la plantilla, con la misma regla de siempre: quien lavó las dos últimas retas queda en descanso y sale en gris. Gira con el pulgar y hace tic cada vez que pasa un nombre. A diferencia de la web, **el turno no se guarda solo**: sale el elegido y tú confirmas — en la cancha pasa a menudo que el que salió ya se fue, y volver a girar tiene que costar un toque. Debajo, a quién le ha tocado y cuándo.
 
 - 📱 **Registro de retas.** Todo lo que ha ido repartiendo el generador, en gráficas: qué tan parejas van saliendo las retas, con cuántos equipos se juega normalmente, quién sale más convocado y qué parejas siempre caen en el mismo equipo. Se abre desde el carrusel de Inicio y desde _Armar reta_.
@@ -28,6 +30,18 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 - 🖥️ **Buscador del menú con ⌘K.** El menú de la web tiene catorce sitios a los que ir y encontrar el que quieres a ojo cuesta. Pulsa ⌘K (Ctrl+K en Windows) o toca _Buscar…_ arriba del menú, escribe dos letras y entra. Busca también por lo que hace cada página: "roster" lleva a Jugadores, "ruleta" a Casacas.
 
 ### 🔧 Mejoras
+
+- 📱 **Lo que se puede hacer en cada pantalla está arriba, en un botón redondo verde.** Convocar en _Armar reta_, pedir tu lugar en _Plantilla_, y repartir y compartir en la convocatoria. Cada uno lleva su dibujo y ninguno necesita etiqueta: un monigote con un "+" suma gente, las aspas cruzadas reparten equipos. **Se fueron las píldoras de abajo**, que ocupaban media pantalla de ancho para decir lo mismo: la cancha del once ideal y la rejilla de cartas se ven ahora enteras. Repartir se ve apagado mientras falten convocados, y compartir aparece solo cuando ya hay equipos que mandar.
+
+- 🖥️ **El once ideal enseña quién es cada bolita.** Pasa el ratón por encima de cualquier jugador de la pizarra y sale su ficha al vuelo —foto, nombre completo, posición, bandera y los tres atributos que más cuentan en su puesto—, la misma tarjeta que ya salía en el detalle de un partido. Antes solo se veía un número y un apodo abreviado.
+
+- 🖥️ **La web vuelve a seguir el tema de tu equipo.** El botón de tema solo alternaba claro y oscuro, así que en cuanto lo tocabas una vez te quedabas fijado y ya daba igual que tu Mac pasara a oscuro al anochecer. Ahora es un menú con **Claro, Oscuro y Automático**, y automático es lo que viene de fábrica: si no eliges nada, la web va como vaya tu sistema y cambia con él sin recargar.
+
+- 🖥️ **Las reacciones de una reseña salen al instante.** Tocabas un emoji y no pasaba nada durante casi dos segundos: el número no se movía hasta que el servidor guardaba y la ficha entera se volvía a cargar detrás. Y al arreglarlo a medias quedó algo peor —el emoji aparecía, parpadeaba y se iba hasta que terminaba de guardarse—. Ahora se queda puesto desde el momento en que lo tocas, el guardado va por su cuenta y, si algo falla, se deshace solo y te avisa. Los emojis de la paleta son más grandes —antes en el teléfono se fallaba el toque más de lo que se acertaba—, el botón de "+" mide lo mismo que los demás y ya no se salen de la pantalla.
+
+- 🖥️ **La ficha de un jugador, reordenada.** Su nota de las reseñas ahora sale justo debajo de la carta —era el único dato que ponen los demás y estaba enterrado al final de la página—, y toca en ella para ir a leerlas. El historial de stats y la posición en la cancha pasan a ocupar el ancho completo, con la gráfica y la cancha a la izquierda y los números a la derecha: la gráfica cabía en un tercio de lo que necesitaba y las fechas del eje se pisaban unas con otras. El diario de cambios va en su propio recuadro con desplazamiento, así que la tarjeta ya no crece sin fin en cuanto un jugador acumula veinte ajustes.
+
+- 🖥️ **El historial de goles se lee de un vistazo.** Era una pila de líneas de texto donde la fecha, el marcador y el resultado pesaban lo mismo, así que veinte partidos se veían idénticos y había que leerlos uno a uno. Ahora cada partido lleva su día en grande a la izquierda —como en el registro de partidos—, el marcador con el color de cada equipo, el equipo en el que jugaste en negrita, si ganaste o empataste, y sus goles como la cifra grande de la fila. Y las cuatro cifras de arriba —goles, partidos anotando, mejor partido y promedio— llevan cada una su color e icono, para no tener que leer las etiquetas para saber cuál es cuál.
 
 - 🖥️ **El menú se queda como lo dejaste.** Si lo plegabas para ganar pantalla, volvía a abrirse solo en cuanto recargabas. Ahora recuerda cómo lo dejaste. También se pliega arrastrando su borde, no solo desde el botón.
 
@@ -56,6 +70,12 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 - 🖥️ **La web va mucho más ligera.** Las fotos se estaban descargando a tamaño completo aunque se pintaran del tamaño de una moneda: la pantalla de un partido llegaba a ocupar 93 MB de memoria solo en imágenes, y por eso el navegador se atascaba al desplazarse, sobre todo en el teléfono. Ahora cada foto se pide al tamaño en que de verdad se ve —esa misma pantalla ocupa 3,6 MB— y las cartas de la galería se cargan según vas bajando. Nada cambia de aspecto; solo deja de pesar.
 
 ### 🐛 Correcciones
+
+- 🖥️ **Partidos ya no se desplaza de lado en pantallas medianas.** Entre tablet y portátil, la página entera se podía arrastrar hacia la derecha y quedaba contenido fuera de la vista. La culpa era de la lista de goleadores de cada partido: al no caber, en vez de recortarse con puntos suspensivos estiraba la columna más allá de la pantalla. Ahora se recorta como debía y la página se queda quieta.
+
+- 🖥️ **El botón "Ver todos los goleadores" ya no se sale de su tarjeta.** En pantallas medianas y grandes la tarjeta de _El goleador_ deja unos 150 px para el texto y el botón mide 207: se desbordaba por la derecha y quedaba cortado. Ahora va en su propia fila, a todo el ancho de la tarjeta.
+
+- 🖥️ **La ficha ya no se salía de la pantalla en el teléfono.** La gráfica de evolución fijaba un ancho mínimo mayor que el del móvil y arrastraba consigo a toda la página, que quedaba desplazada y cortada por la derecha.
 
 - 🌐 **Volver a poder apuntarse a la reta.** Mandar la solicitud fallaba —en la web y en la app— y el panel de solicitudes del admin no abría. Las cinco que ya estaban enviadas seguían guardadas; solo no había manera de verlas ni de añadir una nueva. Ya funcionan las dos cosas.
 

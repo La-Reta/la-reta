@@ -12,6 +12,7 @@
       "bundleIdentifier": "com.mrluisfer.la-reta-app"
     },
     "android": {
+      "package": "com.mrluisfer.laretaapp",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/images/android-icon-foreground.png",
@@ -21,8 +22,6 @@
       "predictiveBackGestureEnabled": false,
       "softwareKeyboardLayoutMode": "resize",
       "permissions": [
-        "android.permission.READ_CALENDAR",
-        "android.permission.WRITE_CALENDAR",
         "android.permission.READ_CALENDAR",
         "android.permission.WRITE_CALENDAR"
       ]
@@ -36,7 +35,11 @@
       [
         "expo-splash-screen",
         {
-          "backgroundColor": "#FAFAF8"
+          "backgroundColor": "#FAFAF8",
+          "android": {
+            "image": "./assets/images/android-icon-foreground.png",
+            "imageWidth": 180
+          }
         }
       ],
       "@clerk/expo",

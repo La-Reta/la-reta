@@ -8,6 +8,7 @@ import { MatchdayBanner } from "@/components/matchday-banner";
 import { Notice } from "@/components/notice";
 import { PlayerRow, PlayerRowSkeleton } from "@/components/player-row";
 import { QuickActions } from "@/components/quick-actions";
+import { ScorerSpotlight } from "@/components/scorer-spotlight";
 import { ScorerRace, SCORER_RACE_SIZE } from "@/components/scorer-race";
 import { StatStrip } from "@/components/stat-strip";
 import { Section } from "@/components/ui/section";
@@ -133,6 +134,15 @@ export default function InicioScreen() {
             summary.best ? () => openPlayer(summary.best as Player) : undefined
           }
           player={summary.best}
+        />
+      </Section>
+
+      <Section meta="Máximo anotador" title="El goleador">
+        <ScorerSpotlight
+          matches={matches}
+          onSelect={openPlayer}
+          pending={pending}
+          players={players}
         />
       </Section>
 

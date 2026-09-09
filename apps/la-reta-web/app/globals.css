@@ -576,6 +576,20 @@
   }
 }
 
+/* La barra de un atributo, creciendo desde cero al pintarse la ficha.
+   Anima `scale`, no `width`: el ancho dispara layout en cada fotograma y con
+   seis barras eso son seis reflows por frame. El porcentaje real sigue siendo
+   el `width` inline del elemento; la escala solo lo revela. */
+@keyframes stat-grow {
+  from {
+    scale: 0 1;
+  }
+
+  to {
+    scale: 1 1;
+  }
+}
+
 @layer utilities {
   /* Condensed display face for matchday/scoreboard headings. */
   .font-display {
@@ -597,6 +611,18 @@
         animation-range: entry 10% cover 22%;
         animation-timeline: view();
       }
+    }
+  }
+
+  /**
+   * Relleno de una barra de atributo. `transform-origin: left` porque una
+   * escala se aplica desde el centro por defecto y la barra crecería hacia los
+   * dos lados desde su punto medio.
+   */
+  @media (prefers-reduced-motion: no-preference) {
+    .stat-bar-fill {
+      animation: stat-grow 700ms cubic-bezier(0.22, 1, 0.36, 1) both;
+      transform-origin: left;
     }
   }
 

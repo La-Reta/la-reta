@@ -54,7 +54,7 @@ The web app owns the database and is the source of truth; the mobile app talks t
 - **Node.js 24+** and **npm 12+**
 - A free **[Neon](https://neon.tech)** Postgres database
 - _Optional:_ a **[Clerk](https://clerk.com)** app (accounts/sign-in) and a **public [Vercel Blob](https://vercel.com/docs/vercel-blob)** store (image uploads) — the app runs without them, those features just stay off.
-- _For mobile:_ the [Expo Go](https://expo.dev/go) app, or an iOS Simulator / Android emulator.
+- _For mobile:_ an **iOS Simulator (Xcode)** or **Android emulator (Android Studio)**. The app needs its own native modules, so it runs on a [development build](apps/la-reta-app/README.md#running-it) it compiles itself — not on Expo Go.
 
 ### Setup
 

@@ -1,3 +1,5 @@
+import { Stack } from "expo-router";
+
 import { toNewReta, toRecentSplits } from "@repo/reta/api";
 import {
   balanceTeamsVaried,
@@ -6,20 +8,19 @@ import {
 } from "@repo/reta/balancer";
 import { useMemo, useState } from "react";
 import { ScrollView, Share, View } from "react-native";
-import { useSafeAreaInsets } from "react-native-safe-area-context";
 
 import { CallupGrid } from "@/components/callup-grid";
 import { GuestList } from "@/components/guest-list";
 import { Notice } from "@/components/notice";
 import { ConfirmDialog } from "@/components/confirm-dialog";
 import { RetaBoard, retaAsMessage } from "@/components/reta-board";
-import { useTabAction, type TabAction } from "@/components/tab-action";
+import { HeaderAction, HeaderActions } from "@/components/header-action";
 import { Button } from "@/components/ui/button";
 import { Section } from "@/components/ui/section";
 import { Segmented } from "@/components/ui/segmented";
 import { Surface } from "@/components/ui/surface";
 import { Text } from "@/components/ui/text";
-import { AccessoryInset, MaxContentWidth, Spacing } from "@/constants/theme";
+import { BottomTabInset, MaxContentWidth, Spacing } from "@/constants/theme";
 import { useReta } from "@/hooks/use-reta";
 import { useRetas } from "@/hooks/use-retas";
 import { useTeamNames } from "@/hooks/use-team-names";
@@ -50,7 +51,6 @@ const COUNT_OPTIONS = [
  * cuántos lados— y lo que devuelve.
  */
 export default function ConvocatoriaScreen() {
-  const insets = useSafeAreaInsets();
   const { players, loading, error, refetch } = useReta();
   const { retas, save } = useRetas();
   const { nameOf, rename } = useTeamNames();
@@ -180,19 +180,37 @@ export default function ConvocatoriaScreen() {
     await Share.share({ message: retaAsMessage(result, nameOf) });
   }
 
-  // Repartir pide confirmación porque descarta el reparto anterior sin vuelta
-  // atrás, y en el accesorio el botón queda justo donde descansa el pulgar.
-  const shuffle: TabAction = {
-    label: result === null ? "Repartir" : "Repartir otra vez",
-    icon: "shuffle",
-    onPress: () => setConfirming(true),
-    disabled: !enough,
-  };
-
-  useTabAction(
-    result === null
-      ? [shuffle]
-      : [{ label: "Compartir", icon: "share", onPress: share }, shuffle]
+  // Las dos acciones van en la cabecera, sin etiqueta, así que el icono carga
+  // con el significado: las aspas cruzadas reparten, el cuadro con la flecha
+  // comparte. Repartir pide confirmación porque descarta el reparto anterior
+  // sin vuelta atrás.
+  //
+  // Se declaran aquí y no en el `_layout` porque dependen del estado de la
+  // pantalla: compartir no existe hasta que hay algo que compartir, y repartir
+  // se apaga mientras no haya gente suficiente.
+  const headerRight = () => (
+    <HeaderActions>
+      {result === null ? null : (
+        <HeaderAction
+          hint="Manda los equipos por mensaje"
+          icon="share"
+          label="Compartir"
+          onPress={share}
+          variant="plain"
+        />
+      )}
+      <HeaderAction
+        disabled={!enough}
+        hint={
+          enough
+            ? "Arma los equipos con los convocados"
+            : "Faltan convocados para poder repartir"
+        }
+        icon="shuffle"
+        label={result === null ? "Repartir" : "Repartir otra vez"}
+        onPress={() => setConfirming(true)}
+      />
+    </HeaderActions>
   );
 
   return (
@@ -204,11 +222,13 @@ export default function ConvocatoriaScreen() {
         gap: Spacing.four,
         paddingHorizontal: Spacing.four,
         paddingTop: Spacing.three,
-        paddingBottom: insets.bottom + AccessoryInset + Spacing.five,
+        paddingBottom: BottomTabInset + Spacing.five,
       }}
       contentInsetAdjustmentBehavior="automatic"
       keyboardDismissMode="on-drag"
     >
+      <Stack.Screen options={{ headerRight }} />
+
       {error === null ? null : (
         <Notice
           actionLabel="Reintentar"

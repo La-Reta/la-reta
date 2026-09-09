@@ -6,6 +6,7 @@ import {
   deleteOwnComment,
   type ClientInfo,
 } from "@/app/actions/comments";
+import { StarRating } from "@/components/shared/star-rating";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Kbd, KbdGroup } from "@/components/ui/kbd";
@@ -16,6 +17,7 @@ import { formatLongDate } from "@/lib/dates";
 import type { PlayerComment } from "@/lib/db/schema";
 import { initials } from "@/lib/format";
 import { cleanText } from "@/lib/profanity";
+import { averageRating } from "@/lib/ratings";
 import { cn } from "@/lib/utils";
 import { Show, SignInButton, useAuth } from "@clerk/nextjs";
 import {
@@ -45,40 +47,20 @@ function collectClient(): ClientInfo {
   };
 }
 
-/** Read-only star row supporting fractional values (for the average). */
-function Stars({ value, className }: { value: number; className?: string }) {
-  const pct = Math.max(0, Math.min(1, value / 5)) * 100;
-  return (
-    <span
-      className={cn("relative inline-flex w-fit", className)}
-      role="img"
-      aria-label={`${value.toFixed(1)} de 5 estrellas`}
-    >
-      <span className="text-muted-foreground/30 flex gap-0.5">
-        {[0, 1, 2, 3, 4].map((i) => (
-          <StarIcon key={i} className="size-4" />
-        ))}
-      </span>
-      <span
-        className="absolute inset-0 flex gap-0.5 overflow-hidden text-amber-400"
-        style={{ width: `${pct}%` }}
-      >
-        {[0, 1, 2, 3, 4].map((i) => (
-          <StarIcon key={i} className="size-4 shrink-0 fill-current" />
-        ))}
-      </span>
-    </span>
-  );
-}
+/**
+ * Default estable de `reactions`. Un `{}` en la firma es un objeto nuevo en
+ * cada render, y `useComments` lo recibe como `initialData`.
+ */
+const NO_REACTIONS: Record<number, Record<string, number>> = {};
 
 /** Interactive star picker. */
-function StarInput({
+const StarInput = ({
   value,
   onChange,
 }: {
-  value: number;
-  onChange: (v: number) => void;
-}) {
+  readonly value: number;
+  readonly onChange: (v: number) => void;
+}) => {
   const [hover, setHover] = React.useState(0);
   const active = hover || value;
   return (
@@ -103,47 +85,50 @@ function StarInput({
               "size-6 transition-colors",
               active >= n
                 ? "fill-amber-400 text-amber-400"
-                : "text-muted-foreground/40",
+                : "text-muted-foreground/40"
             )}
           />
         </button>
       ))}
     </div>
   );
-}
+};
 
 /**
  * Live count for the card title. Shares the `useComments` cache (same queryKey)
  * with the list, so header and list never diverge — no extra fetch.
  */
-export function CommentsCount({
+export const CommentsCount = ({
   playerId,
   initialData,
 }: {
-  playerId: number;
-  initialData: {
+  readonly playerId: number;
+  readonly initialData: {
     comments: PlayerComment[];
     reactions?: Record<number, Record<string, number>>;
   };
-}) {
+}) => {
   const { data } = useComments(playerId, {
     comments: initialData.comments,
     reactions: initialData.reactions ?? {},
   });
-  return <>{data.comments.length}</>;
-}
+  // Un `<span>` y no el número pelado: devolver un number hace que el lint deje
+  // de ver esto como un componente (y Fast Refresh, con él). El fragmento que
+  // había antes tampoco valía, por vacío.
+  return <span>{data.comments.length}</span>;
+};
 
-export function PlayerComments({
+export const PlayerComments = ({
   playerId,
   comments: initialComments,
-  reactions: initialReactions = {},
+  reactions: initialReactions = NO_REACTIONS,
   isAdmin = false,
 }: {
-  playerId: number;
-  comments: PlayerComment[];
-  reactions?: Record<number, Record<string, number>>;
-  isAdmin?: boolean;
-}) {
+  readonly playerId: number;
+  readonly comments: PlayerComment[];
+  readonly reactions?: Record<number, Record<string, number>>;
+  readonly isAdmin?: boolean;
+}) => {
   // Polled every 15s (see useComments) so reseñas from other clients appear here.
   const { data, refetch } = useComments(playerId, {
     comments: initialComments,
@@ -156,12 +141,11 @@ export function PlayerComments({
   const [rating, setRating] = React.useState(0);
   const [pending, startTransition] = React.useTransition();
 
-  const rated = comments.filter((c) => c.rating != null) as (PlayerComment & {
-    rating: number;
-  })[];
-  const avg = rated.length
-    ? rated.reduce((a, c) => a + c.rating, 0) / rated.length
-    : 0;
+  // Mismo cálculo que la ficha del jugador: si divergieran, la nota bajo la
+  // carta y la de esta cabecera dirían cosas distintas del mismo jugador.
+  const summary = averageRating(comments);
+  const avg = summary?.avg ?? 0;
+  const ratedCount = summary?.count ?? 0;
 
   function onArchive(commentId: number) {
     startTransition(async () => {
@@ -219,19 +203,23 @@ export function PlayerComments({
           <p className="font-mono text-4xl leading-none font-black tabular-nums">
             {avg ? avg.toFixed(1) : "—"}
           </p>
+          {/* Micro-etiqueta bajo la nota grande: subirla a 12 px la pone a
+              competir con el "4.0" que acompaña, que es lo que hay que leer.
+              No es texto de interfaz que nadie tenga que descifrar. */}
+          {/* eslint-disable-next-line react-doctor/no-tiny-text -- ver arriba */}
           <p className="text-muted-foreground mt-1 text-[10px] uppercase">
             de 5
           </p>
         </div>
         <div className="space-y-1">
-          {rated.length ? (
-            <Stars value={avg} className="[&_svg]:size-5" />
+          {ratedCount ? (
+            <StarRating value={avg} className="[&_svg]:size-5" />
           ) : null}
           <p className="text-muted-foreground text-xs">
-            {rated.length > 0
-              ? `${rated.length} calificación${rated.length === 1 ? "" : "es"}`
+            {ratedCount > 0
+              ? `${ratedCount} calificación${ratedCount === 1 ? "" : "es"}`
               : "Sin calificaciones aún"}
-            {comments.length > rated.length
+            {comments.length > ratedCount
               ? ` · ${comments.length} comentario${comments.length === 1 ? "" : "s"}`
               : ""}
           </p>
@@ -313,6 +301,7 @@ export function PlayerComments({
                   <span className="text-sm font-semibold">
                     {c.author ?? "Anónimo"}
                   </span>
+                  {/* eslint-disable-next-line react-doctor/no-tiny-text -- la fecha es metadato secundario de la reseña; a 12 px pesa lo mismo que el nombre del autor */}
                   <span className="text-muted-foreground flex items-center gap-1 text-[11px]">
                     {formatLongDate(c.createdAt)}
                     {isAdmin ? (
@@ -322,7 +311,7 @@ export function PlayerComments({
                         disabled={pending}
                         aria-label="Archivar comentario"
                         title="Archivar (ocultar sin eliminar)"
-                        variant={"destructive"}
+                        variant="destructive"
                       >
                         <ArchiveIcon className="size-3.5" />
                       </Button>
@@ -333,7 +322,7 @@ export function PlayerComments({
                         disabled={pending}
                         aria-label="Eliminar mi reseña"
                         title="Eliminar mi reseña"
-                        variant={"destructive"}
+                        variant="destructive"
                       >
                         <Trash2Icon className="size-3.5" />
                       </Button>
@@ -341,7 +330,7 @@ export function PlayerComments({
                   </span>
                 </div>
                 {c.rating != null && (
-                  <Stars value={c.rating} className="mt-0.5" />
+                  <StarRating value={c.rating} className="mt-0.5" />
                 )}
                 <p className="mt-1.5 text-sm leading-relaxed wrap-break-word">
                   {cleanText(c.body)}
@@ -358,4 +347,4 @@ export function PlayerComments({
       )}
     </div>
   );
-}
+};

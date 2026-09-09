@@ -64,8 +64,18 @@ const MatchesPage = async () => {
           admin={admin}
         />
 
-        <div className="grid gap-6 lg:grid-cols-[1fr_300px] lg:items-start">
-          <section className="space-y-3">
+        {/* `minmax(0,1fr)` y `min-w-0` en las dos columnas, no `1fr` a secas.
+          La línea de goleadores de cada partido lleva `truncate`, o sea
+          `white-space: nowrap`, así que su aportación de min-content es el
+          texto entero —502 px con nueve nombres—. `min-w-0` sobre ella no
+          basta: baja el suelo al que puede encogerse, pero no su min-content,
+          y una celda de rejilla se dimensiona por el min-content de lo que
+          lleva dentro (`1fr` es `minmax(auto,1fr)`). El resultado era una
+          columna de 754 px dentro de una rejilla de 596 y scroll horizontal en
+          toda la página entre md y lg. Con la celda acotada, la columna recibe
+          un ancho definido y el `truncate` vuelve a hacer su trabajo. */}
+        <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px] lg:items-start">
+          <section className="min-w-0 space-y-3">
             <SectionHeading title="Historial" count={matches.length} />
             <MatchHistoryList matches={matches} admin={admin} />
             {matches.length > 0 && <MatchesChart matches={matches} />}
@@ -78,7 +88,7 @@ const MatchesPage = async () => {
             `dvh` el tope sigue a la barra del navegador en móvil, y
             `overscroll-contain` evita que al terminar de recorrerla el scroll
             salte a la página de atrás. */}
-          <section className="space-y-3 lg:sticky lg:top-16">
+          <section className="min-w-0 space-y-3 lg:sticky lg:top-16">
             <SectionHeading
               title="Goles y asistencias"
               count={scorers.length}
