@@ -141,6 +141,31 @@ export interface Scorer {
   isGuest: boolean;
 }
 
+/** Una reseña de partido tal y como la devuelve /api/v1/matches/:id/comments. */
+export interface MatchReview {
+  id: number;
+  author: string | null;
+  authorImageUrl: string | null;
+  body: string;
+  /** Del 1 al 5, o `null` si quien escribió no puso nota. */
+  rating: number | null;
+  createdAt: string;
+  /**
+   * La escribiste tú. Lo decide el servidor comparando con la sesión; el
+   * `authorId` de Clerk no viaja en una respuesta que puede leer cualquiera.
+   */
+  mine: boolean;
+  /** Recuento por emoji: `{ "🔥": 3 }`. */
+  reactions: Record<string, number>;
+  /** Los emojis que pusiste tú, para pintarlos marcados. */
+  myReactions: string[];
+}
+
+export interface MatchReviews {
+  comments: MatchReview[];
+  rating: { average: number | null; votes: number };
+}
+
 export type VoteCategory = "figura" | "gol" | "error";
 
 /** Una línea del recuento de votos de un partido (/api/v1/matches/:id/votes). */

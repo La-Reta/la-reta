@@ -9,6 +9,7 @@ import {
 import { MatchHero } from "@/components/match-hero";
 import { MatchDials } from "@/components/match-share";
 import { MatchStrip } from "@/components/match-strip";
+import { MatchVoices } from "@/components/match-voices";
 import { Notice } from "@/components/notice";
 import { ScorerBoard } from "@/components/scorer-board";
 import { Section } from "@/components/ui/section";
@@ -143,6 +144,12 @@ export function MatchSheet() {
 
       <Section title="Cómo estaban armados">
         <LineHeatmap match={match} players={players} />
+      </Section>
+
+      {/* Al final a propósito: opinar de la reta se hace después de ver cómo
+          quedó y quién anotó, no antes. */}
+      <Section meta="Reseñas" title="La reta según ustedes">
+        <MatchVoices matchId={id} />
       </Section>
     </ScrollView>
   );

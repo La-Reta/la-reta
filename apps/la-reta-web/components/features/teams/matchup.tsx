@@ -4,7 +4,7 @@ import {
   EXPORT_BOARD_WIDTH,
   EXPORT_LIST_WIDTH,
 } from "@/components/features/teams/constants";
-import type { MatchupView } from "@/components/features/teams/control-bar";
+import type { MatchupView } from "@/components/features/teams/constants";
 import { MatchupList } from "@/components/features/teams/matchup-list";
 import { MatchupPitch } from "@/components/features/teams/matchup-pitch";
 import { TeamSheet } from "@/components/features/teams/team-sheet";
@@ -74,7 +74,7 @@ export const Matchup = ({
 
       {/* Alineación: tablero o lista */}
       <div className="bg-card space-y-3 px-4 py-4">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-wrap items-center justify-between gap-2">
           <span className="font-display text-muted-foreground font-semibold tracking-wide uppercase">
             Alineación
           </span>
@@ -140,7 +140,7 @@ export const Matchup = ({
               className="pointer-events-none fixed top-0"
               style={{ left: -10000, width: EXPORT_BOARD_WIDTH }}
             >
-              <MatchupPitch ref={exportPitchRef} {...pitchProps} />
+              <MatchupPitch eager ref={exportPitchRef} {...pitchProps} />
             </div>
             <ExportSizeHint />
           </>
@@ -207,6 +207,16 @@ const PairPicker = ({
   );
 };
 
+/**
+ * El marcador del reparto.
+ *
+ * Era `bg-neutral-950` con textos `white/xx` pasara lo que pasara, o sea el
+ * mismo agujero negro en tema claro que ya se corrigió en `/live`. Ahora sale
+ * de tokens y el color de cada equipo pasa por `.team-ink-row`, que en claro
+ * oscurece el 500 lo justo para que se lea sobre la tarjeta y en oscuro usa el
+ * 400 tal cual. Esta tarjeta **no** entra en la imagen que se descarga —eso es
+ * la cancha o la lista—, así que puede seguir al tema sin tocar la exportación.
+ */
 const ScoreboardHeader = ({
   teams,
   names,
@@ -216,25 +226,30 @@ const ScoreboardHeader = ({
 }) => {
   const duel = teams.length === 2;
   return (
-    <div className="flex flex-wrap items-center justify-center gap-x-6 gap-y-4 bg-neutral-950 px-5 py-6 text-white">
+    <div className="bg-card flex flex-wrap items-center justify-center gap-x-6 gap-y-4 px-5 py-6">
       {teams.map((team, i) => (
         <React.Fragment key={team.key}>
           {duel && i === 1 ? (
-            <span className="font-display text-2xl font-black text-white/30">
+            <span className="font-display text-muted-foreground/40 text-2xl font-black">
               VS
             </span>
           ) : null}
-          <div className="min-w-24 text-center">
-            <p
-              className="font-display truncate text-xs font-semibold tracking-[0.2em] uppercase"
-              style={{ color: TEAM_COLORS_LIGHT[team.key] }}
-            >
+          <div
+            className="team-ink-row min-w-24 text-center"
+            style={
+              {
+                "--team": TEAM_COLORS[team.key],
+                "--team-light": TEAM_COLORS_LIGHT[team.key],
+              } as React.CSSProperties
+            }
+          >
+            <p className="font-display team-ink truncate text-xs font-semibold tracking-[0.2em] uppercase">
               {teamName(names, team.key)}
             </p>
             <p className="font-mono text-5xl leading-none font-black tabular-nums">
               {team.rating}
             </p>
-            <p className="mt-1 text-xs text-white/50">
+            <p className="text-muted-foreground mt-1 text-xs">
               {team.lineups.length} jugadores · OVR prom.
             </p>
           </div>

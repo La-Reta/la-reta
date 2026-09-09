@@ -284,4 +284,11 @@ export const REACTION_EMOJIS = ["⚽", "🔥", "👏", "😂", "💪", "🐐"] a
 /**
 Max distinct emojis per comment (each one can still be reacted infinitely).
 */
+/**
+ * Tope de texto de una reseña, el mismo que guarda la columna `body`.
+ * Vive aquí y no en `lib/comments.ts` porque el contador de caracteres lo
+ * pinta un componente de cliente, y ese módulo es `server-only`.
+ */
+export const MAX_BODY = 500;
+
 export const MAX_DISTINCT_REACTIONS = 15;

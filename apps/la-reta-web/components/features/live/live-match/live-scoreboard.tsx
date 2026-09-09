@@ -25,7 +25,7 @@ export type LiveStanding = {
  *
  * Los colores salen del tema, no de un negro fijo: en claro esto es una tarjeta
  * clara como las demás. Los dos tonos de cada equipo llegan como `--team` /
- * `--team-light` y `globals.css` elige cuál usar (`.live-team-row`).
+ * `--team-light` y `globals.css` elige cuál usar (`.team-ink-row`).
  */
 export const LiveScoreboard = ({
   standings,
@@ -77,7 +77,7 @@ const TeamRow = ({
 
   return (
     <li
-      className="live-team-row relative"
+      className="team-ink-row relative"
       style={
         {
           "--team": TEAM_COLORS[side.key],
@@ -90,14 +90,14 @@ const TeamRow = ({
           ancho al nombre, que en un teléfono es lo que escasea. */}
       <span
         aria-hidden="true"
-        className="live-team-veil pointer-events-none absolute inset-0"
+        className="team-ink-veil pointer-events-none absolute inset-0"
       />
 
       <div className="relative flex items-center gap-3 px-3 py-2.5 sm:px-4 sm:py-3">
-        <span className="live-team-dot size-2.5 shrink-0 rounded-full" />
+        <span className="team-ink-dot size-2.5 shrink-0 rounded-full" />
 
         <div className="min-w-0 flex-1">
-          <p className="live-team-ink truncate text-sm font-bold tracking-wide uppercase sm:text-base">
+          <p className="team-ink truncate text-sm font-bold tracking-wide uppercase sm:text-base">
             {side.name}
           </p>
           {scorers.length === 0 ? (

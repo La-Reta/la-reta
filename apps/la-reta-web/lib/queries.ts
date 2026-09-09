@@ -1,5 +1,5 @@
 import { readdirSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 import { and, asc, desc, eq, gt, inArray, sql } from "drizzle-orm";
 import type { Position } from "@/lib/constants";
 import type {
@@ -20,6 +20,8 @@ import { rotatingWords } from "@/constants/rotatingWords";
 import {
   casacaAssignments,
   commentReactions,
+  matchCommentReactions,
+  matchComments,
   db,
   generatedRetaPlayers,
   generatedRetas,
@@ -45,15 +47,18 @@ import "server-only";
  */
 function playerImageMap(): Map<number, string> {
   const map = new Map<number, string>();
+  let files: string[];
   try {
-    for (const file of readdirSync(join(process.cwd(), "public", "players"))) {
-      const id = Number(file.replace(/\.[^.]+$/, ""));
-      if (!Number.isNaN(id)) {
-        map.set(id, `/players/${file}`);
-      }
-    }
+    files = readdirSync(path.join(process.cwd(), "public", "players"));
   } catch {
     // folder missing — fall back to whatever photoUrl the rows already have
+    return map;
+  }
+  for (const file of files) {
+    const id = Number(file.replace(/\.[^.]+$/u, ""));
+    if (!Number.isNaN(id)) {
+      map.set(id, `/players/${file}`);
+    }
   }
   return map;
 }
@@ -63,7 +68,7 @@ Overlays the local `public/players/<id>` image when present.
 */
 function withLocalPhoto(player: Player, images: Map<number, string>): Player {
   const local = images.get(player.id);
-  return local ? { ...player, photoUrl: local } : player;
+  return local === undefined ? player : { ...player, photoUrl: local };
 }
 
 /**
@@ -81,14 +86,15 @@ Id del jugador vinculado a esta cuenta de Clerk, o null (una vinculación por cu
 export async function getOwnedPlayerId(
   userId: string | null | undefined
 ): Promise<number | null> {
-  if (!userId) {
+  if (userId == null || userId === "") {
     return null;
   }
-  const [row] = await db
+  const rowRows = await db
     .select({ id: players.id })
     .from(players)
     .where(eq(players.clerkUserId, userId))
     .limit(1);
+  const row = rowRows.at(0);
   return row?.id ?? null;
 }
 
@@ -98,10 +104,11 @@ export async function getPlayerById(id: number): Promise<Player | null> {
     .from(players)
     .where(eq(players.id, id))
     .limit(1);
-  if (!rows[0]) {
+  const row = rows.at(0);
+  if (row === undefined) {
     return null;
   }
-  return withLocalPhoto(rows[0], playerImageMap());
+  return withLocalPhoto(row, playerImageMap());
 }
 
 /**
@@ -144,7 +151,103 @@ export async function getCommentReactions(
 
   const out: Record<number, Record<string, number>> = {};
   for (const r of rows) {
-    (out[r.commentId] ??= {})[r.emoji] = r.count;
+    out[r.commentId] ??= {};
+    out[r.commentId][r.emoji] = r.count;
+  }
+  return out;
+}
+
+/**
+ * Reseñas de un partido, de la más nueva a la más vieja.
+ *
+ * Al revés que las de un jugador, que van en orden de conversación: aquí lo
+ * último dicho es lo que se quiere leer —el partido acaba de pasar— y no el
+ * primer comentario de hace tres semanas.
+ */
+export async function getMatchComments(matchId: number) {
+  return await db
+    .select({
+      id: matchComments.id,
+      author: matchComments.author,
+      authorImageUrl: matchComments.authorImageUrl,
+      authorId: matchComments.authorId,
+      body: matchComments.body,
+      rating: matchComments.rating,
+      createdAt: matchComments.createdAt,
+    })
+    .from(matchComments)
+    .where(
+      and(eq(matchComments.matchId, matchId), eq(matchComments.deleted, false))
+    )
+    .orderBy(desc(matchComments.createdAt));
+}
+
+export type MatchCommentRow = Awaited<
+  ReturnType<typeof getMatchComments>
+>[number];
+
+/**
+ * Reacciones por reseña de un partido: `{ [commentId]: { [emoji]: n } }`.
+ */
+export async function getMatchCommentReactions(
+  matchId: number
+): Promise<Record<number, Record<string, number>>> {
+  const rows = await db
+    .select({
+      commentId: matchCommentReactions.commentId,
+      emoji: matchCommentReactions.emoji,
+      count: sql<number>`count(*)::int`,
+    })
+    .from(matchCommentReactions)
+    .innerJoin(
+      matchComments,
+      eq(matchCommentReactions.commentId, matchComments.id)
+    )
+    .where(eq(matchComments.matchId, matchId))
+    .groupBy(matchCommentReactions.commentId, matchCommentReactions.emoji);
+
+  const out: Record<number, Record<string, number>> = {};
+  for (const r of rows) {
+    out[r.commentId] ??= {};
+    out[r.commentId][r.emoji] = r.count;
+  }
+  return out;
+}
+
+/**
+ * Qué emojis puso **este** lector, para pintar sus propias reacciones marcadas.
+ * Va aparte del recuento porque el recuento es igual para todos y se puede
+ * cachear; esto no.
+ */
+export async function getMatchCommentMine(
+  matchId: number,
+  reactorKey: string
+): Promise<Record<number, string[]>> {
+  if (reactorKey === "") {
+    return {};
+  }
+
+  const rows = await db
+    .select({
+      commentId: matchCommentReactions.commentId,
+      emoji: matchCommentReactions.emoji,
+    })
+    .from(matchCommentReactions)
+    .innerJoin(
+      matchComments,
+      eq(matchCommentReactions.commentId, matchComments.id)
+    )
+    .where(
+      and(
+        eq(matchComments.matchId, matchId),
+        eq(matchCommentReactions.reactorKey, reactorKey)
+      )
+    );
+
+  const out: Record<number, string[]> = {};
+  for (const r of rows) {
+    out[r.commentId] ??= [];
+    out[r.commentId].push(r.emoji);
   }
   return out;
 }
@@ -219,7 +322,9 @@ const PROFILE_COMMENT_LIMIT = 20;
 
 export async function getPlayerProfile(
   playerId: number,
-  /** Cuenta de Clerk de quien mira, para marcar sus propios comentarios. */
+  /**
+  Cuenta de Clerk de quien mira, para marcar sus propios comentarios.
+  */
   viewerId?: string | null
 ): Promise<PlayerProfile> {
   const [history, awardRows, casacaRows, commentRows] = await Promise.all([
@@ -388,11 +493,12 @@ One signup by id (to prefill the new-player form).
 export async function getPlayerSignupById(
   id: number
 ): Promise<PlayerSignup | null> {
-  const [row] = await db
+  const rowRows = await db
     .select()
     .from(playerSignups)
     .where(eq(playerSignups.id, id))
     .limit(1);
+  const row = rowRows.at(0);
   return row ?? null;
 }
 
@@ -400,10 +506,11 @@ export async function getPlayerSignupById(
 How many signups are still waiting — for the admin badge.
 */
 export async function getPendingSignupCount(): Promise<number> {
-  const [row] = await db
+  const rowRows = await db
     .select({ n: sql<number>`count(*)`.mapWith(Number) })
     .from(playerSignups)
     .where(eq(playerSignups.status, "pendiente"));
+  const row = rowRows.at(0);
   return row?.n ?? 0;
 }
 
@@ -418,9 +525,13 @@ export interface Scorer {
   goals: number;
   assists: number;
   isGuest: boolean;
-  /** Overall del jugador; null en invitados, que no tienen ficha. */
+  /**
+  Overall del jugador; null en invitados, que no tienen ficha.
+  */
   overall: number | null;
-  /** Posición principal; null en invitados. */
+  /**
+  Posición principal; null en invitados.
+  */
   position: string | null;
 }
 export type MatchWithScorers = Match & { scorers: Scorer[] };
@@ -476,10 +587,13 @@ export async function getMatches(): Promise<MatchWithScorers[]> {
     byMatch.set(g.matchId, list);
   }
 
-  return rows.map((m) => ({
-    ...m,
-    scorers: (byMatch.get(m.id) ?? []).sort((a, b) => b.goals - a.goals),
-  }));
+  function withScorers(m: (typeof rows)[number]) {
+    return {
+      ...m,
+      scorers: (byMatch.get(m.id) ?? []).toSorted((a, b) => b.goals - a.goals),
+    };
+  }
+  return rows.map(withScorers);
 }
 
 /**
@@ -488,11 +602,12 @@ A single match with its scorers, for the edit screen.
 export async function getMatchById(
   id: number
 ): Promise<MatchWithScorers | null> {
-  const [m] = await db
+  const mRows = await db
     .select()
     .from(matches)
     .where(eq(matches.id, id))
     .limit(1);
+  const m = mRows.at(0);
   if (!m) {
     return null;
   }
@@ -516,26 +631,27 @@ export async function getMatchById(
     .where(eq(matchGoals.matchId, id));
 
   const imageMap = playerImageMap();
+  function toScorer(g: (typeof goalRows)[number]) {
+    return {
+      playerId: g.playerId,
+      name: g.name ?? g.guestName ?? "Invitado",
+      displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
+      nationality: g.nationality ?? "mx",
+      photoUrl:
+        g.playerId == null
+          ? null
+          : (imageMap.get(g.playerId) ?? g.photoUrl ?? null),
+      team: g.team,
+      goals: g.goals,
+      assists: g.assists,
+      isGuest: g.playerId == null,
+      overall: g.overall ?? null,
+      position: g.position ?? null,
+    };
+  }
   return {
     ...m,
-    scorers: goalRows
-      .map((g) => ({
-        playerId: g.playerId,
-        name: g.name ?? g.guestName ?? "Invitado",
-        displayName: g.displayName ?? g.guestName ?? g.name ?? "Invitado",
-        nationality: g.nationality ?? "mx",
-        photoUrl:
-          g.playerId != null
-            ? (imageMap.get(g.playerId) ?? g.photoUrl ?? null)
-            : null,
-        team: g.team,
-        goals: g.goals,
-        assists: g.assists,
-        isGuest: g.playerId == null,
-        overall: g.overall ?? null,
-        position: g.position ?? null,
-      }))
-      .sort((a, b) => b.goals - a.goals),
+    scorers: goalRows.map(toScorer).toSorted((a, b) => b.goals - a.goals),
   };
 }
 
@@ -569,13 +685,16 @@ export async function getMatchVoteTally(matchId: number): Promise<VoteTally[]> {
       matchVotes.guestName,
       players.name
     );
-  return rows.map((r) => ({
-    category: r.category as VoteCategory,
-    playerId: r.playerId,
-    guestName: r.guestName,
-    name: r.playerId != null ? (r.name ?? "—") : (r.guestName ?? "Invitado"),
-    count: r.count,
-  }));
+  function toTally(r: (typeof rows)[number]) {
+    return {
+      category: r.category,
+      playerId: r.playerId,
+      guestName: r.guestName,
+      name: r.playerId == null ? (r.guestName ?? "Invitado") : (r.name ?? "—"),
+      count: r.count,
+    };
+  }
+  return rows.map(toTally);
 }
 
 /**
@@ -585,7 +704,7 @@ export async function getMyMatchVotes(
   matchId: number,
   voterId: string | null | undefined
 ): Promise<Record<string, string>> {
-  if (!voterId) {
+  if (voterId == null || voterId === "") {
     return {};
   }
   const rows = await db
@@ -726,14 +845,18 @@ export async function getRecentSplits(limit = 20): Promise<RecentSplit[]> {
   }
   for (const row of rows) {
     const split = byReta.get(row.retaId);
-    if (!split || row.playerId == null) {
-      continue;
-    } // guests excluded from variety
-    const side = split.get(row.team) ?? [];
-    side.push(row.playerId);
-    split.set(row.team, side);
+    // Los invitados quedan fuera del cálculo de variedad: no tienen ficha y su
+    // id negativo cambia entre retas, así que no dicen nada de con quién jugó.
+    if (split !== undefined && row.playerId !== null) {
+      const side = split.get(row.team) ?? [];
+      side.push(row.playerId);
+      split.set(row.team, side);
+    }
   }
-  return retas.map((r) => ({ sides: [...byReta.get(r.id)!.values()] }));
+  function toSplit(r: (typeof retas)[number]) {
+    return { sides: [...(byReta.get(r.id)?.values() ?? [])] };
+  }
+  return retas.map(toSplit);
 }
 
 /**
@@ -747,12 +870,16 @@ export function retaTeams(
     "teams" | "teamAName" | "teamBName" | "ratingA" | "ratingB"
   >
 ): { key: TeamKey; name: string; rating: number }[] {
-  if (reta.teams?.length) {
-    return reta.teams.map((t) => ({
-      key: (isTeamKey(t.key) ? t.key : "A") as TeamKey,
+  const declared = reta.teams ?? [];
+  function toTeam(t: (typeof declared)[number]) {
+    return {
+      key: isTeamKey(t.key) ? t.key : "A",
       name: t.name,
       rating: t.rating,
-    }));
+    };
+  }
+  if (declared.length > 0) {
+    return declared.map(toTeam);
   }
   return [
     { key: "A", name: reta.teamAName, rating: reta.ratingA },
@@ -870,15 +997,19 @@ export async function getCasacaAssignments(
     .orderBy(desc(casacaAssignments.createdAt))
     .limit(limit);
   const images = playerImageMap();
-  return rows.map((r) => ({
-    id: r.id,
-    playerId: r.playerId,
-    displayName: r.rosterName ?? r.guestName ?? "Invitado",
-    photoUrl: r.playerId ? (images.get(r.playerId) ?? r.photoUrl) : null,
-    isGuest: r.playerId == null,
-    spunByName: r.spunByName,
-    createdAt: r.createdAt,
-  }));
+  function toAssignment(r: (typeof rows)[number]) {
+    return {
+      id: r.id,
+      playerId: r.playerId,
+      displayName: r.rosterName ?? r.guestName ?? "Invitado",
+      photoUrl:
+        r.playerId == null ? null : (images.get(r.playerId) ?? r.photoUrl),
+      isGuest: r.playerId == null,
+      spunByName: r.spunByName,
+      createdAt: r.createdAt,
+    };
+  }
+  return rows.map(toAssignment);
 }
 
 /**
@@ -888,12 +1019,22 @@ export async function getBannerWords(): Promise<string[]> {
   const rows = await db.select({ word: retaWords.word }).from(retaWords);
   const seen = new Set<string>();
   const out: string[] = [];
-  for (const w of [...rotatingWords, ...rows.map((r) => r.word)]) {
-    const key = w.trim().toLowerCase();
-    if (w.trim() && !seen.has(key)) {
+  // Se recorre cada lista por su lado en vez de juntarlas antes: `[...a, ...b]`
+  // lo marca `prefer-iterator-concat` y `a.concat(b)` lo marca `prefer-spread`,
+  // así que la lista intermedia no tiene forma válida — y tampoco hacía falta.
+  function add(word: string) {
+    const trimmed = word.trim();
+    const key = trimmed.toLowerCase();
+    if (trimmed !== "" && !seen.has(key)) {
       seen.add(key);
-      out.push(w.trim());
+      out.push(trimmed);
     }
+  }
+  for (const w of rotatingWords) {
+    add(w);
+  }
+  for (const r of rows) {
+    add(r.word);
   }
   return out;
 }

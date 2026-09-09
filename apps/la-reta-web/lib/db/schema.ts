@@ -402,6 +402,80 @@ export const commentReactions = pgTable(
 export type CommentReaction = typeof commentReactions.$inferSelect;
 export type NewCommentReaction = typeof commentReactions.$inferInsert;
 
+/**
+ * Reseñas de un partido: cómo estuvo la reta, no cómo jugó alguien.
+ *
+ * Es una tabla aparte de `player_comments` y no una columna más con un
+ * "target": las filas de jugador llevan meses acumuladas y la regla de este
+ * repo es que el esquema se amplía, nunca se reescribe lo que ya hay dentro.
+ * El precio es duplicar cinco columnas de metadatos; el de la alternativa era
+ * migrar datos de gente real para ahorrarlas.
+ */
+export const matchComments = pgTable(
+  "match_comments",
+  {
+    id: serial("id").primaryKey(),
+    matchId: integer("match_id")
+      .notNull()
+      .references(() => matches.id, { onDelete: "cascade" }),
+    author: varchar("author", { length: 60 }),
+    authorImageUrl: text("author_image_url"),
+    authorId: text("author_id"),
+    body: varchar("body", { length: 500 }).notNull(),
+    /**
+    Del 1 al 5: qué tal estuvo la reta. La media del partido sale de aquí.
+    */
+    rating: smallint("rating"),
+    deleted: boolean("deleted").notNull().default(false),
+    language: varchar("language", { length: 24 }),
+    timezone: varchar("timezone", { length: 64 }),
+    screen: varchar("screen", { length: 24 }),
+    platform: varchar("platform", { length: 80 }),
+    userAgent: text("user_agent"),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  // La lista de un partido se lee siempre por match_id y en orden de fecha.
+
+  (t) => [index("match_comments_match_idx").on(t.matchId, t.createdAt)]
+);
+
+export type MatchComment = typeof matchComments.$inferSelect;
+export type NewMatchComment = typeof matchComments.$inferInsert;
+
+/**
+ * Reacciones a una reseña de partido. Tabla propia porque
+ * `comment_reactions.comment_id` apunta a `player_comments` por clave ajena, y
+ * aflojar esa clave para que valiera para dos tablas dejaría a la base sin
+ * poder garantizar que la reacción cuelga de algo que existe.
+ *
+ * `reactorKey` es quien reacciona: el `userId` de Clerk si hay sesión, y un id
+ * anónimo del dispositivo si no. El índice único es lo que impide reaccionar
+ * dos veces con el mismo emoji.
+ */
+export const matchCommentReactions = pgTable(
+  "match_comment_reactions",
+  {
+    id: serial("id").primaryKey(),
+    commentId: integer("comment_id")
+      .notNull()
+      .references(() => matchComments.id, { onDelete: "cascade" }),
+    emoji: varchar("emoji", { length: 16 }).notNull(),
+    reactorKey: varchar("reactor_key", { length: 64 }).notNull(),
+    createdAt: timestamp("created_at").notNull().defaultNow(),
+  },
+  // eslint-disable-next-line unicorn/consistent-arrow-return-style
+  (t) => [
+    uniqueIndex("match_comment_reactions_unique").on(
+      t.commentId,
+      t.emoji,
+      t.reactorKey
+    ),
+  ]
+);
+
+export type MatchCommentReaction = typeof matchCommentReactions.$inferSelect;
+export type NewMatchCommentReaction = typeof matchCommentReactions.$inferInsert;
+
 // Legal consent evidence
 /**
 Minimal audit trail for users who accept the public legal documents.

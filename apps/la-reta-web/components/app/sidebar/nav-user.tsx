@@ -4,6 +4,7 @@ import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -77,14 +78,21 @@ export const NavUser = () => {
           align="end"
           sideOffset={8}
         >
-          <DropdownMenuLabel className="font-normal">
-            <span className="block truncate text-sm font-semibold">{name}</span>
-            {email ? (
-              <span className="text-muted-foreground block truncate text-xs">
-                {email}
+          {/* `DropdownMenuLabel` es `Menu.GroupLabel` de Base UI y lanza
+              "MenuGroupContext is missing" si no cuelga de un `Menu.Group`.
+              Aquí no saltaba porque el menú solo existe con sesión iniciada. */}
+          <DropdownMenuGroup>
+            <DropdownMenuLabel className="font-normal">
+              <span className="block truncate text-sm font-semibold">
+                {name}
               </span>
-            ) : null}
-          </DropdownMenuLabel>
+              {email ? (
+                <span className="text-muted-foreground block truncate text-xs">
+                  {email}
+                </span>
+              ) : null}
+            </DropdownMenuLabel>
+          </DropdownMenuGroup>
           <DropdownMenuSeparator />
           <DropdownMenuItem onClick={() => openUserProfile()}>
             <UserRoundCogIcon />

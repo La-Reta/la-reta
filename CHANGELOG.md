@@ -21,6 +21,8 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 
 ### ✨ Nuevo
 
+- 🌐 **Cada partido tiene su sección de reseñas.** Al final de la ficha del partido, en la web y en la app: pon tu nota del 1 al 5, escribe qué te pareció la reta —el nivel, el ambiente, la cancha— y reacciona a lo que escribieron los demás con ⚽🔥👏😂💪🐐. **Arriba no sale solo el promedio, sale el reparto de notas**: un 3.0 de "todos pusieron 3" y un 3.0 de "mitad cincos, mitad unos" son dos retas muy distintas, y en un número suelto se leen igual. Hace falta cuenta para escribir y para reaccionar; leer no. Tu propia reseña se corrige y se borra cuando quieras, y la de los demás no se toca.
+
 - 📱 **El goleador tiene su tarjeta en Inicio, y no corona a nadie a dedo.** Debajo de _El crack_ sale quien más ha marcado, con su cara, sus goles y en cuántos partidos los hizo. **Cuando hay empate arriba —que pasa más de lo que parece— salen todos**: se pasa de uno a otro deslizando con el dedo, o tocando los puntos de abajo, y va cambiando solo hasta que tú tomas el mando. Toca la tarjeta y abre su ficha. Si quien más marcó fue alguien de última hora sin ficha en la plantilla, lo dice en vez de coronar al segundo.
 
 - 📱 **Las casacas se sortean desde el teléfono.** Ruleta con todos los de la plantilla, con la misma regla de siempre: quien lavó las dos últimas retas queda en descanso y sale en gris. Gira con el pulgar y hace tic cada vez que pasa un nombre. A diferencia de la web, **el turno no se guarda solo**: sale el elegido y tú confirmas — en la cancha pasa a menudo que el que salió ya se fue, y volver a girar tiene que costar un toque. Debajo, a quién le ha tocado y cuándo.
@@ -30,6 +32,10 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 - 🖥️ **Buscador del menú con ⌘K.** El menú de la web tiene catorce sitios a los que ir y encontrar el que quieres a ojo cuesta. Pulsa ⌘K (Ctrl+K en Windows) o toca _Buscar…_ arriba del menú, escribe dos letras y entra. Busca también por lo que hace cada página: "roster" lleva a Jugadores, "ruleta" a Casacas.
 
 ### 🔧 Mejoras
+
+- 🖥️ **Armar equipos, rehecho para que se arme de una pasada.** Antes elegías gente en un bloque, generabas en otro que estaba arriba y el resultado salía al final: armar una reta era subir y bajar la página. Ahora los controles —cuántos van, en cuántos equipos, generar— viajan contigo en una barra que no se va, **abajo en el teléfono** para que caiga bajo el pulgar. Al generar, **los equipos aparecen arriba del todo** y la convocatoria se pliega sola, a un toque de volver a abrirla. La lista de convocados estrena **buscador** y un **“Todos” por línea**, así que convocar a los cuatro defensas es un toque y no cuatro. Los invitados de última hora pasan a un diálogo en vez de un formulario siempre desplegado, y los nombres de equipo se piden **con** el resultado, no antes de que exista ningún equipo que nombrar.
+
+- 🖥️ **El marcador del reparto ya respeta el tema claro.** Era una tarjeta negra pasara lo que pasara: en modo claro quedaba un rectángulo oscuro en medio de la pantalla, igual que le pasaba al marcador en vivo. Ahora cambia con el tema y el color de cada equipo se ajusta para leerse bien sobre los dos fondos.
 
 - 📱 **Lo que se puede hacer en cada pantalla está arriba, en un botón redondo verde.** Convocar en _Armar reta_, pedir tu lugar en _Plantilla_, y repartir y compartir en la convocatoria. Cada uno lleva su dibujo y ninguno necesita etiqueta: un monigote con un "+" suma gente, las aspas cruzadas reparten equipos. **Se fueron las píldoras de abajo**, que ocupaban media pantalla de ancho para decir lo mismo: la cancha del once ideal y la rejilla de cartas se ven ahora enteras. Repartir se ve apagado mientras falten convocados, y compartir aparece solo cuando ya hay equipos que mandar.
 
@@ -70,6 +76,10 @@ Cómo se escribe esto (para quien lo mantenga, humano o agente):
 - 🖥️ **La web va mucho más ligera.** Las fotos se estaban descargando a tamaño completo aunque se pintaran del tamaño de una moneda: la pantalla de un partido llegaba a ocupar 93 MB de memoria solo en imágenes, y por eso el navegador se atascaba al desplazarse, sobre todo en el teléfono. Ahora cada foto se pide al tamaño en que de verdad se ve —esa misma pantalla ocupa 3,6 MB— y las cartas de la galería se cargan según vas bajando. Nada cambia de aspecto; solo deja de pesar.
 
 ### 🐛 Correcciones
+
+- 🖥️ **El menú de tres puntos ya no rompe la pantalla.** En _Armar equipos_, tocar el menú junto a “Generar” tiraba la vista entera y salía “Algo se rompió en la jugada”. El mismo fallo estaba esperando en el menú de tu cuenta, al pie del menú lateral: solo aparece con la sesión iniciada, así que no había dado la cara todavía. Los dos arreglados.
+
+- 🖥️ **Las fotos de la imagen descargable no se cargaban.** La copia que se convierte en PNG se dibuja fuera de la pantalla, y por eso ninguna de las caras llegaba a cargar: la descarga se quedaba esperándolas. Ahora sí cargan, y si aun así tarda demasiado te lo dice y te devuelve el botón, en vez de quedarse en “Generando…” para siempre. El archivo sale con la fecha (`reta-2026-09-08.png`) en lugar de amontonarse como “reta-vs (3)”.
 
 - 🖥️ **Partidos ya no se desplaza de lado en pantallas medianas.** Entre tablet y portátil, la página entera se podía arrastrar hacia la derecha y quedaba contenido fuera de la vista. La culpa era de la lista de goleadores de cada partido: al no caber, en vez de recortarse con puntos suspensivos estiraba la columna más allá de la pantalla. Ahora se recorta como debía y la página se queda quieta.
 
