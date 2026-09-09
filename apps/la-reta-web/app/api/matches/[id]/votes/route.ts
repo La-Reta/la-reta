@@ -1,12 +1,15 @@
-import { getMatchVoteTally, getMyMatchVotes } from "@/lib/queries";
 import { auth } from "@clerk/nextjs/server";
+import { getMatchVoteTally, getMyMatchVotes } from "@/lib/queries";
 
 export const dynamic = "force-dynamic";
 
-/** Conteo de votos + el voto del usuario actual, para el polling "live". */
+/**
+Conteo de votos + el voto del usuario actual, para el polling "live".
+*/
+// eslint-disable-next-line sonarjs/function-name -- el App Router exige este nombre exacto
 export async function GET(
-  _req: Request,
-  { params }: { params: Promise<{ id: string }> },
+  _request: Request,
+  { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
   const matchId = Number(id);

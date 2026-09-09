@@ -26,7 +26,7 @@ const forbiddenUse = [
   "Intentar extraer, vender, automatizar o reutilizar la base de datos para fines ajenos a la comunidad sin autorización.",
 ];
 
-export default function TermsPage() {
+const TermsPage = () => {
   return (
     <LegalShell
       eyebrow="Términos de uso"
@@ -95,4 +95,6 @@ export default function TermsPage() {
       </LegalSection>
     </LegalShell>
   );
-}
+};
+
+export default TermsPage;

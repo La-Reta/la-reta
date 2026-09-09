@@ -58,9 +58,16 @@ const ES_WORDS = [
   "tonto",
 ];
 
+/*
+ * `leo-profanity` guarda su diccionario en un singleton del módulo: la lista en
+ * español hay que registrarla al importar, antes del primer `clean()`.
+ */
+/* eslint-disable-next-line unicorn/no-top-level-side-effects -- así se registra el diccionario */
 leo.add(ES_WORDS);
 
-/** Censor profanity, keeping the first letter of each bad word (`p***`). */
+/**
+Censor profanity, keeping the first letter of each bad word (`p***`).
+*/
 export function cleanText(text: string): string {
   return leo.clean(text, "*", 1);
 }

@@ -1,21 +1,22 @@
 import { config } from "dotenv";
-config({ path: ".env.local" });
-config({ path: ".env" });
 
 import { neon } from "@neondatabase/serverless";
 import { drizzle } from "drizzle-orm/neon-http";
+import { computeOverall } from "../ratings";
+import { STAT_KEYS } from "../constants";
+import { formatApiDate } from "../dates";
 import {
   players,
   playerStatHistory,
   ideas,
   matches,
   matchGoals,
-  type NewPlayer,
-  type NewStatHistory,
 } from "./schema";
-import { computeOverall } from "../ratings";
-import { STAT_KEYS, type Position, type Foot } from "../constants";
-import { formatApiDate } from "../dates";
+import type { Position, Foot } from "../constants";
+import type { NewPlayer, NewStatHistory } from "./schema";
+
+config({ path: ".env.local" });
+config({ path: ".env" });
 
 type Seed = Omit<NewPlayer, "overall" | "id" | "createdAt" | "updatedAt"> & {
   position: Position;
@@ -319,73 +320,117 @@ const roster: Seed[] = [
   },
 ];
 
+type Stats = Record<(typeof STAT_KEYS)[number], number>;
+
+/**
+ * Los seis atributos de una fila, como objeto.
+ */
+function statsOf(p: Record<string, unknown>): Stats {
+  const out: Stats = {
+    pace: 0,
+    shooting: 0,
+    passing: 0,
+    dribbling: 0,
+    defending: 0,
+    physical: 0,
+  };
+  for (const k of STAT_KEYS) {
+    out[k] = Number(p[k]);
+  }
+  return out;
+}
+
+/**
+ * Los mismos atributos desplazados, acotados a 1–99.
+ */
+function applyDelta(stats: Stats, delta: number): Stats {
+  const out: Stats = {
+    pace: 0,
+    shooting: 0,
+    passing: 0,
+    dribbling: 0,
+    defending: 0,
+    physical: 0,
+  };
+  for (const k of STAT_KEYS) {
+    out[k] = Math.max(1, Math.min(99, stats[k] + delta));
+  }
+  return out;
+}
+
+const PRIORITY_MEDIA = "media";
+const PLATFORM_IPHONE = "iPhone";
+const SEED_AMERICA_MEXICO_CITY = "America/Mexico_City";
+
+/**
+ * Una fila de `players` con su overall ya calculado.
+ */
+function seededPlayer(p: (typeof roster)[number]): NewPlayer {
+  const stats = {
+    pace: p.pace ?? 50,
+    shooting: p.shooting ?? 50,
+    passing: p.passing ?? 50,
+    dribbling: p.dribbling ?? 50,
+    defending: p.defending ?? 50,
+    physical: p.physical ?? 50,
+  };
+  return { ...p, overall: computeOverall(p.position, stats) };
+}
+
 async function main() {
   const url = process.env.DATABASE_URL;
-  if (!url) throw new Error("DATABASE_URL no está definida (.env.local).");
+  if (url === undefined || url === "") {
+    throw new Error("DATABASE_URL no está definida (.env.local).");
+  }
 
-  const db = drizzle(neon(url));
+  const database = drizzle(neon(url));
 
-  const rows: NewPlayer[] = roster.map((p) => ({
-    ...p,
-    overall: computeOverall(p.position, {
-      pace: p.pace ?? 50,
-      shooting: p.shooting ?? 50,
-      passing: p.passing ?? 50,
-      dribbling: p.dribbling ?? 50,
-      defending: p.defending ?? 50,
-      physical: p.physical ?? 50,
-    }),
-  }));
+  const rows: NewPlayer[] = roster.map(seededPlayer);
 
   console.log(`Limpiando tabla players...`);
-  await db.delete(players); // cascade borra también player_stat_history
+  // cascade borra también player_stat_history
+  await database.delete(players);
 
   console.log(`Insertando ${rows.length} jugadores...`);
-  const inserted = await db.insert(players).values(rows).returning();
+  const inserted = await database.insert(players).values(rows).returning();
 
   // Snapshots de historial. Todos tienen al menos uno (su "alta"); a un par
   // les generamos una progresión retroactiva para demostrar la gráfica.
   const now = Date.now();
   const DEMO = new Set(["PASTOR", "HAALAND"]);
-  const statsOf = (p: (typeof inserted)[number]) =>
-    Object.fromEntries(STAT_KEYS.map((k) => [k, p[k]])) as Record<
-      (typeof STAT_KEYS)[number],
-      number
-    >;
-  const applyDelta = (s: Record<string, number>, d: number) =>
-    Object.fromEntries(
-      STAT_KEYS.map((k) => [k, Math.max(1, Math.min(99, s[k] + d))]),
-    ) as Record<(typeof STAT_KEYS)[number], number>;
-  const snap = (
+
+  function snap(
     p: (typeof inserted)[number],
-    stats: Record<(typeof STAT_KEYS)[number], number>,
-    daysAgo: number,
-  ): NewStatHistory => ({
-    playerId: p.id,
-    ...stats,
-    overall: computeOverall(p.position, stats),
-    recordedAt: new Date(now - daysAgo * 86_400_000),
-  });
+    stats: Stats,
+    daysAgo: number
+  ): NewStatHistory {
+    return {
+      playerId: p.id,
+      ...stats,
+      overall: computeOverall(p.position, stats),
+      recordedAt: new Date(now - daysAgo * 86_400_000),
+    };
+  }
 
   const history: NewStatHistory[] = [];
   for (const p of inserted) {
-    const cur = statsOf(p);
+    const current = statsOf(p);
     if (DEMO.has(p.displayName)) {
       history.push(
-        snap(p, applyDelta(cur, -7), 120),
-        snap(p, applyDelta(cur, -3), 50),
-        snap(p, cur, 0),
+        snap(p, applyDelta(current, -7), 120),
+        snap(p, applyDelta(current, -3), 50),
+        snap(p, current, 0)
       );
     } else {
-      history.push(snap(p, cur, 90));
+      history.push(snap(p, current, 90));
     }
   }
   console.log(`Insertando ${history.length} snapshots de historial...`);
-  await db.insert(playerStatHistory).values(history);
+  await database.insert(playerStatHistory).values(history);
 
   // Ideas demo
   console.log("Insertando ideas demo...");
-  await db.insert(ideas).values([
+  await database.insert(ideas).values([
     {
       title: "Llevar conos y petos a la reta",
       description:
@@ -393,12 +438,12 @@ async function main() {
       author: "Charly",
       category: "cancha",
       status: "planeada",
-      priority: "media",
+      priority: PRIORITY_MEDIA,
       estimate: "1 jornada",
       language: "es-MX",
-      timezone: "America/Mexico_City",
+      timezone: SEED_AMERICA_MEXICO_CITY,
       screen: "390x844",
-      platform: "iPhone",
+      platform: PLATFORM_IPHONE,
     },
     {
       title: "Tabla de goleadores en la app",
@@ -410,7 +455,7 @@ async function main() {
       priority: "alta",
       estimate: "Listo",
       language: "es-MX",
-      timezone: "America/Mexico_City",
+      timezone: SEED_AMERICA_MEXICO_CITY,
       screen: "1440x900",
       platform: "macOS",
     },
@@ -422,7 +467,7 @@ async function main() {
       category: "social",
       status: "nueva",
       language: "es-MX",
-      timezone: "America/Mexico_City",
+      timezone: SEED_AMERICA_MEXICO_CITY,
       screen: "412x915",
       platform: "Android",
     },
@@ -434,7 +479,7 @@ async function main() {
       status: "en_progreso",
       priority: "baja",
       language: "es-MX",
-      timezone: "America/Mexico_City",
+      timezone: SEED_AMERICA_MEXICO_CITY,
       screen: "1366x768",
       platform: "Windows",
     },
@@ -446,7 +491,7 @@ async function main() {
     inserted.find((p) => p.displayName === name)?.id ?? inserted[0].id;
   const dateAgo = (days: number) => formatApiDate(now - days * 86_400_000);
 
-  const [m1] = await db
+  const [m1] = await database
     .insert(matches)
     .values({
       playedAt: dateAgo(14),
@@ -457,7 +502,7 @@ async function main() {
       notes: "Partidazo de inicio de temporada.",
     })
     .returning({ id: matches.id });
-  const [m2] = await db
+  const [m2] = await database
     .insert(matches)
     .values({
       playedAt: dateAgo(7),
@@ -469,7 +514,7 @@ async function main() {
     })
     .returning({ id: matches.id });
 
-  await db.insert(matchGoals).values([
+  await database.insert(matchGoals).values([
     { matchId: m1.id, playerId: id("HAALAND"), team: "A", goals: 2 },
     { matchId: m1.id, playerId: id("PASTOR"), team: "A", goals: 1 },
     { matchId: m1.id, playerId: id("MIGUE"), team: "A", goals: 1 },
@@ -487,7 +532,11 @@ async function main() {
   console.log("✅ Seed completado.");
 }
 
-main().catch((err) => {
-  console.error("❌ Seed falló:", err);
+// Punto de entrada de script: `main` es lo último del archivo y no hay nada que
+// pueda `await`arlo, así que la cadena de promesas es lo correcto aquí.
+/* eslint-disable unicorn/prefer-await, github/no-then, promise/prefer-await-to-callbacks, @typescript-eslint/use-unknown-in-catch-callback-variable -- entrada de script */
+main().catch((error) => {
+  console.error("❌ Seed falló:", error);
   process.exit(1);
 });
+/* eslint-enable unicorn/prefer-await, github/no-then, promise/prefer-await-to-callbacks, @typescript-eslint/use-unknown-in-catch-callback-variable */

@@ -7,11 +7,11 @@ import { notFound, redirect } from "next/navigation";
 
 export const dynamic = "force-dynamic";
 
-export default async function EditPlayerPage({
+const EditPlayerPage = async ({
   params,
 }: {
-  params: Promise<{ id: string }>;
-}) {
+  readonly params: Promise<{ id: string }>;
+}) => {
   const { id } = await params;
   const [admin, { userId }, player] = await Promise.all([
     isAdmin(),
@@ -38,4 +38,6 @@ export default async function EditPlayerPage({
       <PlayerForm player={player} canManage={canManage} canEditStats={admin} />
     </div>
   );
-}
+};
+
+export default EditPlayerPage;

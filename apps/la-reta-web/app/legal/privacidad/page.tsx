@@ -36,7 +36,7 @@ const rights = [
   "Oposición: pedir que ciertos datos no se muestren, no se usen para métricas o no se procesen con herramientas asistidas por IA.",
 ];
 
-export default function PrivacyPage() {
+const PrivacyPage = () => {
   return (
     <LegalShell
       eyebrow="Aviso de privacidad"
@@ -133,4 +133,6 @@ export default function PrivacyPage() {
       <LegalReferences />
     </LegalShell>
   );
-}
+};
+
+export default PrivacyPage;

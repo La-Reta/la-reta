@@ -3,14 +3,14 @@ import Link from "next/link";
 import { Button } from "../ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../ui/card";
 
-export function ScorerNotFound() {
+export const ScorerNotFound = () => {
   return (
     <Card className="h-fit">
       <CardHeader className="border-b">
         <CardTitle className="font-display text-lg font-semibold tracking-wide uppercase">
           El goleador
         </CardTitle>
-        <p className="text-muted-foreground text-[11px]">
+        <p className="text-muted-foreground text-xs">
           Máximo anotador de la reta
         </p>
       </CardHeader>
@@ -27,4 +27,4 @@ export function ScorerNotFound() {
       </CardContent>
     </Card>
   );
-}
+};

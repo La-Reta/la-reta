@@ -14,7 +14,13 @@ import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { toast } from "sonner";
 
-export function IdeaRowActions({ id, status }: { id: number; status: string }) {
+export const IdeaRowActions = ({
+  id,
+  status,
+}: {
+  readonly id: number;
+  readonly status: string;
+}) => {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -44,13 +50,13 @@ export function IdeaRowActions({ id, status }: { id: number; status: string }) {
           </Button>
         }
       />
-      <DropdownMenuContent align="end" className={"w-fit"}>
+      <DropdownMenuContent align="end" className="w-fit">
         <DropdownMenuItem
           disabled={status === "hecha"}
           onClick={() =>
             run(
               () => setIdeaStatus(id, "hecha"),
-              "Idea marcada como completada",
+              "Idea marcada como completada"
             )
           }
         >
@@ -68,4 +74,4 @@ export function IdeaRowActions({ id, status }: { id: number; status: string }) {
       </DropdownMenuContent>
     </DropdownMenu>
   );
-}
+};

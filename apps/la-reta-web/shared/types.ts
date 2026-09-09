@@ -1,4 +1,4 @@
-import { Button } from "@/components/ui/button";
-import { VariantProps } from "class-variance-authority";
+import type { VariantProps } from "class-variance-authority";
+import type { Button } from "@/components/ui/button";
 
 export type ButtonVariant = VariantProps<typeof Button>["variant"];

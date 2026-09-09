@@ -25,7 +25,7 @@ const coveredData = [
   "Datos técnicos básicos: idioma, zona horaria, resolución de pantalla, plataforma y user agent para métricas, diagnóstico y seguridad.",
 ];
 
-export default function LegalPage() {
+const LegalPage = () => {
   return (
     <LegalShell
       eyebrow="Legal y privacidad"
@@ -78,4 +78,6 @@ export default function LegalPage() {
       <LegalReferences />
     </LegalShell>
   );
-}
+};
+
+export default LegalPage;

@@ -24,13 +24,17 @@ const CONSENT_EVENT = "reta-legal-consent-updated";
 
 type ConsentState = "accepted" | "rejected" | "pending";
 
-export function LegalConsentGate({ children }: { children: React.ReactNode }) {
+export const LegalConsentGate = ({
+  children,
+}: {
+  readonly children: React.ReactNode;
+}) => {
   const pathname = usePathname();
   const isLegalRoute = pathname === "/legal" || pathname.startsWith("/legal/");
   const consent = React.useSyncExternalStore(
     subscribeConsent,
     getConsentSnapshot,
-    getServerConsentSnapshot,
+    getServerConsentSnapshot
   );
 
   if (consent === "accepted") return children;
@@ -54,9 +58,9 @@ export function LegalConsentGate({ children }: { children: React.ReactNode }) {
       <LegalConsentDrawer />
     </>
   );
-}
+};
 
-function LegalConsentInline() {
+const LegalConsentInline = () => {
   const [pending, startTransition] = React.useTransition();
 
   return (
@@ -75,9 +79,9 @@ function LegalConsentInline() {
       </div>
     </div>
   );
-}
+};
 
-function LegalConsentDrawer() {
+const LegalConsentDrawer = () => {
   const [pending, startTransition] = React.useTransition();
 
   return (
@@ -94,25 +98,25 @@ function LegalConsentDrawer() {
             <DrawerDescription className="max-w-3xl leading-relaxed">
               Para usar Reta Credix aceptas los{" "}
               <Button
-                render={<Link href="/legal/terminos"></Link>}
-                variant={"link"}
-                className={"p-0"}
+                render={<Link href="/legal/terminos" />}
+                variant="link"
+                className="p-0"
               >
                 términos y condiciones
               </Button>
               , el{" "}
               <Button
-                render={<Link href="/legal/privacidad"></Link>}
-                variant={"link"}
-                className={"p-0"}
+                render={<Link href="/legal/privacidad" />}
+                variant="link"
+                className="p-0"
               >
                 aviso de privacidad
               </Button>{" "}
               y la política de{" "}
               <Button
-                render={<Link href="/legal/ia-y-contenido"></Link>}
-                variant={"link"}
-                className={"p-0"}
+                render={<Link href="/legal/ia-y-contenido" />}
+                variant="link"
+                className="p-0"
               >
                 IA y contenido
               </Button>
@@ -139,9 +143,9 @@ function LegalConsentDrawer() {
       </DrawerContent>
     </Drawer>
   );
-}
+};
 
-function LegalConsentBlocked() {
+const LegalConsentBlocked = () => {
   const [pending, startTransition] = React.useTransition();
 
   return (
@@ -185,7 +189,7 @@ function LegalConsentBlocked() {
       </section>
     </div>
   );
-}
+};
 
 function subscribeConsent(callback: () => void) {
   window.addEventListener("storage", callback);
@@ -217,7 +221,7 @@ function accept(startTransition: React.TransitionStartFunction) {
         JSON.stringify({
           version: LEGAL_CONSENT_VERSION,
           acceptedAt: new Date().toISOString(),
-        }),
+        })
       );
       localStorage.removeItem(REJECTION_STORAGE_KEY);
       window.dispatchEvent(new Event(CONSENT_EVENT));
@@ -234,18 +238,18 @@ function reject() {
     JSON.stringify({
       version: LEGAL_CONSENT_VERSION,
       rejectedAt: new Date().toISOString(),
-    }),
+    })
   );
   window.dispatchEvent(new Event(CONSENT_EVENT));
 }
 
-function ConsentAcceptButton({
+const ConsentAcceptButton = ({
   pending,
   onAccept,
 }: {
-  pending: boolean;
-  onAccept: () => void;
-}) {
+  readonly pending: boolean;
+  readonly onAccept: () => void;
+}) => {
   return (
     <Button
       type="button"
@@ -257,7 +261,7 @@ function ConsentAcceptButton({
       {pending ? "Guardando..." : "Aceptar términos"}
     </Button>
   );
-}
+};
 
 function collectClientInfo() {
   const uaData = (

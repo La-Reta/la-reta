@@ -2,19 +2,21 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { PlayerComment } from "@/lib/db/schema";
+import { fetchJson } from "@/lib/fetch-json";
 
-export type CommentsData = {
+export interface CommentsData {
   comments: PlayerComment[];
   reactions: Record<number, Record<string, number>>;
-};
+}
 
 export const commentsKey = (playerId: number) =>
   ["comments", playerId] as const;
 
 async function fetchComments(playerId: number): Promise<CommentsData> {
-  const res = await fetch(`/api/players/${playerId}/comments`);
-  if (!res.ok) throw new Error("No se pudieron cargar los comentarios");
-  return res.json();
+  return await fetchJson<CommentsData>(
+    `/api/players/${playerId}/comments`,
+    "No se pudieron cargar los comentarios"
+  );
 }
 
 /**
@@ -25,7 +27,7 @@ async function fetchComments(playerId: number): Promise<CommentsData> {
 export function useComments(playerId: number, initialData: CommentsData) {
   return useQuery({
     queryKey: commentsKey(playerId),
-    queryFn: () => fetchComments(playerId),
+    queryFn: async () => await fetchComments(playerId),
     initialData,
     refetchInterval: 15_000,
   });

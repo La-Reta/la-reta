@@ -7,7 +7,9 @@ export const VOTING_DAYS = 7;
 
 export type VoteCategory = "gol" | "error" | "figura";
 
-/** Orden y textos de las categorías (la figura primero). */
+/**
+Orden y textos de las categorías (la figura primero).
+*/
 export const VOTE_CATEGORIES: {
   key: VoteCategory;
   label: string;
@@ -36,50 +38,60 @@ export const VOTE_CATEGORIES: {
 
 export const VOTE_CATEGORY_KEYS = VOTE_CATEGORIES.map((c) => c.key);
 
-/** Cuándo cierra la votación: creación del partido + VOTING_DAYS. */
+/**
+Cuándo cierra la votación: creación del partido + VOTING_DAYS.
+*/
 export function votingClosesAt(createdAt: Date | string | number): Date {
-  return new Date(new Date(createdAt).getTime() + VOTING_DAYS * 86_400_000);
+  const opened = new Date(createdAt);
+  return new Date(opened.getTime() + VOTING_DAYS * 86_400_000);
 }
 
-/** ¿Sigue abierta la votación? (`now` inyectable para tests). */
+/**
+¿Sigue abierta la votación? (`now` inyectable para tests).
+*/
 export function isVotingOpen(
   createdAt: Date | string | number,
-  now: number = Date.now(),
+  now: number = Date.now()
 ): boolean {
   return now < votingClosesAt(createdAt).getTime();
 }
 
-/** Clave estable de un candidato: `p:<id>` (roster) o `g:<nombre>` (invitado). */
+/**
+Clave estable de un candidato: `p:<id>` (roster) o `g:<nombre>` (invitado).
+*/
 export function candidateKey(c: {
   playerId: number | null;
   guestName?: string | null;
 }): string {
-  return c.playerId != null ? `p:${c.playerId}` : `g:${c.guestName ?? ""}`;
+  return c.playerId == null ? `g:${c.guestName ?? ""}` : `p:${c.playerId}`;
+}
+
+function assert(condition: boolean, message: string) {
+  if (!condition) {
+    throw new Error(`match-votes demo failed: ${message}`);
+  }
 }
 
 // self-check
 export function demo() {
-  const assert = (c: boolean, m: string) => {
-    if (!c) throw new Error("match-votes demo failed: " + m);
-  };
   const created = new Date("2026-01-01T00:00:00Z");
   const day = 86_400_000;
   assert(
     isVotingOpen(created, created.getTime() + 6 * day),
-    "abierta al día 6",
+    "abierta al día 6"
   );
   assert(
     !isVotingOpen(created, created.getTime() + 8 * day),
-    "cerrada al día 8",
+    "cerrada al día 8"
   );
   assert(
     votingClosesAt(created).getTime() === created.getTime() + 7 * day,
-    "cierra a 7 días",
+    "cierra a 7 días"
   );
   assert(candidateKey({ playerId: 5 }) === "p:5", "clave roster");
   assert(
     candidateKey({ playerId: null, guestName: "Beto" }) === "g:Beto",
-    "clave invitado",
+    "clave invitado"
   );
   return "ok";
 }
@@ -87,6 +99,7 @@ export function demo() {
 // typeof/optional guards: este módulo también se importa en el cliente.
 if (
   typeof process !== "undefined" &&
-  process.argv?.[1]?.endsWith("match-votes.ts")
-)
+  process.argv[1]?.endsWith("match-votes.ts")
+) {
   console.log(demo());
+}

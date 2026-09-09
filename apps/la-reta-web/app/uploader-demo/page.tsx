@@ -6,7 +6,7 @@ import * as React from "react";
 
 // Demo de integración del ImageUploader. La URL subida se muestra con next/image
 // (el host de Blob ya está permitido en next.config.ts → images.remotePatterns).
-export default function UploaderDemoPage() {
+const UploaderDemoPage = () => {
   const [url, setUrl] = React.useState<string | null>(null);
 
   return (
@@ -36,4 +36,6 @@ export default function UploaderDemoPage() {
       ) : null}
     </main>
   );
-}
+};
+
+export default UploaderDemoPage;

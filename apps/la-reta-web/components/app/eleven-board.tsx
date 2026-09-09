@@ -21,13 +21,13 @@ const GROUP_LABEL_PLURAL: Record<PositionGroup, string> = {
   FWD: "Delanteros",
 };
 
-export function ElevenBoard({
+export const ElevenBoard = ({
   players,
   counts,
 }: {
-  players: Player[];
-  counts: Record<PositionGroup, number>;
-}) {
+  readonly players: Player[];
+  readonly counts: Record<PositionGroup, number>;
+}) => {
   return (
     <Card>
       <CardHeader className="border-b">
@@ -39,7 +39,7 @@ export function ElevenBoard({
           <span className="font-display bg-foreground text-background rounded-xl px-2 py-1 font-bold tracking-wider uppercase">
             4-3-3
           </span>
-          <Button render={<Link href={"/players"} className="ms-2"></Link>}>
+          <Button render={<Link href="/players" className="ms-2" />}>
             Ver todos los jugadores
           </Button>
         </CardAction>
@@ -70,4 +70,4 @@ export function ElevenBoard({
       </CardFooter>
     </Card>
   );
-}
+};

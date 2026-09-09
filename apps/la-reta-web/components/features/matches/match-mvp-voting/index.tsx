@@ -34,7 +34,7 @@ export type VoteCandidate = {
   isGuest: boolean;
 };
 
-export function MatchMvpVoting({
+export const MatchMvpVoting = ({
   matchId,
   candidates,
   tally,
@@ -43,20 +43,20 @@ export function MatchMvpVoting({
   votingOpen,
   closesLabel,
 }: {
-  matchId: number;
-  candidates: VoteCandidate[];
-  tally: VoteTally[];
-  myVotes: Record<string, string>;
-  canVote: boolean;
-  votingOpen: boolean;
-  closesLabel: string;
-}) {
+  readonly matchId: number;
+  readonly candidates: VoteCandidate[];
+  readonly tally: VoteTally[];
+  readonly myVotes: Record<string, string>;
+  readonly canVote: boolean;
+  readonly votingOpen: boolean;
+  readonly closesLabel: string;
+}) => {
   const [pending, startTransition] = React.useTransition();
   // Datos "live": sembrados con lo del server, sondeados mientras esté abierta.
   const { data, refetch } = useMatchVotes(
     matchId,
     { tally, myVotes },
-    votingOpen,
+    votingOpen
   );
   const liveTally = data.tally;
   const liveMyVotes = data.myVotes;
@@ -64,7 +64,7 @@ export function MatchMvpVoting({
   // Categoría activa del selector: arranca en la primera que te falte votar.
   const [activeCat, setActiveCat] = React.useState<VoteCategory>(
     () =>
-      (VOTE_CATEGORIES.find((c) => !myVotes[c.key]) ?? VOTE_CATEGORIES[0]).key,
+      (VOTE_CATEGORIES.find((c) => !myVotes[c.key]) ?? VOTE_CATEGORIES[0]).key
   );
 
   if (candidates.length === 0) return null;
@@ -126,7 +126,7 @@ export function MatchMvpVoting({
     <section className="space-y-3">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <SectionHeading title="Gol, Error y Figura" />
-        <Badge variant={"default"}>
+        <Badge variant="default">
           {votingOpen ? (
             <>Vota hasta el {closesLabel}</>
           ) : (
@@ -181,4 +181,4 @@ export function MatchMvpVoting({
       )}
     </section>
   );
-}
+};

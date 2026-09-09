@@ -13,7 +13,7 @@ import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { legalPages } from "./legal-content";
 
-export function LegalNav() {
+export const LegalNav = () => {
   const pathname = usePathname();
 
   return (
@@ -36,14 +36,14 @@ export function LegalNav() {
               data-active={active}
               className={cn(
                 "group/legal-nav h-auto w-full justify-start gap-3 px-2 py-2 text-left",
-                "data-[active=true]:bg-primary/10 data-[active=true]:text-foreground data-[active=true]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_24%,transparent)]",
+                "data-[active=true]:bg-primary/10 data-[active=true]:text-foreground data-[active=true]:shadow-[inset_0_0_0_1px_color-mix(in_oklab,var(--primary)_24%,transparent)]"
               )}
               render={<Link href={page.href} />}
             >
               <page.icon
                 className={cn(
                   "text-muted-foreground size-4 shrink-0",
-                  active && "text-primary",
+                  active && "text-primary"
                 )}
               />
               <span className="min-w-0">
@@ -53,7 +53,7 @@ export function LegalNav() {
                 <span
                   className={cn(
                     "text-muted-foreground line-clamp-2 text-xs font-normal text-wrap break-words",
-                    active && "text-foreground/70",
+                    active && "text-foreground/70"
                   )}
                 >
                   {page.description}
@@ -65,4 +65,4 @@ export function LegalNav() {
       </CardContent>
     </Card>
   );
-}
+};

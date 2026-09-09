@@ -29,7 +29,11 @@ export type RetaToMatchItem = {
  * submitted — the form loads the data so details can be adjusted first. Con 3+
  * equipos hay un botón por duelo posible, porque un partido siempre es de dos.
  */
-export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
+export const RetaToMatchList = ({
+  retas,
+}: {
+  readonly retas: RetaToMatchItem[];
+}) => {
   const router = useRouter();
   const setPrefill = useSetAtom(matchPrefillAtom);
 
@@ -43,14 +47,19 @@ export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
       teamAKey: aKey,
       teamBKey: bKey,
       // Solo los dos equipos que juegan; su letra se traduce a lado A/B.
-      scorers: reta.players
-        .filter((p) => p.team === aKey || p.team === bKey)
-        .map((p) => ({
-          playerId: p.playerId,
-          guestName: p.playerId == null ? (p.guestName ?? p.name) : undefined,
-          team: p.team === aKey ? ("A" as const) : ("B" as const),
-          goals: 0,
-        })),
+      scorers: reta.players.flatMap((p) => {
+        if (p.team !== aKey && p.team !== bKey) {
+          return [];
+        }
+        return [
+          {
+            playerId: p.playerId,
+            guestName: p.playerId == null ? (p.guestName ?? p.name) : undefined,
+            team: p.team === aKey ? ("A" as const) : ("B" as const),
+            goals: 0,
+          },
+        ];
+      }),
     });
     router.push("/matches");
   }
@@ -83,7 +92,7 @@ export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
               className="group hover:bg-muted/60 flex flex-col gap-3 rounded-2xl p-3 transition-colors sm:flex-row sm:items-center sm:gap-4"
             >
               <div className="min-w-0 flex-1">
-                <p className="text-muted-foreground mb-1 text-center text-[10px] font-semibold tracking-wider uppercase tabular-nums sm:text-left">
+                <p className="text-muted-foreground mb-1 text-center text-xs font-semibold tracking-wider uppercase tabular-nums sm:text-left">
                   {reta.dateLabel} · {reta.teams.length} equipos ·{" "}
                   {reta.players.length} jugadores
                 </p>
@@ -91,7 +100,7 @@ export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
                   {reta.teams.map((team, i) => (
                     <span key={team.key} className="flex items-center gap-2">
                       {i > 0 && (
-                        <span className="text-muted-foreground font-display text-[11px] font-bold">
+                        <span className="text-muted-foreground font-display text-xs font-bold">
                           VS
                         </span>
                       )}
@@ -129,4 +138,4 @@ export function RetaToMatchList({ retas }: { retas: RetaToMatchItem[] }) {
       </CardContent>
     </Card>
   );
-}
+};

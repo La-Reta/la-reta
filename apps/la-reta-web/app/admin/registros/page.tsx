@@ -10,7 +10,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "Solicitudes de jugadores · Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminSignupsPage() {
+const AdminSignupsPage = async () => {
   if (!(await isAdmin())) return <AdminLogin />;
 
   const signups = await getPlayerSignups();
@@ -37,4 +37,6 @@ export default async function AdminSignupsPage() {
       <AdminSignups signups={signups} />
     </div>
   );
-}
+};
+
+export default AdminSignupsPage;

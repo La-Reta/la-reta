@@ -40,21 +40,41 @@ export const RetaCountdownBanner = () => {
 
   const [, setTick] = React.useState(0);
 
+  /*
+   * El timer se reencola a sí mismo, así que el análisis estático no puede
+   * demostrar que la limpieza lo alcanza. Sí lo hace: `cancelled` corta el
+   * reencolado y `clearTimeout` cancela el que estuviera pendiente, que es
+   * siempre como mucho uno.
+   */
+  // eslint-disable-next-line react-doctor/effect-needs-cleanup -- limpieza verificada a mano, ver comentario
   React.useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
+    // eslint-disable-next-line react-hooks/set-state-in-effect -- marca el montaje, no hay valor externo que leer
     setMounted(true);
-    let timer: ReturnType<typeof setTimeout>;
+    let timer: ReturnType<typeof setTimeout> | undefined;
+    // `cancelled` no es ceremonia: el timer se reencola a sí mismo, así que si
+    // el callback entra mientras se desmonta, `schedule()` dejaría uno nuevo
+    // vivo DESPUÉS de que la limpieza cancelara el anterior.
+    let cancelled = false;
     // Re-evalúa la ventana solo en cada medianoche local (no hay polling).
     const schedule = () => {
+      if (cancelled) {
+        return;
+      }
       const now = new Date();
-      const next = midnight(new Date(now.getTime() + DAY_MS)).getTime() + 1000;
+      const tomorrow = new Date(now.getTime() + DAY_MS);
+      const next = midnight(tomorrow).getTime() + 1000;
       timer = setTimeout(() => {
         setTick((t) => t + 1);
         schedule();
       }, next - now.getTime());
     };
     schedule();
-    return () => clearTimeout(timer);
+    return () => {
+      cancelled = true;
+      if (timer !== undefined) {
+        clearTimeout(timer);
+      }
+    };
   }, []);
 
   if (!mounted) return null; // evita mismatch SSR y costo cero fuera de la ventana

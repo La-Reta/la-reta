@@ -10,7 +10,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "Reportes · Admin" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminReportsPage() {
+const AdminReportsPage = async () => {
   if (!(await isAdmin())) return <AdminLogin />;
 
   const reports = await getReports();
@@ -28,4 +28,6 @@ export default async function AdminReportsPage() {
       <AdminReports reports={reports} />
     </div>
   );
-}
+};
+
+export default AdminReportsPage;

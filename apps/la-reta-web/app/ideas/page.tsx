@@ -14,7 +14,7 @@ import type { ReactNode } from "react";
 export const metadata: Metadata = { title: "Ideas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function IdeasPage() {
+const IdeasPage = async () => {
   const [ideas, admin] = await Promise.all([getIdeas(), isAdmin()]);
 
   // Aprovechamos el estado que ya guardamos: lo abierto queda a la vista y lo
@@ -22,7 +22,7 @@ export default async function IdeasPage() {
   const done = ideas.filter((i) => i.status === "hecha");
   const discarded = ideas.filter((i) => i.status === "descartada");
   const pending = ideas.filter(
-    (i) => i.status !== "hecha" && i.status !== "descartada",
+    (i) => i.status !== "hecha" && i.status !== "descartada"
   );
 
   return (
@@ -32,9 +32,7 @@ export default async function IdeasPage() {
           title="Ideas de la reta"
           description="¿Tienes una propuesta para mejorar la reta? Déjala aquí. El equipo la revisa y le asigna prioridad."
           actions={
-            <DialogTrigger
-              render={<Button type="button" variant={"default"} />}
-            >
+            <DialogTrigger render={<Button type="button" variant="default" />}>
               <LightbulbIcon />
               Crear nueva idea
             </DialogTrigger>
@@ -84,9 +82,9 @@ export default async function IdeasPage() {
       )}
     </div>
   );
-}
+};
 
-function EmptyNote({ children }: { children: ReactNode }) {
+const EmptyNote = ({ children }: { readonly children: ReactNode }) => {
   return (
     <Card size="sm">
       <CardContent className="py-6 text-center">
@@ -94,4 +92,6 @@ function EmptyNote({ children }: { children: ReactNode }) {
       </CardContent>
     </Card>
   );
-}
+};
+
+export default IdeasPage;

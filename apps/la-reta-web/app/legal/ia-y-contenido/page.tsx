@@ -26,7 +26,7 @@ const aiLimits = [
   "Cuando se genere contenido sobre una persona, debe poder corregirse, ocultarse o eliminarse si la persona afectada lo solicita razonablemente.",
 ];
 
-export default function AiAndContentPage() {
+const AiAndContentPage = () => {
   return (
     <LegalShell
       eyebrow="IA y contenido"
@@ -87,4 +87,6 @@ export default function AiAndContentPage() {
       </LegalSection>
     </LegalShell>
   );
-}
+};
+
+export default AiAndContentPage;

@@ -3,7 +3,11 @@
 import { cookies } from "next/headers";
 import { ADMIN_COOKIE, adminPin, LIVE_COOKIE, livePin } from "@/lib/admin";
 
-export async function loginAdmin(pin: string) {
+/**
+ * El PIN llega del formulario, o sea del cliente: el tipo lo declara opcional
+ * porque en ejecución puede no venir, y la guarda `?.` de abajo sí hace falta.
+ */
+export async function loginAdmin(pin?: string) {
   if (pin?.trim() !== adminPin()) {
     return { ok: false as const, error: "PIN incorrecto." };
   }
@@ -23,7 +27,10 @@ export async function logoutAdmin() {
   return { ok: true as const };
 }
 
-export async function unlockLive(pin: string) {
+/**
+ * Igual que `loginAdmin`: lo que llega es lo que el cliente haya mandado.
+ */
+export async function unlockLive(pin?: string) {
   if (pin?.trim() !== livePin()) {
     return { ok: false as const, error: "Contraseña incorrecta." };
   }

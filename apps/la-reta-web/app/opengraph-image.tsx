@@ -130,7 +130,7 @@ export default function OpengraphImage() {
               >
                 {label}
               </div>
-            ),
+            )
           )}
         </div>
       </div>
@@ -215,6 +215,6 @@ export default function OpengraphImage() {
         </div>
       </div>
     </div>,
-    { ...size },
+    { ...size }
   );
 }

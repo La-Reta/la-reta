@@ -17,19 +17,24 @@ import { HandIcon } from "lucide-react";
 import React from "react";
 
 /** Manually assign the turn to someone who volunteers, from the current pool. */
-export function ManualAssign({
+export const ManualAssign = ({
   wheel,
   assignments,
 }: {
-  wheel: Pick<CasacaWheel, "canManage" | "spinning" | "pool" | "assignManual">;
-  assignments: CasacaAssignmentRow[];
-}) {
+  readonly wheel: Pick<
+    CasacaWheel,
+    "canManage" | "spinning" | "pool" | "assignManual"
+  >;
+  readonly assignments: CasacaAssignmentRow[];
+}) => {
   const [id, setId] = React.useState("");
 
   const daysUntil = useGetMatchDaysUntil();
 
-  if (!wheel.canManage || wheel.pool.length === 0) return null;
-
+  // El hook va ANTES de la salida temprana: llamarlo después lo dejaba fuera
+  // del render en cuanto el panel se ocultaba, y React exige el mismo orden de
+  // hooks en cada render. Con la plantilla vacía el hook trabaja sobre una lista
+  // vacía, que es barato.
   const { isToday, hasAlreadyAssignedToday, todaysAssignedIds, availablePool } =
     useAssignmentState({
       assignments,
@@ -37,13 +42,17 @@ export function ManualAssign({
       daysUntil,
     });
 
+  if (!wheel.canManage || wheel.pool.length === 0) {
+    return null;
+  }
+
   const hasntSelectedValue = !id || wheel.spinning;
   const selectedPersonAlreadyAssignedToday =
     id && todaysAssignedIds.has(Number(id));
 
   const disabledForm = !isToday || wheel.spinning || hasAlreadyAssignedToday;
   const disabledButton = Boolean(
-    hasntSelectedValue || wheel.spinning || selectedPersonAlreadyAssignedToday,
+    hasntSelectedValue || wheel.spinning || selectedPersonAlreadyAssignedToday
   );
 
   return (
@@ -59,11 +68,11 @@ export function ManualAssign({
         </p>
       )}
 
-      {hasAlreadyAssignedToday && isToday && (
+      {hasAlreadyAssignedToday && isToday ? (
         <p className="text-muted-foreground mb-3 text-sm">
           Ya se asignó casacas hoy. Próximo: mañana.
         </p>
-      )}
+      ) : null}
 
       <div className="flex flex-wrap items-center gap-2">
         <Select
@@ -121,4 +130,4 @@ export function ManualAssign({
       </div>
     </div>
   );
-}
+};

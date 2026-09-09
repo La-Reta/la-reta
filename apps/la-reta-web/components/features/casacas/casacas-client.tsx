@@ -14,8 +14,9 @@ import { useCasacaWheel } from "@/hooks/use-casaca-wheel";
 import type { Player } from "@/lib/db/schema";
 import type { CasacaAssignmentRow } from "@/lib/queries";
 import { ShirtIcon } from "lucide-react";
+import Link from "next/link";
 
-function EmptyPool() {
+const EmptyPool = () => {
   return (
     <Empty>
       <EmptyHeader>
@@ -25,36 +26,38 @@ function EmptyPool() {
         <EmptyTitle>No hay jugadores</EmptyTitle>
         <EmptyDescription>
           Selecciona a los que jugaron en{" "}
-          <a href="/teams" className="underline">
+          <Link href="/teams" className="underline">
             Armar equipos
-          </a>{" "}
+          </Link>{" "}
           o registra jugadores para girar la ruleta.
         </EmptyDescription>
       </EmptyHeader>
     </Empty>
   );
-}
+};
 
-export function CasacasClient({
+export const CasacasClient = ({
   players,
   assignments,
   canManage,
   admin = false,
 }: {
-  players: Player[];
-  assignments: CasacaAssignmentRow[];
-  canManage: boolean;
-  admin?: boolean;
-}) {
+  readonly players: Player[];
+  readonly assignments: CasacaAssignmentRow[];
+  readonly canManage: boolean;
+  readonly admin?: boolean;
+}) => {
   const wheel = useCasacaWheel({ players, assignments, canManage });
 
   if (wheel.pool.length === 0) return <EmptyPool />;
+
+  const handleWinnerClose = wheel.dismissWinner;
 
   return (
     <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
       <WheelPanel wheel={wheel} assignments={assignments} />
       <CasacaHistory assignments={assignments} admin={admin} />
-      <WinnerDialog winner={wheel.winner} onClose={wheel.dismissWinner} />
+      <WinnerDialog winner={wheel.winner} onClose={handleWinnerClose} />
     </div>
   );
-}
+};

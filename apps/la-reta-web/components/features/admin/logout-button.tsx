@@ -6,7 +6,7 @@ import { LogOutIcon } from "lucide-react";
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 
-export function LogoutButton() {
+export const LogoutButton = () => {
   const router = useRouter();
   const [pending, startTransition] = useTransition();
 
@@ -25,4 +25,4 @@ export function LogoutButton() {
       Salir
     </Button>
   );
-}
+};

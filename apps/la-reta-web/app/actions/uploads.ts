@@ -4,10 +4,16 @@ import { put } from "@vercel/blob";
 import { auth } from "@clerk/nextjs/server";
 import { isAdmin } from "@/lib/admin";
 import { toWebp, webpName } from "@/lib/images";
+import { errorMessage } from "@/lib/errors";
 
 type Result = { ok: true; url: string } | { ok: false; error: string };
 
-const MAX_BYTES = 6 * 1024 * 1024; // 6 MB — foto de celular cabe de sobra.
+/**
+
+ * 6 MB — una foto de celular cabe de sobra.
+
+ */
+const MAX_BYTES = 6 * 1024 * 1024;
 
 /**
  * Sube una imagen a Vercel Blob (público) y devuelve la URL para guardar en
@@ -18,16 +24,20 @@ const MAX_BYTES = 6 * 1024 * 1024; // 6 MB — foto de celular cabe de sobra.
  */
 export async function uploadImage(formData: FormData): Promise<Result> {
   const { userId } = await auth();
-  if (!userId && !(await isAdmin()))
+  if (userId === null && !(await isAdmin())) {
     return { ok: false, error: "Inicia sesión o entra como admin para subir." };
+  }
 
   const file = formData.get("file");
-  if (!(file instanceof File) || file.size === 0)
+  if (!(file instanceof File) || file.size === 0) {
     return { ok: false, error: "No se recibió ningún archivo." };
-  if (!file.type.startsWith("image/"))
+  }
+  if (!file.type.startsWith("image/")) {
     return { ok: false, error: "Solo se permiten imágenes." };
-  if (file.size > MAX_BYTES)
+  }
+  if (file.size > MAX_BYTES) {
     return { ok: false, error: "La imagen supera los 6 MB." };
+  }
 
   try {
     const image = await toWebp(await file.arrayBuffer());
@@ -38,7 +48,7 @@ export async function uploadImage(formData: FormData): Promise<Result> {
       contentType: image.contentType,
     });
     return { ok: true, url: blob.url };
-  } catch (err) {
-    return { ok: false, error: (err as Error).message };
+  } catch (error) {
+    return { ok: false, error: errorMessage(error) };
   }
 }

@@ -8,18 +8,23 @@ import {
   IDEA_CATEGORIES,
   IDEA_STATUSES,
   IDEA_PRIORITIES,
-  type IdeaCategory,
-  type IdeaStatus,
-  type IdeaPriority,
 } from "@/lib/constants";
+import { optionalText, safeText } from "@/lib/text";
+import { inList } from "@/lib/guards";
 
 type Result = { ok: true; id?: number } | { ok: false; error: string };
 
-export type IdeaInput = {
-  title: string;
-  description: string;
-  author: string;
-  category: string;
+/**
+ * Lo que llega del cliente. Los campos van opcionales aunque el formulario
+ * siempre los mande: esto es una frontera y el cliente es manipulable.
+ * Declarándolos obligatorios, TypeScript daba por muertas las guardas `?.` que
+ * en ejecución sí hacen falta.
+ */
+export interface IdeaInput {
+  title?: string;
+  description?: string;
+  author?: string;
+  category?: string;
   client?: {
     language?: string;
     timezone?: string;
@@ -27,16 +32,24 @@ export type IdeaInput = {
     platform?: string;
     userAgent?: string;
   };
-};
+}
+
+const IDEAS_PATH = "/ideas";
+const ADMIN_IDEAS_PATH = "/admin/ideas";
+const NOT_AUTHORIZED = "No autorizado.";
 
 export async function createIdea(input: IdeaInput): Promise<Result> {
-  const title = input.title?.trim();
-  const description = input.description?.trim();
-  if (!title) return { ok: false, error: "El título es obligatorio." };
-  if (!description) return { ok: false, error: "Describe tu idea." };
+  const title = optionalText(input.title);
+  if (title === null) {
+    return { ok: false, error: "El título es obligatorio." };
+  }
+  const description = optionalText(input.description);
+  if (description === null) {
+    return { ok: false, error: "Describe tu idea." };
+  }
 
-  const category = IDEA_CATEGORIES.includes(input.category as IdeaCategory)
-    ? (input.category as IdeaCategory)
+  const category = inList(IDEA_CATEGORIES, input.category)
+    ? input.category
     : "otro";
 
   const [row] = await db
@@ -44,79 +57,81 @@ export async function createIdea(input: IdeaInput): Promise<Result> {
     .values({
       title: title.slice(0, 140),
       description,
-      author: input.author?.trim() || null,
+      author: optionalText(input.author),
       category,
-      language: input.client?.language?.slice(0, 24) || null,
-      timezone: input.client?.timezone?.slice(0, 64) || null,
-      screen: input.client?.screen?.slice(0, 24) || null,
-      platform: input.client?.platform?.slice(0, 80) || null,
-      userAgent: input.client?.userAgent || null,
+      language: safeText(input.client?.language, 24),
+      timezone: safeText(input.client?.timezone, 64),
+      screen: safeText(input.client?.screen, 24),
+      platform: safeText(input.client?.platform, 80),
+      userAgent: optionalText(input.client?.userAgent),
     })
     .returning({ id: ideas.id });
 
-  revalidatePath("/ideas");
-  revalidatePath("/admin/ideas");
+  revalidatePath(IDEAS_PATH);
+  revalidatePath(ADMIN_IDEAS_PATH);
   return { ok: true, id: row.id };
 }
 
-export type IdeaTriage = {
+export interface IdeaTriage {
   status: string;
   priority: string;
   estimate: string;
   adminNotes: string;
-};
+}
 
 export async function updateIdeaTriage(
   id: number,
-  t: IdeaTriage,
+  t: IdeaTriage
 ): Promise<Result> {
-  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+  if (!(await isAdmin())) {
+    return { ok: false, error: NOT_AUTHORIZED };
+  }
 
-  const status = IDEA_STATUSES.includes(t.status as IdeaStatus)
-    ? (t.status as IdeaStatus)
-    : "nueva";
-  const priority = IDEA_PRIORITIES.includes(t.priority as IdeaPriority)
-    ? (t.priority as IdeaPriority)
-    : null;
+  const status = inList(IDEA_STATUSES, t.status) ? t.status : "nueva";
+  const priority = inList(IDEA_PRIORITIES, t.priority) ? t.priority : null;
 
   await db
     .update(ideas)
     .set({
       status,
       priority,
-      estimate: t.estimate?.trim() || null,
-      adminNotes: t.adminNotes?.trim() || null,
+      estimate: optionalText(t.estimate),
+      adminNotes: optionalText(t.adminNotes),
       updatedAt: new Date(),
     })
     .where(eq(ideas.id, id));
 
-  revalidatePath("/ideas");
-  revalidatePath("/admin/ideas");
+  revalidatePath(IDEAS_PATH);
+  revalidatePath(ADMIN_IDEAS_PATH);
   return { ok: true, id };
 }
 
-/** Quick status change (e.g. mark an idea as done) without the full triage form. */
+/**
+Quick status change (e.g. mark an idea as done) without the full triage form.
+*/
 export async function setIdeaStatus(
   id: number,
-  status: string,
+  status: string
 ): Promise<Result> {
-  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
-  const next = IDEA_STATUSES.includes(status as IdeaStatus)
-    ? (status as IdeaStatus)
-    : "nueva";
+  if (!(await isAdmin())) {
+    return { ok: false, error: NOT_AUTHORIZED };
+  }
+  const next = inList(IDEA_STATUSES, status) ? status : "nueva";
   await db
     .update(ideas)
     .set({ status: next, updatedAt: new Date() })
     .where(eq(ideas.id, id));
-  revalidatePath("/ideas");
-  revalidatePath("/admin/ideas");
+  revalidatePath(IDEAS_PATH);
+  revalidatePath(ADMIN_IDEAS_PATH);
   return { ok: true, id };
 }
 
 export async function deleteIdea(id: number): Promise<Result> {
-  if (!(await isAdmin())) return { ok: false, error: "No autorizado." };
+  if (!(await isAdmin())) {
+    return { ok: false, error: NOT_AUTHORIZED };
+  }
   await db.delete(ideas).where(eq(ideas.id, id));
-  revalidatePath("/ideas");
-  revalidatePath("/admin/ideas");
+  revalidatePath(IDEAS_PATH);
+  revalidatePath(ADMIN_IDEAS_PATH);
   return { ok: true, id };
 }

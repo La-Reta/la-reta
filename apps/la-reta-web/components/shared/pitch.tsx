@@ -18,18 +18,29 @@ const LINE = "rgba(255,255,255,0.7)";
  * server. Pass `highlight` to emphasize one player's positions, or `counts` to
  * show how many players cover each spot.
  */
-export function Pitch({
+export const Pitch = ({
   highlight,
   counts,
   className,
+  markers = true,
 }: {
-  highlight?: Position[];
-  counts?: Partial<Record<Position, number>>;
-  className?: string;
-}) {
+  readonly highlight?: Position[];
+  readonly counts?: Partial<Record<Position, number>>;
+  readonly className?: string;
+  /**
+   * Los marcadores dibujados dentro del SVG. El mapa interactivo de
+   * `/positions` los pone él mismo en HTML —botones de verdad, con foco y con
+   * estado— y de aquí pide solo el campo.
+   */
+  readonly markers?: boolean;
+}) => {
   const hi = highlight ? new Set(highlight) : null;
 
   return (
+    // `<svg role="img" aria-label>` es el patrón accesible de un gráfico
+    // vectorial: la alternativa que propone la regla, `<img alt>`, obligaría a
+    // rasterizar la cancha y perder el escalado.
+    // eslint-disable-next-line jsx-a11y/prefer-tag-over-role -- SVG accesible, no un <img>
     <svg
       viewBox={`0 0 ${W} ${H}`}
       className={cn("h-auto w-full select-none", className)}
@@ -37,7 +48,11 @@ export function Pitch({
       aria-label="Cancha de fútbol con las posiciones"
     >
       {/* Grass + mowing stripes */}
-      <rect width={W} height={H} className="fill-[#1f8b4a] dark:fill-[#12613a]" />
+      <rect
+        width={W}
+        height={H}
+        className="fill-[#1f8b4a] dark:fill-[#12613a]"
+      />
       {Array.from({ length: 10 }).map((_, i) =>
         i % 2 === 0 ? (
           <rect
@@ -48,7 +63,7 @@ export function Pitch({
             height={H}
             fill="rgba(255,255,255,0.04)"
           />
-        ) : null,
+        ) : null
       )}
 
       {/* Outer lines + halfway */}
@@ -77,55 +92,57 @@ export function Pitch({
       </g>
 
       {/* Position markers */}
-      {POSITIONS.map((pos) => {
-        const { x, y } = POSITION_COORDS[pos];
-        const cx = (x / 100) * W;
-        const cy = (y / 100) * H;
-        const group = positionGroup(pos);
-        const active = !hi || hi.has(pos);
-        const count = counts?.[pos] ?? 0;
+      {markers
+        ? POSITIONS.map((pos) => {
+            const { x, y } = POSITION_COORDS[pos];
+            const cx = (x / 100) * W;
+            const cy = (y / 100) * H;
+            const group = positionGroup(pos);
+            const active = !hi || hi.has(pos);
+            const count = counts?.[pos] ?? 0;
 
-        return (
-          <g key={pos} opacity={active ? 1 : 0.3}>
-            <title>{`${pos} — ${POSITION_NAME[pos]}`}</title>
-            <circle
-              cx={cx}
-              cy={cy}
-              r={30}
-              fill={GROUP_COLOR[group]}
-              stroke="white"
-              strokeWidth={hi?.has(pos) ? 5 : 2}
-            />
-            <text
-              x={cx}
-              y={cy}
-              textAnchor="middle"
-              dominantBaseline="central"
-              fontSize={22}
-              fontWeight={800}
-              fill="white"
-            >
-              {pos}
-            </text>
-            {counts && count > 0 ? (
-              <>
-                <circle cx={cx + 24} cy={cy - 24} r={14} fill="white" />
+            return (
+              <g key={pos} opacity={active ? 1 : 0.3}>
+                <title>{`${pos} — ${POSITION_NAME[pos]}`}</title>
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={30}
+                  fill={GROUP_COLOR[group]}
+                  stroke="white"
+                  strokeWidth={hi?.has(pos) ? 5 : 2}
+                />
                 <text
-                  x={cx + 24}
-                  y={cy - 24}
+                  x={cx}
+                  y={cy}
                   textAnchor="middle"
                   dominantBaseline="central"
-                  fontSize={18}
+                  fontSize={22}
                   fontWeight={800}
-                  fill={GROUP_COLOR[group]}
+                  fill="white"
                 >
-                  {count}
+                  {pos}
                 </text>
-              </>
-            ) : null}
-          </g>
-        );
-      })}
+                {counts && count > 0 ? (
+                  <>
+                    <circle cx={cx + 24} cy={cy - 24} r={14} fill="white" />
+                    <text
+                      x={cx + 24}
+                      y={cy - 24}
+                      textAnchor="middle"
+                      dominantBaseline="central"
+                      fontSize={18}
+                      fontWeight={800}
+                      fill={GROUP_COLOR[group]}
+                    >
+                      {count}
+                    </text>
+                  </>
+                ) : null}
+              </g>
+            );
+          })
+        : null}
     </svg>
   );
-}
+};

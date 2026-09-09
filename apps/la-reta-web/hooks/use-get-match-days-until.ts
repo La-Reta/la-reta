@@ -1,8 +1,8 @@
+import { useCallback } from "react";
 import { computeReta } from "@/lib/functions/compute-reta";
-import React from "react";
 
 export function useGetMatchDaysUntil() {
-  return React.useCallback(() => {
+  return useCallback(() => {
     const { daysUntil } = computeReta(new Date());
     return daysUntil;
   }, []);

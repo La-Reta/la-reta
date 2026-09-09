@@ -9,6 +9,7 @@ import type { Foot, SignupStatus } from "@/lib/constants";
 import { isAdmin } from "@/lib/admin";
 import { FEET, POSITIONS, SIGNUP_STATUSES } from "@/lib/constants";
 import { db, playerSignups } from "@/lib/db";
+import { safeText } from "@/lib/text";
 
 type Result = { ok: true; id?: number } | { ok: false; error: string };
 
@@ -24,10 +25,16 @@ export interface SignupClientInfo {
   userAgent?: string;
 }
 
+/**
+ * Lo que llega del cliente. Los campos van opcionales aunque el formulario
+ * siempre los mande: esto es una frontera y el cliente es manipulable.
+ * Declarándolos obligatorios, TypeScript daba por muertas las guardas `?.` que
+ * en ejecución sí hacen falta.
+ */
 export interface PlayerSignupInput {
-  name: string;
+  name?: string;
   displayName?: string;
-  position: string;
+  position?: string;
   position2?: string;
   preferredFoot?: string;
   nationality?: string;
@@ -59,16 +66,6 @@ Rutas que se revalidan al tocar la cola de solicitudes.
 */
 const ADMIN_PATH = "/admin/registros";
 const PLAYERS_PATH = "/players";
-
-/**
-Recorta y acota; vacío cuenta como ausente, que es lo que guarda la tabla.
-*/
-function safeText(value: string | null | undefined, maxLength: number) {
-  const clean = value?.trim();
-  return clean === undefined || clean.length === 0
-    ? null
-    : clean.slice(0, maxLength);
-}
 
 async function collectRequestInfo() {
   const headerStore = await headers();
@@ -119,7 +116,7 @@ export async function createPlayerSignup(
 ): Promise<Result> {
   // La misma regla que aplica la app mientras se escribe. Aquí no es cortesía:
   // el cliente es sugerencia, esto es la puerta.
-  const name = cleanPersonName(input.name);
+  const name = cleanPersonName(input.name ?? "");
   const nameError = personNameError(name);
   if (nameError !== null) {
     return { ok: false, error: nameError };

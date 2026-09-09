@@ -47,13 +47,13 @@ const LINES: PositionGroup[] = ["FWD", "MID", "DEF", "GK"];
  * overall arriba como titular, el resto colgando debajo — y, sobre todo, qué
  * posiciones están descubiertas.
  */
-export function DepthChart({
+export const DepthChart = ({
   byPosition,
 }: {
-  byPosition: Record<Position, Player[]>;
-}) {
+  readonly byPosition: Record<Position, Player[]>;
+}) => {
   const squad = new Set(
-    POSITIONS.flatMap((p) => byPosition[p].map((x) => x.id)),
+    POSITIONS.flatMap((p) => byPosition[p].map((x) => x.id))
   );
   const uncovered = POSITIONS.filter((p) => byPosition[p].length === 0).length;
 
@@ -71,7 +71,7 @@ export function DepthChart({
           <span
             className={cn(
               "font-mono font-bold tabular-nums",
-              uncovered > 0 && "text-foreground",
+              uncovered > 0 && "text-foreground"
             )}
           >
             {uncovered}
@@ -81,7 +81,7 @@ export function DepthChart({
       </header>
 
       {/* Encabezado de carriles: una vez, no repetido por línea. */}
-      <div className="text-muted-foreground hidden grid-cols-3 gap-x-6 border-b px-5 py-1.5 text-[10px] tracking-[0.2em] uppercase md:grid">
+      <div className="text-muted-foreground hidden grid-cols-3 gap-x-6 border-b px-5 py-1.5 text-xs tracking-[0.2em] uppercase md:grid">
         {LANES.map((lane) => (
           <span key={lane}>{LANE_LABEL[lane]}</span>
         ))}
@@ -92,7 +92,7 @@ export function DepthChart({
           const color = GROUP_COLOR[line];
           const inLine = POSITIONS.filter((p) => positionGroup(p) === line);
           const count = new Set(
-            inLine.flatMap((p) => byPosition[p].map((x) => x.id)),
+            inLine.flatMap((p) => byPosition[p].map((x) => x.id))
           ).size;
 
           return (
@@ -142,20 +142,20 @@ export function DepthChart({
       </div>
     </section>
   );
-}
+};
 
 /** Una posición y su fondo: titular arriba, suplentes colgando. */
-function Slot({
+const Slot = ({
   position,
   players,
   color,
 }: {
-  position: Position;
-  players: Player[];
-  color: string;
-}) {
+  readonly position: Position;
+  readonly players: Player[];
+  readonly color: string;
+}) => {
   // El cuadro de profundidad se lee de arriba abajo: primero quien más rinde.
-  const depth = [...players].sort((a, b) => b.overall - a.overall);
+  const depth = players.toSorted((a, b) => b.overall - a.overall);
   const empty = depth.length === 0;
 
   return (
@@ -175,7 +175,7 @@ function Slot({
         <span
           className={cn(
             "font-display text-2xl leading-none font-bold tracking-tight",
-            empty ? "text-muted-foreground/40" : "text-[var(--pos)]",
+            empty ? "text-muted-foreground/40" : "text-[var(--pos)]"
           )}
         >
           {position}
@@ -186,7 +186,7 @@ function Slot({
             "mb-1 h-px flex-1",
             empty
               ? "border-muted-foreground/25 border-t border-dashed"
-              : "bg-[var(--pos-soft)]",
+              : "bg-[var(--pos-soft)]"
           )}
         />
       </div>
@@ -194,15 +194,15 @@ function Slot({
           no hay hover y esta página es justamente la referencia de posiciones. */}
       <p
         className={cn(
-          "mt-0.5 truncate text-[10px] tracking-wide",
-          empty ? "text-muted-foreground/50" : "text-muted-foreground",
+          "mt-0.5 truncate text-xs tracking-wide",
+          empty ? "text-muted-foreground/50" : "text-muted-foreground"
         )}
       >
         {POSITION_NAME[position]}
       </p>
 
       {empty ? (
-        <p className="text-muted-foreground/60 mt-1.5 text-[11px] tracking-wide">
+        <p className="text-muted-foreground/60 mt-1.5 text-xs tracking-wide">
           sin cubrir
         </p>
       ) : (
@@ -218,17 +218,17 @@ function Slot({
                     "group-hover:text-foreground group-focus-visible:text-foreground min-w-0 flex-1 truncate transition-colors",
                     i === 0
                       ? "font-display text-sm font-semibold tracking-wide uppercase"
-                      : "text-muted-foreground text-xs",
+                      : "text-muted-foreground text-xs"
                   )}
                 >
                   {player.displayName}
                 </span>
                 <span
                   className={cn(
-                    "shrink-0 font-mono text-[11px] tabular-nums transition-colors",
+                    "shrink-0 font-mono text-xs tabular-nums transition-colors",
                     i === 0
                       ? "font-bold"
-                      : "text-muted-foreground group-hover:text-foreground group-focus-visible:text-foreground",
+                      : "text-muted-foreground group-hover:text-foreground group-focus-visible:text-foreground"
                   )}
                 >
                   {player.overall}
@@ -240,4 +240,4 @@ function Slot({
       )}
     </div>
   );
-}
+};

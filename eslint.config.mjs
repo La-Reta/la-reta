@@ -80,4 +80,48 @@ export default [
     ],
     rules: { "compat/compat": "off" },
   },
+  // `components/ui/**` son primitivas generadas por shadcn. Tres reglas chocan
+  // con su diseño, y no con un descuido nuestro:
+  //
+  //  - `prefer-tag-over-role`: shadcn usa `role="group"` en Field, InputGroup y
+  //    ButtonGroup. Es ARIA válido; cambiarlo por `<fieldset>` arrastra estilos
+  //    de agente de usuario y rompe la maquetación.
+  //  - `only-export-components`: exportar el componente **y** sus `cva` variants
+  //    (`buttonVariants`, `badgeVariants`) desde el mismo archivo es su API, y
+  //    media app importa de ahí.
+  //  - `react-compiler-no-manual-memoization`: el compilador de React no está
+  //    activado en este proyecto, así que sus `useMemo`/`useCallback` sí hacen
+  //    trabajo. Quitarlos es una regresión de rendimiento, no una limpieza.
+  //
+  // Va acotado aquí y no como `eslint-disable` dentro de los archivos porque
+  // `shadcn add` los reescribe: los comentarios se perderían y volveríamos a
+  // empezar. Lo que sí es un fallo de verdad —a11y real, claves de lista,
+  // `==`— está arreglado en el propio archivo.
+  {
+    files: ["apps/*/components/ui/**"],
+    rules: {
+      "jsx-a11y/prefer-tag-over-role": "off",
+      "react-doctor/only-export-components": "off",
+      "react-doctor/react-compiler-no-manual-memoization": "off",
+      // `react-day-picker` recibe los subcomponentes por la prop `components`:
+      // definirlos ahí es su API, no un descuido.
+      "react/no-unstable-nested-components": "off",
+      // Falso positivo en TypeScript: los tipos ya validan las props.
+      "react/prop-types": "off",
+      // Limitación interna del compilador de React con `String.raw`, no un
+      // problema del código.
+      "react-hooks/todo": "off",
+      // `chart.tsx` inyecta las variables CSS del tema por `style`; es el
+      // mecanismo de shadcn y el contenido no viene de fuera.
+      "react/no-danger": "off",
+      // recharts se importa estático a propósito: los componentes que lo usan
+      // ya son cliente y solo se montan en las vistas que llevan gráfica.
+      "react-doctor/prefer-dynamic-import": "off",
+      // `FieldLabel` y `Label` son envoltorios: el `htmlFor` lo pone quien los
+      // usa, y ahí sí se comprueba. Igual el `<a>` de `PaginationLink`, que
+      // recibe su contenido por la prop `render` del Button.
+      "jsx-a11y/label-has-associated-control": "off",
+      "jsx-a11y/anchor-has-content": "off",
+    },
+  },
 ];

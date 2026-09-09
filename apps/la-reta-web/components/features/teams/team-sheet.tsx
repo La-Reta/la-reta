@@ -2,17 +2,17 @@ import { Badge } from "@/components/ui/badge";
 import { flagEmoji, playerPositions } from "@/lib/format";
 import type { Lineup } from "@/lib/team-balancer";
 
-export function TeamSheet({
+export const TeamSheet = ({
   team,
   color,
   lineups,
   rating,
 }: {
-  team: string;
-  color: string;
-  lineups: Lineup[];
-  rating: number;
-}) {
+  readonly team: string;
+  readonly color: string;
+  readonly lineups: Lineup[];
+  readonly rating: number;
+}) => {
   return (
     <div className="bg-card" style={{ borderTop: `3px solid ${color}` }}>
       <div className="flex items-center justify-between gap-2 px-4 py-3">
@@ -53,11 +53,11 @@ export function TeamSheet({
               <span className="min-w-0 truncate font-medium">
                 {player.name}
               </span>
-              {flexed && (
-                <span className="text-muted-foreground shrink-0 text-[10px]">
+              {flexed ? (
+                <span className="text-muted-foreground shrink-0 text-xs">
                   ({playerPositions(player).join("/")})
                 </span>
-              )}
+              ) : null}
               <span className="ml-auto shrink-0">
                 {flagEmoji(player.nationality)}
               </span>
@@ -67,4 +67,4 @@ export function TeamSheet({
       </ul>
     </div>
   );
-}
+};

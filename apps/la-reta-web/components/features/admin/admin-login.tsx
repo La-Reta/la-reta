@@ -9,7 +9,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function AdminLogin() {
+export const AdminLogin = () => {
   const router = useRouter();
   const [pin, setPin] = React.useState("");
   const [pending, startTransition] = React.useTransition();
@@ -40,8 +40,11 @@ export function AdminLogin() {
         </p>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div>
-            <Label className="mb-1.5 block text-xs">PIN</Label>
+            <Label htmlFor="admin-pin" className="mb-1.5 block text-xs">
+              PIN
+            </Label>
             <Input
+              id="admin-pin"
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
@@ -57,4 +60,4 @@ export function AdminLogin() {
       </div>
     </div>
   );
-}
+};

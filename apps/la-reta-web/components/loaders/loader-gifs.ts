@@ -1,6 +1,6 @@
 import "server-only";
 import { readdirSync } from "node:fs";
-import { join } from "node:path";
+import path from "node:path";
 
 /**
  * All animated loaders dropped in `public/loaders`, as public paths. Read fresh
@@ -10,7 +10,7 @@ import { join } from "node:path";
  */
 export function loaderGifs(): string[] {
   try {
-    return readdirSync(join(process.cwd(), "public", "loaders"))
+    return readdirSync(path.join(process.cwd(), "public", "loaders"))
       .filter((f) => f.toLowerCase().endsWith(".webp"))
       .map((f) => `/loaders/${f}`);
   } catch {

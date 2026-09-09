@@ -5,13 +5,13 @@ import { selectedIdsAtom } from "@/lib/state/atoms";
 import { useAtom } from "jotai";
 import { CheckIcon, PlusIcon } from "lucide-react";
 
-export function SelectForTeamsButton({
+export const SelectForTeamsButton = ({
   id,
   size = "sm",
 }: {
-  id: number;
-  size?: "sm" | "default";
-}) {
+  readonly id: number;
+  readonly size?: "sm" | "default";
+}) => {
   const [selected, setSelected] = useAtom(selectedIdsAtom);
   const isSelected = selected.includes(id);
 
@@ -22,7 +22,7 @@ export function SelectForTeamsButton({
       variant={isSelected ? "secondary" : "outline"}
       onClick={() =>
         setSelected(
-          isSelected ? selected.filter((x) => x !== id) : [...selected, id],
+          isSelected ? selected.filter((x) => x !== id) : [...selected, id]
         )
       }
     >
@@ -30,4 +30,4 @@ export function SelectForTeamsButton({
       {isSelected ? "En la reta" : "Añadir a la reta"}
     </Button>
   );
-}
+};

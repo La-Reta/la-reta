@@ -15,7 +15,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "Admin · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function AdminPage() {
+const AdminPage = async () => {
   if (!(await isAdmin())) return <AdminLogin />;
 
   const [ideas, reports, pendingSignups] = await Promise.all([
@@ -25,7 +25,7 @@ export default async function AdminPage() {
   ]);
   const pending = ideas.filter((i) => i.status === "nueva").length;
   const pendingReports = reports.filter(
-    (report) => report.status === "nuevo",
+    (report) => report.status === "nuevo"
   ).length;
 
   return (
@@ -62,19 +62,19 @@ export default async function AdminPage() {
       </div>
     </div>
   );
-}
+};
 
-function AdminLink({
+const AdminLink = ({
   href,
   icon: Icon,
   title,
   description,
 }: {
-  href: string;
-  icon: React.ComponentType<React.ComponentProps<"svg">>;
-  title: string;
-  description: string;
-}) {
+  readonly href: string;
+  readonly icon: React.ComponentType<React.ComponentProps<"svg">>;
+  readonly title: string;
+  readonly description: string;
+}) => {
   return (
     <Link
       href={href}
@@ -90,4 +90,6 @@ function AdminLink({
       <ArrowRightIcon className="text-muted-foreground size-4" />
     </Link>
   );
-}
+};
+
+export default AdminPage;

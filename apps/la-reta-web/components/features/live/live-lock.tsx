@@ -16,7 +16,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function LiveLock() {
+export const LiveLock = () => {
   const router = useRouter();
   const [pin, setPin] = React.useState("");
   const [pending, startTransition] = React.useTransition();
@@ -50,8 +50,11 @@ export function LiveLock() {
       <CardContent>
         <form onSubmit={onSubmit} className="mt-4 space-y-3">
           <div>
-            <Label className="mb-1.5 block">Contraseña</Label>
+            <Label htmlFor="live-pin" className="mb-1.5 block">
+              Contraseña
+            </Label>
             <Input
+              id="live-pin"
               type="password"
               value={pin}
               onChange={(e) => setPin(e.target.value)}
@@ -67,4 +70,4 @@ export function LiveLock() {
       </CardContent>
     </Card>
   );
-}
+};

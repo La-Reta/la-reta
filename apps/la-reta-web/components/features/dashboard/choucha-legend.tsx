@@ -55,7 +55,7 @@ const FACTS: { icon: typeof StarIcon; text: string }[] = [
  * Dialog body for the Player Legend: the Choucha video on the left (driving the
  * height) and his real internet lore on the right. Drop inside a <Dialog>.
  */
-export function ChouchaLegend() {
+export const ChouchaLegend = () => {
   return (
     <DialogContent
       showCloseButton={false}
@@ -90,7 +90,7 @@ export function ChouchaLegend() {
 
         {/* Info (min-h-0 lets it scroll inside the flex parent) */}
         <div className="flex min-h-0 flex-1 flex-col gap-3 overflow-y-auto p-4 sm:p-6">
-          <span className="font-display inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-[11px] font-semibold tracking-[0.18em] text-amber-500 uppercase ring-1 ring-amber-400/30 dark:text-amber-300">
+          <span className="font-display inline-flex w-fit items-center gap-1.5 rounded-full bg-amber-400/15 px-2.5 py-1 text-xs font-semibold tracking-[0.18em] text-amber-500 uppercase ring-1 ring-amber-400/30 dark:text-amber-300">
             <StarIcon className="size-3.5 fill-amber-400 text-amber-400" />
             El GOAT del fútbol de barrio
           </span>
@@ -128,19 +128,19 @@ export function ChouchaLegend() {
 
           {/* Non-official meme attributes */}
           <div>
-            <p className="text-muted-foreground mb-1.5 text-[11px] font-semibold tracking-[0.14em] uppercase">
+            <p className="text-muted-foreground mb-1.5 text-xs font-semibold tracking-[0.14em] uppercase">
               Atributos (no oficiales 😅)
             </p>
             <div className="grid grid-cols-5 gap-1">
-              {ATTRS.map((a, i) => (
+              {ATTRS.map((a) => (
                 <div
-                  key={`${a.key}-${i}`}
+                  key={a.key}
                   className="bg-muted/50 rounded-md py-1 text-center"
                 >
                   <p className="font-mono text-sm leading-none font-bold tabular-nums">
                     {a.value}
                   </p>
-                  <p className="text-muted-foreground mt-0.5 text-[9px] font-semibold">
+                  <p className="text-muted-foreground mt-0.5 text-xs font-semibold">
                     {a.key}
                   </p>
                 </div>
@@ -150,7 +150,7 @@ export function ChouchaLegend() {
 
           {/* Real internet lore */}
           <div>
-            <p className="text-muted-foreground mb-2 text-[11px] font-semibold tracking-[0.14em] uppercase">
+            <p className="text-muted-foreground mb-2 text-xs font-semibold tracking-[0.14em] uppercase">
               Por qué es leyenda
             </p>
             <ul className="space-y-2">
@@ -166,4 +166,4 @@ export function ChouchaLegend() {
       </div>
     </DialogContent>
   );
-}
+};

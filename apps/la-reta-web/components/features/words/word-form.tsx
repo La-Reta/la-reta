@@ -26,7 +26,7 @@ function collectClient(): ClientInfo {
   };
 }
 
-export function WordForm() {
+export const WordForm = () => {
   const router = useRouter();
   const [word, setWord] = React.useState("");
   const [author, setAuthor] = React.useState("");
@@ -88,10 +88,14 @@ export function WordForm() {
 
       <div className="mx-auto mt-6 flex max-w-md flex-col gap-3 sm:flex-row sm:items-end">
         <div className="flex-1 text-left">
-          <Label className="mb-1.5 block text-xs text-emerald-50/70">
+          <Label
+            htmlFor="word-author"
+            className="mb-1.5 block text-xs text-emerald-50/70"
+          >
             Tu nombre (opcional)
           </Label>
           <Input
+            id="word-author"
             value={author}
             onChange={(e) => setAuthor(e.target.value)}
             placeholder="Anónimo"
@@ -110,4 +114,4 @@ export function WordForm() {
       </div>
     </form>
   );
-}
+};

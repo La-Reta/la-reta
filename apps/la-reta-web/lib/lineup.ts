@@ -1,17 +1,22 @@
-import { positionGroup, type PositionGroup } from "@/lib/constants";
-import { playerPositions } from "@/lib/format";
+import type { PositionGroup } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import { positionGroup } from "@/lib/constants";
+import { playerPositions } from "@/lib/format";
 
-export type LineupSlot = {
+export interface LineupSlot {
   id: string;
-  /** Position label shown on the board, e.g. "CB". */
+  /**
+  Position label shown on the board, e.g. "CB".
+  */
   label: string;
   group: PositionGroup;
-  /** Coordinates as % of the board: x along the length, y across the width. */
+  /**
+  Coordinates as % of the board: x along the length, y across the width.
+  */
   x: number;
   y: number;
   player: Player | null;
-};
+}
 
 // A 4-3-3 — the most legible shape for a quick "once ideal".
 const FORMATION: Omit<LineupSlot, "player">[] = [
@@ -33,17 +38,33 @@ const FORMATION: Omit<LineupSlot, "player">[] = [
  * who can play that line (primary or secondary position); any slot left empty
  * because a line ran short is filled with the best remaining player.
  */
+/**
+ * ¿Este jugador puede ocupar ese hueco?
+ *
+ * A nivel de módulo y no como arrow dentro del bucle:
+ * `consistent-arrow-return-style` y `arrow-body-style` se contradicen sobre un
+ * arrow multilínea, `no-function-declaration-in-block` prohíbe declararla
+ * dentro, y el autofix llegó a dejar aquí la sintaxis rota tres veces. Fuera no
+ * hay nada que recolocar.
+ */
+function canPlayHere(
+  player: Player,
+  used: Set<number>,
+  group: PositionGroup
+): boolean {
+  return (
+    !used.has(player.id) &&
+    playerPositions(player).some((pos) => positionGroup(pos) === group)
+  );
+}
+
 export function bestEleven(players: Player[]): LineupSlot[] {
-  const pool = [...players].sort((a, b) => b.overall - a.overall);
+  const pool = players.toSorted((a, b) => b.overall - a.overall);
   const used = new Set<number>();
   const slots: LineupSlot[] = FORMATION.map((s) => ({ ...s, player: null }));
 
   for (const slot of slots) {
-    const pick = pool.find(
-      (p) =>
-        !used.has(p.id) &&
-        playerPositions(p).some((pos) => positionGroup(pos) === slot.group),
-    );
+    const pick = pool.find((p) => canPlayHere(p, used, slot.group));
     if (pick) {
       slot.player = pick;
       used.add(pick.id);
@@ -51,7 +72,9 @@ export function bestEleven(players: Player[]): LineupSlot[] {
   }
 
   for (const slot of slots) {
-    if (slot.player) continue;
+    if (slot.player) {
+      continue;
+    }
     const pick = pool.find((p) => !used.has(p.id));
     if (pick) {
       slot.player = pick;

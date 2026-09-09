@@ -28,13 +28,13 @@ import { cn } from "@/lib/utils";
 export type IdeaListItem = Awaited<ReturnType<typeof getIdeas>>[number];
 
 /** Responsive list of ideas: stacked cards on mobile, a table on desktop. */
-export function IdeasView({
+export const IdeasView = ({
   ideas,
   admin,
 }: {
-  ideas: IdeaListItem[];
-  admin: boolean;
-}) {
+  readonly ideas: IdeaListItem[];
+  readonly admin: boolean;
+}) => {
   return (
     <>
       <div className="grid gap-3 lg:hidden">
@@ -112,9 +112,15 @@ export function IdeasView({
       </div>
     </>
   );
-}
+};
 
-function IdeaCard({ idea, admin }: { idea: IdeaListItem; admin: boolean }) {
+const IdeaCard = ({
+  idea,
+  admin,
+}: {
+  readonly idea: IdeaListItem;
+  readonly admin: boolean;
+}) => {
   return (
     <Card size="sm">
       <CardHeader className="border-b">
@@ -164,26 +170,32 @@ function IdeaCard({ idea, admin }: { idea: IdeaListItem; admin: boolean }) {
       </CardContent>
     </Card>
   );
-}
+};
 
-function InfoItem({ label, value }: { label: string; value: string }) {
+const InfoItem = ({
+  label,
+  value,
+}: {
+  readonly label: string;
+  readonly value: string;
+}) => {
   return (
     <div className="min-w-0">
       <dt className="text-muted-foreground">{label}</dt>
       <dd className="truncate font-medium">{value}</dd>
     </div>
   );
-}
+};
 
-function ClientPills({
+const ClientPills = ({
   language,
   timezone,
   screen,
 }: {
-  language: string | null;
-  timezone: string | null;
-  screen: string | null;
-}) {
+  readonly language: string | null;
+  readonly timezone: string | null;
+  readonly screen: string | null;
+}) => {
   const items = [language, timezone, screen].filter(Boolean);
 
   if (items.length === 0) {
@@ -199,23 +211,23 @@ function ClientPills({
       ))}
     </div>
   );
-}
+};
 
-function Pill({
+const Pill = ({
   className,
   children,
 }: {
-  className?: string;
-  children: React.ReactNode;
-}) {
+  readonly className?: string;
+  readonly children: React.ReactNode;
+}) => {
   return (
     <span
       className={cn(
         "inline-flex max-w-full rounded-sm px-1.5 py-0.5 text-[11px] font-medium break-all",
-        className,
+        className
       )}
     >
       {children}
     </span>
   );
-}
+};

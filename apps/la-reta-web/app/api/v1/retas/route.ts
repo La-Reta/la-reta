@@ -1,5 +1,4 @@
 import type { NewRetaDTO } from "@repo/reta/api";
-
 import { saveGeneratedReta } from "@/app/actions/retas";
 import { getActor } from "@/lib/api/context";
 import { readJson } from "@/lib/api/errors";

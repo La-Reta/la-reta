@@ -42,7 +42,7 @@ function collectClient() {
   };
 }
 
-export function IdeaForm() {
+export const IdeaForm = () => {
   const router = useRouter();
   const { user, isSignedIn } = useUser();
   const [form, setForm] = React.useState({
@@ -81,8 +81,11 @@ export function IdeaForm() {
         </DialogHeader>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="sm:col-span-2">
-            <Label className="mb-1.5 block text-xs">Título</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="idea-title">
+              Título
+            </Label>
             <Input
+              id="idea-title"
               value={form.title}
               onChange={(e) => set("title", e.target.value)}
               placeholder="Ej. Llevar conos para marcar la portería"
@@ -91,8 +94,11 @@ export function IdeaForm() {
             />
           </div>
           <div className="sm:col-span-2">
-            <Label className="mb-1.5 block text-xs">Descripción</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="idea-description">
+              Descripción
+            </Label>
             <Textarea
+              id="idea-description"
               value={form.description}
               onChange={(e) => set("description", e.target.value)}
               placeholder="Cuéntanos el detalle: qué propones y por qué ayudaría a la reta."
@@ -102,8 +108,11 @@ export function IdeaForm() {
             />
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs">Categoría</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="idea-category">
+              Categoría
+            </Label>
             <NativeSelect
+              id="idea-category"
               className="w-full"
               value={form.category}
               onChange={(e) => set("category", e.target.value)}
@@ -116,8 +125,11 @@ export function IdeaForm() {
             </NativeSelect>
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs">Tu nombre (opcional)</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="idea-author">
+              Tu nombre (opcional)
+            </Label>
             <Input
+              id="idea-author"
               value={isSignedIn ? (user.fullName ?? "") : form.author}
               onChange={(e) => set("author", e.target.value)}
               placeholder="Anónimo"
@@ -127,7 +139,7 @@ export function IdeaForm() {
           </div>
         </div>
         <DialogFooter>
-          <DialogClose render={<Button variant={"outline"} />}>
+          <DialogClose render={<Button variant="outline" />}>
             Cancelar
           </DialogClose>
           <Button type="submit" disabled={pending}>
@@ -138,4 +150,4 @@ export function IdeaForm() {
       </DialogContent>
     </form>
   );
-}
+};

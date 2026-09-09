@@ -11,7 +11,7 @@ import { CAT_META } from "./cat-meta";
 import { teamDot } from "./team-dot";
 
 /** Votación abierta: selector de categoría + una sola lista (compacto). */
-export function VotingPanel({
+export const VotingPanel = ({
   activeCat,
   setActiveCat,
   listFor,
@@ -22,16 +22,16 @@ export function VotingPanel({
   onReset,
   votedCount,
 }: {
-  activeCat: VoteCategory;
-  setActiveCat: (c: VoteCategory) => void;
-  listFor: (c: VoteCategory) => (VoteCandidate & { count: number })[];
-  liveMyVotes: Record<string, string>;
-  canVote: boolean;
-  pending: boolean;
-  onVote: (c: VoteCategory, cand: VoteCandidate) => void;
-  onReset: (c: VoteCategory) => void;
-  votedCount: number;
-}) {
+  readonly activeCat: VoteCategory;
+  readonly setActiveCat: (c: VoteCategory) => void;
+  readonly listFor: (c: VoteCategory) => (VoteCandidate & { count: number })[];
+  readonly liveMyVotes: Record<string, string>;
+  readonly canVote: boolean;
+  readonly pending: boolean;
+  readonly onVote: (c: VoteCategory, cand: VoteCandidate) => void;
+  readonly onReset: (c: VoteCategory) => void;
+  readonly votedCount: number;
+}) => {
   const cat = VOTE_CATEGORIES.find((c) => c.key === activeCat)!;
   const meta = CAT_META[cat.key];
   const list = listFor(cat.key);
@@ -61,13 +61,13 @@ export function VotingPanel({
                   "relative flex flex-col items-center gap-1.5 rounded-xl px-1 py-2 text-xs font-semibold transition-colors",
                   active
                     ? "bg-background shadow-sm"
-                    : "text-muted-foreground hover:text-foreground",
+                    : "text-muted-foreground hover:text-foreground"
                 )}
               >
                 <span
                   className={cn(
                     "grid size-8 place-items-center rounded-lg [&_svg]:size-4",
-                    active ? m.chip : "bg-background/50",
+                    active ? m.chip : "bg-background/50"
                   )}
                 >
                   <Icon />
@@ -113,13 +113,13 @@ export function VotingPanel({
             const cls = cn(
               "block w-full rounded-xl px-2 py-1.5 text-left transition-colors",
               mine && "bg-muted/70 ring-primary/40 ring-1",
-              interactive && "hover:bg-muted cursor-pointer",
+              interactive && "hover:bg-muted cursor-pointer"
             );
             const row = (
               <div className="flex items-center gap-3">
                 <Avatar className="size-8 shrink-0">
                   {c.photoUrl ? <AvatarImage src={c.photoUrl} alt="" /> : null}
-                  <AvatarFallback className="text-[10px] font-semibold">
+                  <AvatarFallback className="text-xs font-semibold">
                     {initials(c.name)}
                   </AvatarFallback>
                 </Avatar>
@@ -128,7 +128,7 @@ export function VotingPanel({
                     <span
                       className={cn(
                         "size-1.5 shrink-0 rounded-full",
-                        teamDot(c.team) ? "" : "bg-muted-foreground",
+                        teamDot(c.team) ? "" : "bg-muted-foreground"
                       )}
                       style={
                         teamDot(c.team)
@@ -140,10 +140,7 @@ export function VotingPanel({
                       {c.name}
                     </span>
                     {mine ? (
-                      <Badge
-                        variant="secondary"
-                        className="shrink-0 text-[10px]"
-                      >
+                      <Badge variant="secondary" className="shrink-0 text-xs">
                         tu voto
                       </Badge>
                     ) : null}
@@ -191,9 +188,7 @@ export function VotingPanel({
                   key={c.key}
                   className={cn(
                     "size-1.5 rounded-full",
-                    liveMyVotes[c.key]
-                      ? "bg-primary"
-                      : "bg-muted-foreground/30",
+                    liveMyVotes[c.key] ? "bg-primary" : "bg-muted-foreground/30"
                   )}
                 />
               ))}
@@ -203,4 +198,4 @@ export function VotingPanel({
       </CardContent>
     </Card>
   );
-}
+};

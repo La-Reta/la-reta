@@ -9,16 +9,16 @@ import { defaultTeamName, TEAM_COLORS, teamKeys } from "@/lib/teams";
  * Un input por equipo. Nombres opcionales — se reflejan en tablero, lista y
  * live, y se guardan en localStorage (atoms) para la próxima vez.
  */
-export function TeamNameInputs({
+export const TeamNameInputs = ({
   count,
   names,
   onChange,
 }: {
-  count: number;
+  readonly count: number;
   /** Indexado como TEAM_KEYS: [0] = A, [1] = B, … */
-  names: string[];
-  onChange: (index: number, value: string) => void;
-}) {
+  readonly names: string[];
+  readonly onChange: (index: number, value: string) => void;
+}) => {
   const keys = teamKeys(count);
   return (
     <Card size="sm">
@@ -48,4 +48,4 @@ export function TeamNameInputs({
       </CardContent>
     </Card>
   );
-}
+};

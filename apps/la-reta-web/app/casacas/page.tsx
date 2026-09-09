@@ -8,7 +8,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "Casacas · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function CasacasPage() {
+const CasacasPage = async () => {
   const [players, assignments, admin, { userId }] = await Promise.all([
     getPlayers(),
     getCasacaAssignments(),
@@ -30,4 +30,6 @@ export default async function CasacasPage() {
       />
     </div>
   );
-}
+};
+
+export default CasacasPage;

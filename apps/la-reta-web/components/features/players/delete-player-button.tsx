@@ -18,7 +18,13 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 
-export function DeletePlayerButton({ id, name }: { id: number; name: string }) {
+export const DeletePlayerButton = ({
+  id,
+  name,
+}: {
+  readonly id: number;
+  readonly name: string;
+}) => {
   const router = useRouter();
   const [pending, startTransition] = React.useTransition();
 
@@ -66,4 +72,4 @@ export function DeletePlayerButton({ id, name }: { id: number; name: string }) {
       </AlertDialogContent>
     </AlertDialog>
   );
-}
+};

@@ -1,7 +1,9 @@
 import type { Position } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 
-/** Guests use negative ids so they never collide with roster players (serial ≥ 1). */
+/**
+Guests use negative ids so they never collide with roster players (serial ≥ 1).
+*/
 export const isGuest = (p: { id: number }) => p.id < 0;
 
 /**
@@ -11,7 +13,7 @@ export const isGuest = (p: { id: number }) => p.id < 0;
  */
 export function makeGuestPlayer(
   input: { name: string; overall: number; position: Position },
-  existing: Player[],
+  existing: Player[]
 ): Player {
   const id = Math.min(0, ...existing.map((g) => g.id)) - 1;
   const now = new Date();

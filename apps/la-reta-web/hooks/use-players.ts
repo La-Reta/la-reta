@@ -2,13 +2,15 @@
 
 import { useQuery } from "@tanstack/react-query";
 import type { Player } from "@/lib/db/schema";
+import { fetchJson } from "@/lib/fetch-json";
 
 export const playersKey = ["players"] as const;
 
 async function fetchPlayers(): Promise<Player[]> {
-  const res = await fetch("/api/players");
-  if (!res.ok) throw new Error("No se pudieron cargar los jugadores");
-  return res.json();
+  return await fetchJson<Player[]>(
+    "/api/players",
+    "No se pudieron cargar los jugadores"
+  );
 }
 
 /**

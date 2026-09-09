@@ -8,6 +8,13 @@ import {
 } from "@/components/ui/chart";
 import { formatShortDate } from "@/lib/dates";
 import type { DayStat } from "@/lib/reta-stats";
+/*
+ * recharts se importa estático a propósito: el App Router ya parte el bundle
+ * por ruta, así que solo llega a quien abre una vista con gráfica. Envolverlo
+ * en `next/dynamic` aquí no quitaría nada del bundle inicial y sí metería un
+ * salto de layout al montar.
+ */
+// eslint-disable-next-line react-doctor/prefer-dynamic-import -- Next ya parte por ruta
 import { Bar, BarChart, CartesianGrid, XAxis } from "recharts";
 
 const chartConfig = {
@@ -15,7 +22,11 @@ const chartConfig = {
 } satisfies ChartConfig;
 
 /** Generated retas per day — how often the group re-rolls teams over time. */
-export function GenerationsChart({ perDay }: { perDay: DayStat[] }) {
+export const GenerationsChart = ({
+  perDay,
+}: {
+  readonly perDay: DayStat[];
+}) => {
   const data = perDay.slice(-14).map((d) => ({
     label: formatShortDate(d.date),
     count: d.count,
@@ -50,4 +61,4 @@ export function GenerationsChart({ perDay }: { perDay: DayStat[] }) {
       </BarChart>
     </ChartContainer>
   );
-}
+};

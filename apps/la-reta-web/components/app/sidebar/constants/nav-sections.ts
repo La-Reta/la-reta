@@ -14,7 +14,7 @@ import {
   UserPlusIcon,
   UsersIcon,
 } from "lucide-react";
-import { NavSection } from "../types/nav-section";
+import type { NavSection } from "../types/nav-section";
 
 export const NAV_SECTIONS: NavSection[] = [
   {

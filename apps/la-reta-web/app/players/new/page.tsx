@@ -11,11 +11,11 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "Nuevo jugador · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function NewPlayerPage({
+const NewPlayerPage = async ({
   searchParams,
 }: {
-  searchParams: Promise<{ signup?: string }>;
-}) {
+  readonly searchParams: Promise<{ signup?: string }>;
+}) => {
   const [{ signup }, admin, { userId }] = await Promise.all([
     searchParams,
     isAdmin(),
@@ -62,4 +62,6 @@ export default async function NewPlayerPage({
       />
     </div>
   );
-}
+};
+
+export default NewPlayerPage;

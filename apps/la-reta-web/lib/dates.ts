@@ -1,8 +1,14 @@
-import dayjs, { type ConfigType } from "dayjs";
+import dayjs from "dayjs";
+import type { ConfigType } from "dayjs";
 import "dayjs/locale/es-mx";
 
 export const API_DATE_FORMAT = "YYYY-MM-DD";
 
+/*
+ * Configurar el locale al importar es como dayjs espera que se haga, y tiene
+ * que pasar antes del primer formateo.
+ */
+/* eslint-disable-next-line unicorn/no-top-level-side-effects, import-x/no-named-as-default-member -- así se configura dayjs */
 dayjs.locale("es-mx");
 
 function asDateOnly(value: string) {
@@ -48,9 +54,13 @@ export function formatTime(value: ConfigType) {
   return dayjs(value).locale("es-mx").format("HH:mm");
 }
 
-/** Full years between a YYYY-MM-DD birth date and today. NaN if unparseable. */
+/**
+Full years between a YYYY-MM-DD birth date and today. NaN if unparseable.
+*/
 export function ageFromBirthDate(value?: string | null) {
-  if (!value) return Number.NaN;
+  if (value == null || value === "") {
+    return NaN;
+  }
   const d = asDateOnly(value);
-  return d.isValid() ? dayjs().diff(d, "year") : Number.NaN;
+  return d.isValid() ? dayjs().diff(d, "year") : NaN;
 }

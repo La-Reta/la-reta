@@ -8,7 +8,11 @@ import * as React from "react";
 import { toast } from "sonner";
 
 /** Self-claim an unclaimed profile to the signed-in account. */
-export function ClaimProfileButton({ playerId }: { playerId: number }) {
+export const ClaimProfileButton = ({
+  playerId,
+}: {
+  readonly playerId: number;
+}) => {
   const router = useRouter();
   const [pending, start] = React.useTransition();
   return (
@@ -31,10 +35,14 @@ export function ClaimProfileButton({ playerId }: { playerId: number }) {
       Este es mi perfil
     </Button>
   );
-}
+};
 
 /** Admin action to unlink a profile from its account. */
-export function UnlinkProfileButton({ playerId }: { playerId: number }) {
+export const UnlinkProfileButton = ({
+  playerId,
+}: {
+  readonly playerId: number;
+}) => {
   const router = useRouter();
   const [pending, start] = React.useTransition();
   return (
@@ -57,4 +65,4 @@ export function UnlinkProfileButton({ playerId }: { playerId: number }) {
       Desvincular cuenta
     </Button>
   );
-}
+};

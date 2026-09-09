@@ -18,11 +18,11 @@ import { RefreshCwIcon, ShirtIcon, UserPlusIcon, XIcon } from "lucide-react";
 import { ManualAssign } from "./manual-assing";
 
 /** Status line under the spin button: why you can't spin, or who's resting. */
-function WheelStatus({
+const WheelStatus = ({
   wheel,
 }: {
-  wheel: Pick<CasacaWheel, "canManage" | "pool" | "restingPlayers">;
-}) {
+  readonly wheel: Pick<CasacaWheel, "canManage" | "pool" | "restingPlayers">;
+}) => {
   if (!wheel.canManage) {
     return (
       <p className="text-muted-foreground text-center text-sm">
@@ -50,15 +50,15 @@ function WheelStatus({
     );
   }
   return null;
-}
+};
 
-export function WheelPanel({
+export const WheelPanel = ({
   wheel,
   assignments,
 }: {
-  wheel: CasacaWheel;
-  assignments: CasacaAssignmentRow[];
-}) {
+  readonly wheel: CasacaWheel;
+  readonly assignments: CasacaAssignmentRow[];
+}) => {
   const daysUntil = useGetMatchDaysUntil();
 
   const assignmentState = useAssignmentState({
@@ -66,6 +66,9 @@ export function WheelPanel({
     pool: wheel.pool,
     daysUntil,
   });
+
+  const handleSpinEnd = wheel.onSpinEnd;
+  const handleSpin = wheel.spin;
 
   return (
     <Card className="overflow-hidden">
@@ -87,7 +90,7 @@ export function WheelPanel({
           rotation={wheel.rotation}
           spinning={wheel.spinning}
           dimIndexes={wheel.dimIndexes}
-          onSpinEnd={wheel.onSpinEnd}
+          onSpinEnd={handleSpinEnd}
         />
 
         {/* El botón solo se muestra a admins o usuarios con sesión (Clerk).
@@ -97,7 +100,7 @@ export function WheelPanel({
             size="lg"
             className="w-full max-w-xs"
             disabled={!wheel.canSpin || assignmentState.hasAlreadyAssignedToday}
-            onClick={wheel.spin}
+            onClick={handleSpin}
           >
             <RefreshCwIcon />
             {wheel.spinning ? "Girando…" : "Girar la ruleta"}
@@ -136,7 +139,7 @@ export function WheelPanel({
               ))}
             </div>
             {wheel.canManage ? (
-              <p className="text-muted-foreground mt-2 text-[11px]">
+              <p className="text-muted-foreground mt-2 text-xs">
                 Se comparten con Armar equipos: al quitarlos aquí salen también
                 de la reta.
               </p>
@@ -146,4 +149,4 @@ export function WheelPanel({
       </CardContent>
     </Card>
   );
-}
+};

@@ -1,4 +1,3 @@
-/* eslint-disable react-doctor/only-export-components -- buttonVariants viaja con el componente: es la convención de shadcn y varios sitios lo usan para estilar un <span> o un <Link>. */
 import { Button as ButtonPrimitive } from "@base-ui/react/button";
 import { cva, type VariantProps } from "class-variance-authority";
 

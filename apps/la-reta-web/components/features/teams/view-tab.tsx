@@ -4,17 +4,17 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type * as React from "react";
 
-export function ViewTab({
+export const ViewTab = ({
   active,
   onClick,
   icon,
   label,
 }: {
-  active: boolean;
-  onClick: () => void;
-  icon: React.ReactNode;
-  label: string;
-}) {
+  readonly active: boolean;
+  readonly onClick: () => void;
+  readonly icon: React.ReactNode;
+  readonly label: string;
+}) => {
   return (
     <Button
       type="button"
@@ -27,4 +27,4 @@ export function ViewTab({
       {label}
     </Button>
   );
-}
+};

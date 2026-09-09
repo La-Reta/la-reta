@@ -60,7 +60,7 @@ export const RankingLevelItem = ({
             {index + 1}
           </m.span>
           <span
-            className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-[10px] font-bold text-white"
+            className="inline-flex min-w-9 justify-center rounded-sm px-1.5 py-0.5 text-xs font-bold text-white"
             style={{
               backgroundColor: GROUP_COLOR[positionGroup(player.position)],
             }}

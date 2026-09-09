@@ -18,19 +18,24 @@ import * as React from "react";
  * shows the flag + localized name, so people pick their country instead of
  * guessing a two-letter code.
  */
-export function CountrySelect({
+export const CountrySelect = ({
   value,
   onChange,
   placeholder = "Busca tu país…",
 }: {
-  value: string;
-  onChange: (code: string) => void;
-  placeholder?: string;
-}) {
+  readonly value: string;
+  readonly onChange: (code: string) => void;
+  readonly placeholder?: string;
+}) => {
+  // Los tres memos se quedan: React Compiler no está activado en este proyecto,
+  // así que sin ellos `Intl.DisplayNames` se reconstruye y la lista entera se
+  // reordena en cada pulsación del buscador.
+  // eslint-disable-next-line react-doctor/react-compiler-no-manual-memoization -- sin compilador, el memo sí trabaja
   const displayNames = React.useMemo(
     () => new Intl.DisplayNames(["es"], { type: "region" }),
-    [],
+    []
   );
+  // eslint-disable-next-line react-doctor/react-compiler-no-manual-memoization -- ídem
   const nameOf = React.useCallback(
     (code: string) => {
       try {
@@ -39,14 +44,15 @@ export function CountrySelect({
         return code.toUpperCase();
       }
     },
-    [displayNames],
+    [displayNames]
   );
+  // eslint-disable-next-line react-doctor/react-compiler-no-manual-memoization -- ídem
   const items = React.useMemo(
     () =>
-      [...COUNTRY_CODES].sort((a, b) =>
-        nameOf(a).localeCompare(nameOf(b), "es"),
+      COUNTRY_CODES.toSorted((a, b) =>
+        nameOf(a).localeCompare(nameOf(b), "es")
       ),
-    [nameOf],
+    [nameOf]
   );
 
   return (
@@ -74,4 +80,4 @@ export function CountrySelect({
       </ComboboxContent>
     </Combobox>
   );
-}
+};

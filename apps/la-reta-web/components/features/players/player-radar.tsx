@@ -1,5 +1,12 @@
 "use client";
 
+/*
+ * recharts se importa estático a propósito: el App Router ya parte el bundle
+ * por ruta, así que solo llega a quien abre una vista con gráfica. Envolverlo
+ * en `next/dynamic` aquí no quitaría nada del bundle inicial y sí metería un
+ * salto de layout al montar.
+ */
+// eslint-disable-next-line react-doctor/prefer-dynamic-import -- Next ya parte por ruta
 import { PolarAngleAxis, PolarGrid, Radar, RadarChart } from "recharts";
 import {
   ChartContainer,
@@ -14,7 +21,7 @@ const chartConfig = {
   value: { label: "Valor", color: "var(--chart-1)" },
 } satisfies ChartConfig;
 
-export function PlayerRadar({ player }: { player: Player }) {
+export const PlayerRadar = ({ player }: { readonly player: Player }) => {
   const data = STAT_KEYS.map((key) => ({
     stat: STAT_ABBR[key],
     label: STAT_LABEL[key],
@@ -32,6 +39,7 @@ export function PlayerRadar({ player }: { player: Player }) {
           content={
             <ChartTooltipContent
               labelKey="label"
+              // eslint-disable-next-line react/no-unstable-nested-components -- `formatter` es una prop de recharts, no un componente
               formatter={(value, _name, item) => (
                 <span>
                   <span className="font-medium">{item.payload.label}</span>
@@ -56,4 +64,4 @@ export function PlayerRadar({ player }: { player: Player }) {
       </RadarChart>
     </ChartContainer>
   );
-}
+};

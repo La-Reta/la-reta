@@ -17,6 +17,13 @@ import { formatShortDate } from "@/lib/dates";
 import type { MatchWithScorers } from "@/lib/queries";
 import { matchTeams } from "@/lib/teams";
 import { cn } from "@/lib/utils";
+/*
+ * recharts se importa estático a propósito: el App Router ya parte el bundle
+ * por ruta, así que solo llega a quien abre una vista con gráfica. Envolverlo
+ * en `next/dynamic` aquí no quitaría nada del bundle inicial y sí metería un
+ * salto de layout al montar.
+ */
+// eslint-disable-next-line react-doctor/prefer-dynamic-import -- Next ya parte por ruta
 import { Bar, BarChart, CartesianGrid, ReferenceLine, XAxis } from "recharts";
 
 const chartConfig = {

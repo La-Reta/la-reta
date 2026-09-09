@@ -32,15 +32,15 @@ function byLine(lineups: TeamSplit["lineups"]) {
   })).filter((x) => x.items.length > 0);
 }
 
-function PlayerRow({
+const PlayerRow = ({
   lineup,
   align,
   color,
 }: {
-  lineup: TeamSplit["lineups"][number];
-  align: "left" | "right";
-  color: string;
-}) {
+  readonly lineup: TeamSplit["lineups"][number];
+  readonly align: "left" | "right";
+  readonly color: string;
+}) => {
   const { player, role } = lineup;
   // Los badges se pegan al divisor central: a la derecha si la columna alinea
   // a la derecha, a la izquierda si no.
@@ -48,11 +48,11 @@ function PlayerRow({
     <div
       className={cn(
         "flex items-center gap-2",
-        align === "right" ? "flex-row-reverse text-right" : "text-left",
+        align === "right" ? "flex-row-reverse text-right" : "text-left"
       )}
     >
       <span
-        className="grid h-5 min-w-7 shrink-0 place-items-center rounded px-1 text-[10px] font-bold tracking-wide text-white"
+        className="grid h-5 min-w-7 shrink-0 place-items-center rounded px-1 text-xs font-bold tracking-wide text-white"
         style={{ backgroundColor: color }}
       >
         {role}
@@ -65,20 +65,20 @@ function PlayerRow({
       </span>
     </div>
   );
-}
+};
 
-function TeamColumn({
+const TeamColumn = ({
   team,
   name,
   align,
   /** Con 3+ equipos cada columna lleva su propio encabezado. */
   withHeader,
 }: {
-  team: TeamSplit;
-  name: string;
-  align: "left" | "right";
-  withHeader: boolean;
-}) {
+  readonly team: TeamSplit;
+  readonly name: string;
+  readonly align: "left" | "right";
+  readonly withHeader: boolean;
+}) => {
   const color = listColor(team.key);
   return (
     <div className="space-y-3.5">
@@ -94,7 +94,7 @@ function TeamColumn({
           >
             {name}
           </span>
-          <span className="font-mono text-[10px] font-semibold text-white/35 tabular-nums">
+          <span className="font-mono text-xs font-semibold text-white/35 tabular-nums">
             OVR {team.rating}
           </span>
         </div>
@@ -105,7 +105,7 @@ function TeamColumn({
           <div
             className={cn(
               "flex items-center gap-2",
-              align === "right" && "flex-row-reverse",
+              align === "right" && "flex-row-reverse"
             )}
           >
             <span className="text-[9px] font-bold tracking-[0.18em] text-white/45 uppercase">
@@ -125,11 +125,11 @@ function TeamColumn({
       ))}
     </div>
   );
-}
+};
 
 export const MatchupList = React.forwardRef<
   HTMLDivElement,
-  { teams: TeamSplit[]; names: string[] }
+  { readonly teams: TeamSplit[]; readonly names: string[] }
 >(function MatchupList({ teams, names }, ref) {
   const isDuel = teams.length === 2;
   const label = (i: number) => teamName(names, teams[i].key);
@@ -177,7 +177,7 @@ export const MatchupList = React.forwardRef<
             DAY
           </span>
         </div>
-        <p className="font-display text-center text-[11px] font-semibold tracking-[0.3em] text-white/55 uppercase">
+        <p className="font-display text-center text-xs font-semibold tracking-[0.3em] text-white/55 uppercase">
           La Reta · Convocatoria
         </p>
 
@@ -191,7 +191,7 @@ export const MatchupList = React.forwardRef<
               >
                 {label(0)}
               </p>
-              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+              <p className="font-mono text-xs font-semibold tracking-wide text-white/35 tabular-nums">
                 OVR {teams[0].rating}
               </p>
             </div>
@@ -205,13 +205,13 @@ export const MatchupList = React.forwardRef<
               >
                 {label(1)}
               </p>
-              <p className="font-mono text-[10px] font-semibold tracking-wide text-white/35 tabular-nums">
+              <p className="font-mono text-xs font-semibold tracking-wide text-white/35 tabular-nums">
                 OVR {teams[1].rating}
               </p>
             </div>
           </div>
         ) : (
-          <p className="font-display mt-3 text-center text-[11px] font-bold tracking-[0.2em] text-white/60 uppercase">
+          <p className="font-display mt-3 text-center text-xs font-bold tracking-[0.2em] text-white/60 uppercase">
             {teams.length} equipos · rotación
           </p>
         )}
@@ -236,7 +236,7 @@ export const MatchupList = React.forwardRef<
           <div
             className={cn(
               "mt-6 grid grid-cols-1 gap-x-5 gap-y-7",
-              GRID_COLS[teams.length] ?? "sm:grid-cols-2",
+              GRID_COLS[teams.length] ?? "sm:grid-cols-2"
             )}
           >
             {teams.map((team, i) => (
@@ -251,7 +251,7 @@ export const MatchupList = React.forwardRef<
           </div>
         )}
 
-        <p className="font-display mt-6 text-center text-[10px] tracking-[0.25em] text-white/35 uppercase">
+        <p className="font-display mt-6 text-center text-xs tracking-[0.25em] text-white/35 uppercase">
           reta fútbol
         </p>
       </div>

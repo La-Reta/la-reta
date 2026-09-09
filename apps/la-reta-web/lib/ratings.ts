@@ -44,10 +44,16 @@ const WEIGHTS: Record<PositionGroup, Stats> = {
 };
 
 /**
-Position-weighted overall rating, clamped to 1-99.
-*/
-export function computeOverall(position: Position, stats: Stats): number {
-  const w = WEIGHTS[positionGroup(position)];
+ * El overall que daría un jugador **en esa línea**, con los pesos de la línea.
+ *
+ * Existe aparte de `computeOverall` porque los pesos son por línea, no por
+ * posición: un mismo jugador puntúa igual de lateral que de central, y pedirlo
+ * por línea deja eso a la vista en vez de obligar a elegir una posición
+ * cualquiera como representante. Es lo que usa el mapa de posiciones para
+ * contestar "¿cómo rendiría este delantero de defensa?".
+ */
+export function overallForLine(line: PositionGroup, stats: Stats): number {
+  const w = WEIGHTS[line];
   const raw =
     stats.pace * w.pace +
     stats.shooting * w.shooting +
@@ -56,6 +62,13 @@ export function computeOverall(position: Position, stats: Stats): number {
     stats.defending * w.defending +
     stats.physical * w.physical;
   return Math.max(1, Math.min(99, Math.round(raw)));
+}
+
+/**
+Position-weighted overall rating, clamped to 1-99.
+*/
+export function computeOverall(position: Position, stats: Stats): number {
+  return overallForLine(positionGroup(position), stats);
 }
 
 export type CardTier = "special" | "gold" | "silver" | "bronze";

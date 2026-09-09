@@ -32,8 +32,8 @@ export const POST = handler(async (request) => {
   // que el cliente haya querido mandar.
   if (
     body === null ||
-    body.name.trim().length === 0 ||
-    body.position.trim().length === 0
+    (body.name ?? "").trim().length === 0 ||
+    (body.position ?? "").trim().length === 0
   ) {
     return jsonError(request, "Falta el nombre o la posición.", 400);
   }

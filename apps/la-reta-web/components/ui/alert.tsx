@@ -16,14 +16,14 @@ const alertVariants = cva(
     defaultVariants: {
       variant: "default",
     },
-  },
+  }
 );
 
-function Alert({
+const Alert = ({
   className,
   variant,
   ...props
-}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) {
+}: React.ComponentProps<"div"> & VariantProps<typeof alertVariants>) => {
   return (
     <div
       data-slot="alert"
@@ -32,36 +32,36 @@ function Alert({
       {...props}
     />
   );
-}
+};
 
-function AlertTitle({ className, ...props }: React.ComponentProps<"div">) {
+const AlertTitle = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="alert-title"
       className={cn(
         "[&_a]:hover:text-foreground font-medium group-has-[>svg]/alert:col-start-2 [&_a]:underline [&_a]:underline-offset-3",
-        className,
+        className
       )}
       {...props}
     />
   );
-}
+};
 
-function AlertDescription({
+const AlertDescription = ({
   className,
   ...props
-}: React.ComponentProps<"div">) {
+}: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="alert-description"
       className={cn(
         "text-muted-foreground [&_a]:hover:text-foreground text-sm text-balance md:text-pretty [&_a]:underline [&_a]:underline-offset-3 [&_p:not(:last-child)]:mb-4",
-        className,
+        className
       )}
       {...props}
     />
   );
-}
+};
 
 /**
  * MODIFICADO respecto a shadcn: el original flota en la esquina
@@ -70,17 +70,17 @@ function AlertDescription({
  * Aquí fluye debajo del texto, alineado con el título. Conservar si se
  * regenera el componente.
  */
-function AlertAction({ className, ...props }: React.ComponentProps<"div">) {
+const AlertAction = ({ className, ...props }: React.ComponentProps<"div">) => {
   return (
     <div
       data-slot="alert-action"
       className={cn(
         "col-start-1 mt-3 flex flex-wrap items-center gap-2 group-has-[>svg]/alert:col-start-2",
-        className,
+        className
       )}
       {...props}
     />
   );
-}
+};
 
 export { Alert, AlertTitle, AlertDescription, AlertAction };

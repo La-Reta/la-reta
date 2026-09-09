@@ -4,7 +4,7 @@ import {
   LightbulbIcon,
   LockIcon,
 } from "lucide-react";
-import { NavItem } from "../types/nav-section";
+import type { NavItem } from "../types/nav-section";
 
 export const ADMIN_ITEMS: NavItem[] = [
   {

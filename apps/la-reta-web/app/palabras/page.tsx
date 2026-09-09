@@ -9,7 +9,7 @@ import { Metadata } from "next";
 export const metadata: Metadata = { title: "La Reta ____ · Reta Fútbol" };
 export const dynamic = "force-dynamic";
 
-export default async function PalabrasPage() {
+const PalabrasPage = async () => {
   const words = await getRetaWords();
 
   return (
@@ -40,4 +40,6 @@ export default async function PalabrasPage() {
       </section>
     </div>
   );
-}
+};
+
+export default PalabrasPage;

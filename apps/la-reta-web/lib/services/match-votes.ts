@@ -1,7 +1,7 @@
 import "server-only";
 import { and, eq } from "drizzle-orm";
-import type { VoteCategory } from "@/lib/match-votes";
 import type { ServiceResult } from "@/lib/services/result";
+import type { VoteCategory } from "@/lib/match-votes";
 import { db, matchGoals, matchVotes, matches } from "@/lib/db";
 import { isVotingOpen, VOTE_CATEGORY_KEYS } from "@/lib/match-votes";
 import {

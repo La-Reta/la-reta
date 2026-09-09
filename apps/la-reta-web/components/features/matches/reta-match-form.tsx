@@ -128,13 +128,16 @@ function teamsFromReta(reta: RetaToMatchItem): Team[] {
     key: team.key,
     name: team.name,
     score: "0",
-    players: reta.players
-      .filter((p) => p.team === team.key)
-      .map((p) =>
-        p.playerId != null
-          ? rosterRow(p.playerId, p.name)
-          : guestRow(p.guestName ?? p.name)
-      ),
+    players: reta.players.flatMap((p) => {
+      if (p.team !== team.key) {
+        return [];
+      }
+      return [
+        p.playerId == null
+          ? guestRow(p.guestName ?? p.name)
+          : rosterRow(p.playerId, p.name),
+      ];
+    }),
   }));
 }
 
@@ -152,9 +155,9 @@ function teamsFromMatch(match: EditRetaMatch): Team[] {
     key: team.key,
     name: team.name,
     score: String(team.score),
-    players: match.scorers
-      .filter((s) => s.team === team.key)
-      .map(rowFromScorer),
+    players: match.scorers.flatMap((s) =>
+      s.team === team.key ? [rowFromScorer(s)] : []
+    ),
   }));
 }
 
@@ -164,18 +167,33 @@ function teamsFromMatch(match: EditRetaMatch): Team[] {
  * jugadores que no salieron en la generación, sumar invitados de última hora,
  * quitar a quien no llegó y cambiar nombres, equipos y marcador.
  */
-export function RetaMatchForm({
-  retas = [],
+/**
+ * Referencia estable: un `[]` en la firma es un array nuevo en cada render, y
+ * cualquier efecto o memo que dependa de `retas` se dispararía siempre.
+ */
+const NO_RETAS: never[] = [];
+
+/*
+ * Las dos reglas de abajo tienen razón y el arreglo no cabe aquí: partir este
+ * formulario y pasar sus siete `useState` a un `useReducer` es un refactor de
+ * fondo del único formulario de partidos —reparto de equipos, invitados de
+ * última hora, el switch de "reiniciar al editar"— y merece su propio cambio,
+ * con la forma abierta delante para comprobar que nada se rompe. Hacerlo dentro
+ * de una limpieza de lint es cambiar mucho a ciegas.
+ */
+/* eslint-disable react-doctor/no-giant-component, react-doctor/prefer-useReducer -- refactor pendiente, ver comentario */
+export const RetaMatchForm = ({
+  retas = NO_RETAS,
   players,
   match,
   admin,
   onCancel,
 }: {
-  retas?: RetaToMatchItem[];
-  players: MatchPlayer[];
+  readonly retas?: RetaToMatchItem[];
+  readonly players: MatchPlayer[];
   /** Presente = modo edición de un partido ya guardado. */
-  match?: EditRetaMatch;
-  admin: boolean;
+  readonly match?: EditRetaMatch;
+  readonly admin: boolean;
   /**
    * Qué pasa al cancelar. El formulario no sabe dónde vive —hoy es un panel
    * plegable en /matches y una página completa en /matches/[id]/edit—, así que
@@ -183,8 +201,8 @@ export function RetaMatchForm({
    * prop se queda con lo razonable por defecto: volver al partido en edición,
    * vaciarse en alta.
    */
-  onCancel?: () => void;
-}) {
+  readonly onCancel?: () => void;
+}) => {
   const router = useRouter();
   const isEdit = Boolean(match);
   const [retaId, setRetaId] = React.useState("");
@@ -197,9 +215,9 @@ export function RetaMatchForm({
   // moverlos a uno, en vez de perderlos.
   const [loose, setLoose] = React.useState<Row[]>(() =>
     match
-      ? match.scorers
-          .filter((s) => !match.teams.some((t) => t.key === s.team))
-          .map(rowFromScorer)
+      ? match.scorers.flatMap((s) =>
+          match.teams.some((t) => t.key === s.team) ? [] : [rowFromScorer(s)]
+        )
       : []
   );
   const [durationMin, setDurationMin] = React.useState(
@@ -211,6 +229,9 @@ export function RetaMatchForm({
   const [notes, setNotes] = React.useState(match?.notes ?? "");
   const [pending, startTransition] = React.useTransition();
 
+  // Sin compilador de React el memo sí trabaja: rehacer el Map en cada tecla
+  // que se escribe en el formulario no es gratis con la plantilla entera.
+  // eslint-disable-next-line react-doctor/react-compiler-no-manual-memoization -- sin compilador, el memo sí trabaja
   const playersById = React.useMemo(
     () => new Map(players.map((p) => [p.id, p.name])),
     [players]
@@ -457,10 +478,11 @@ export function RetaMatchForm({
             <div className="hidden sm:block" />
           ) : (
             <div>
-              <Label className="mb-1.5 block text-xs">
+              <Label className="mb-1.5 block text-xs" htmlFor="match-from-reta">
                 Partir de una reta generada (opcional)
               </Label>
               <NativeSelect
+                id="match-from-reta"
                 className="w-full"
                 value={retaId}
                 onChange={(e) => pickReta(e.target.value)}
@@ -479,8 +501,11 @@ export function RetaMatchForm({
             </div>
           )}
           <div>
-            <Label className="mb-1.5 block text-xs">Equipos</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="match-team-count">
+              Equipos
+            </Label>
             <NativeSelect
+              id="match-team-count"
               value={String(teams.length)}
               onChange={(e) => setTeamCount(Number(e.target.value))}
             >
@@ -494,8 +519,11 @@ export function RetaMatchForm({
             </NativeSelect>
           </div>
           <div>
-            <Label className="mb-1.5 block text-xs">Fecha</Label>
+            <Label className="mb-1.5 block text-xs" htmlFor="match-played-at">
+              Fecha
+            </Label>
             <Input
+              id="match-played-at"
               type="date"
               value={playedAt}
               onChange={(e) => setPlayedAt(e.target.value)}
@@ -562,8 +590,11 @@ export function RetaMatchForm({
           </legend>
           <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
             <div>
-              <Label className="mb-1.5 block text-xs">Duración (min)</Label>
+              <Label className="mb-1.5 block text-xs" htmlFor="match-duration">
+                Duración (min)
+              </Label>
               <Input
+                id="match-duration"
                 type="number"
                 min={0}
                 value={durationMin}
@@ -572,8 +603,11 @@ export function RetaMatchForm({
               />
             </div>
             <div>
-              <Label className="mb-1.5 block text-xs">Notas</Label>
+              <Label className="mb-1.5 block text-xs" htmlFor="match-notes">
+                Notas
+              </Label>
               <Textarea
+                id="match-notes"
                 value={notes}
                 onChange={(e) => setNotes(e.target.value)}
                 placeholder="Cómo estuvo la reta…"
@@ -653,9 +687,9 @@ export function RetaMatchForm({
       </CollapsibleContent>
     </Collapsible>
   );
-}
+};
 
-function TeamCard({
+const TeamCard = ({
   team,
   players,
   playersById,
@@ -664,14 +698,14 @@ function TeamCard({
   onRemove,
   onStat,
 }: {
-  team: Team;
-  players: MatchPlayer[];
-  playersById: Map<number, string>;
-  onPatch: (patch: Partial<Team>) => void;
-  onAdd: (row: Row) => void;
-  onRemove: (key: string) => void;
-  onStat: (key: string, patch: Partial<Row>) => void;
-}) {
+  readonly team: Team;
+  readonly players: MatchPlayer[];
+  readonly playersById: Map<number, string>;
+  readonly onPatch: (patch: Partial<Team>) => void;
+  readonly onAdd: (row: Row) => void;
+  readonly onRemove: (key: string) => void;
+  readonly onStat: (key: string, patch: Partial<Row>) => void;
+}) => {
   const [guestName, setGuestName] = React.useState("");
   const color = TEAM_COLORS[team.key];
   // El filtro es por equipo, no global: alguien pudo jugar en varias retas del
@@ -744,7 +778,7 @@ function TeamCard({
                     ? (playersById.get(p.playerId) ?? p.name)
                     : p.name}
                   {p.playerId == null && (
-                    <span className="text-muted-foreground text-[10px]">
+                    <span className="text-muted-foreground text-xs">
                       {" "}
                       · invitado
                     </span>
@@ -799,6 +833,12 @@ function TeamCard({
               value={guestName}
               onChange={(e) => setGuestName(e.target.value)}
               onKeyDown={(e) => {
+                // Con teclados de composición (CJK) el Enter que confirma un
+                // candidato llega aquí igual: sin esto, añadiría al invitado a
+                // medio escribir su nombre.
+                if (e.nativeEvent.isComposing) {
+                  return;
+                }
                 if (e.key === "Enter") {
                   e.preventDefault();
                   addGuest();
@@ -823,25 +863,25 @@ function TeamCard({
       </div>
     </div>
   );
-}
+};
 
 /**
  * Goleadores de partidos viejos que quedaron sin equipo. Se listan aparte con
  * un select para mandarlos al equipo que les toca (se llevan sus goles).
  */
-function LooseCard({
+const LooseCard = ({
   rows,
   teams,
   onAssign,
   onRemove,
   onStat,
 }: {
-  rows: Row[];
-  teams: Team[];
-  onAssign: (key: string, teamKey: TeamKey) => void;
-  onRemove: (key: string) => void;
-  onStat: (key: string, patch: Partial<Row>) => void;
-}) {
+  readonly rows: Row[];
+  readonly teams: Team[];
+  readonly onAssign: (key: string, teamKey: TeamKey) => void;
+  readonly onRemove: (key: string) => void;
+  readonly onStat: (key: string, patch: Partial<Row>) => void;
+}) => {
   return (
     <div className="space-y-3 rounded-xl border border-dashed p-3">
       <p className="text-sm font-semibold">
@@ -901,4 +941,5 @@ function LooseCard({
       ))}
     </div>
   );
-}
+};
+/* eslint-enable react-doctor/no-giant-component, react-doctor/prefer-useReducer */

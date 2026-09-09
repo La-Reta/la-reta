@@ -13,29 +13,39 @@ import * as React from "react";
  * Plain <img> so the animated GIF/WebP keeps playing and no remotePatterns
  * config is needed; `gifs` can be local paths or remote URLs.
  */
-export function GifLoader({
+export const GifLoader = ({
   gifs,
   alt = "",
   message = "Cargando…",
   sub,
 }: {
-  gifs: string[];
-  alt?: string;
-  message?: string;
-  sub?: string;
-}) {
-  const [src, setSrc] = React.useState<string | null>(null);
-  React.useEffect(() => {
-    if (gifs.length === 0) return;
+  readonly gifs: string[];
+  readonly alt?: string;
+  readonly message?: string;
+  readonly sub?: string;
+}) => {
+  // El gif se elige una vez al montar, con `useState` perezoso y no en un
+  // efecto: en un efecto se pintaba el hueco vacío primero y el gif entraba en
+  // un segundo render. Va aquí y no en el cuerpo del render para que no cambie
+  // en cada repintado.
+  const [src] = React.useState<string | null>(() => {
+    if (gifs.length === 0) {
+      return null;
+    }
     const pick = gifs[Math.floor(Math.random() * gifs.length)];
-    setSrc(`${pick}?r=${Math.random().toString(36).slice(2)}`);
-  }, [gifs]);
+    return `${pick}?r=${Math.random().toString(36).slice(2)}`;
+  });
 
   return (
     <div className="flex min-h-[55vh] flex-col items-center justify-center gap-5 text-center">
       <div className="bg-muted ring-border/60 relative size-96 overflow-hidden rounded-2xl shadow-lg ring-1">
         {src ? (
-          // eslint-disable-next-line @next/next/no-img-element
+          /*
+           * `<img>` y no `next/image`: el optimizador de Next devuelve un
+           * fotograma estático de un GIF animado, y aquí la animación es todo
+           * el punto. La URL lleva un sufijo aleatorio para forzar que reinicie.
+           */
+          // eslint-disable-next-line @next/next/no-img-element, react-doctor/nextjs-no-img-element -- el optimizador congela los GIF
           <img
             src={src}
             alt={alt}
@@ -61,4 +71,4 @@ export function GifLoader({
       </div>
     </div>
   );
-}
+};
