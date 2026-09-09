@@ -6,9 +6,12 @@ import {
   updatePlayerInfo,
   type PlayerInput,
 } from "@/app/actions/players";
-import { uploadImage } from "@/app/actions/uploads";
 import { CountrySelect } from "@/components/features/players/country-select";
-import { FifaCard } from "@/components/shared/fifa-card";
+import { PlayerPhotoField } from "@/components/features/players/player-photo-field";
+import { PlayerPreviewCard } from "@/components/features/players/player-preview-card";
+import { PositionSelect } from "@/components/features/players/position-select";
+import type { PhotoUpload } from "@/lib/upload-photo";
+import { StaggerGroup, StaggerItem } from "@/components/motion/stagger-group";
 import {
   Alert,
   AlertAction,
@@ -24,14 +27,7 @@ import {
   NativeSelectOption,
 } from "@/components/ui/native-select";
 import { Slider } from "@/components/ui/slider";
-import {
-  FEET,
-  POSITION_NAME,
-  POSITIONS,
-  STAT_KEYS,
-  STAT_LABEL,
-  type StatKey,
-} from "@/lib/constants";
+import { FEET, STAT_KEYS, STAT_LABEL, type StatKey } from "@/lib/constants";
 import { ageFromBirthDate } from "@/lib/dates";
 import type { Player } from "@/lib/db/schema";
 import { computeOverall } from "@/lib/ratings";
@@ -127,7 +123,11 @@ export const PlayerForm = ({
     initialState(player, prefill)
   );
   const [pending, startTransition] = React.useTransition();
-  const [uploading, setUploading] = React.useState(false);
+  // La subida vive aquí y no dentro del campo de foto: quien la enseña es la
+  // carta de la derecha. El campo la empieza, la carta la pinta.
+  const [photoUpload, setPhotoUpload] = React.useState<PhotoUpload | null>(
+    null
+  );
 
   // El tope del campo de fecha es "hoy", y hoy solo lo sabe el navegador: el
   // servidor puede estar en otra zona horaria o servir HTML de ayer, y esa
@@ -144,23 +144,6 @@ export const PlayerForm = ({
 
   function set<K extends keyof FormState>(key: K, value: FormState[K]) {
     setForm((f) => ({ ...f, [key]: value }));
-  }
-
-  async function onPickPhoto(e: React.ChangeEvent<HTMLInputElement>) {
-    const file = e.target.files?.[0];
-    e.target.value = ""; // permite re-subir el mismo archivo
-    if (!file) return;
-    setUploading(true);
-    const data = new FormData();
-    data.set("file", file);
-    const res = await uploadImage(data);
-    setUploading(false);
-    if (res.ok) {
-      set("photoUrl", res.url);
-      toast.success("Imagen subida");
-    } else {
-      toast.error(res.error);
-    }
   }
 
   const stats = {
@@ -234,27 +217,37 @@ export const PlayerForm = ({
       className="grid gap-6 lg:grid-cols-[1fr_320px] lg:items-start"
       onSubmit={onSubmit}
     >
-      <div className="space-y-6">
-        <IdentitySection
-          form={form}
-          onPickPhoto={onPickPhoto}
-          set={set}
-          uploading={uploading}
-        />
-        <PhysicalSection age={age} form={form} set={set} today={today} />
-        {canEditStats ? (
-          <AttributesSection form={form} set={set} />
-        ) : (
-          <StaffOnlyNote />
-        )}
-        <FormActions
-          canManage={canManage}
-          isEdit={isEdit}
-          onCancel={() => router.back()}
-          pending={pending}
-        />
-      </div>
-      <PreviewAside overall={overall} preview={preview} />
+      <StaggerGroup className="space-y-6">
+        <StaggerItem>
+          <IdentitySection
+            disabled={pending}
+            form={form}
+            onPhotoUpload={setPhotoUpload}
+            photoUpload={photoUpload}
+            set={set}
+            signupPhotoUrl={prefill?.photoUrl}
+          />
+        </StaggerItem>
+        <StaggerItem>
+          <PhysicalSection age={age} form={form} set={set} today={today} />
+        </StaggerItem>
+        <StaggerItem>
+          {canEditStats ? (
+            <AttributesSection form={form} set={set} />
+          ) : (
+            <StaffOnlyNote />
+          )}
+        </StaggerItem>
+        <StaggerItem>
+          <FormActions
+            canManage={canManage}
+            isEdit={isEdit}
+            onCancel={() => router.back()}
+            pending={pending}
+          />
+        </StaggerItem>
+      </StaggerGroup>
+      <PlayerPreviewCard player={preview} upload={photoUpload} />
     </form>
   );
 };
@@ -274,13 +267,18 @@ type SetField = <K extends keyof FormState>(
 const IdentitySection = ({
   form,
   set,
-  uploading,
-  onPickPhoto,
+  disabled,
+  photoUpload,
+  onPhotoUpload,
+  signupPhotoUrl,
 }: {
   readonly form: FormState;
   readonly set: SetField;
-  readonly uploading: boolean;
-  readonly onPickPhoto: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  readonly disabled: boolean;
+  readonly photoUpload: PhotoUpload | null;
+  readonly onPhotoUpload: (upload: PhotoUpload | null) => void;
+  /** La foto que traía la solicitud, cuando el alta viene de una. */
+  readonly signupPhotoUrl?: string;
 }) => {
   return (
     <FormSection title="Identidad">
@@ -301,35 +299,18 @@ const IdentitySection = ({
           />
         </FormField>
         <FormField label="Posición principal">
-          <NativeSelect
-            className="w-full"
+          <PositionSelect
+            onChange={(next) => set("position", next)}
             value={form.position}
-            onChange={(e) => set("position", e.target.value)}
-          >
-            {POSITIONS.map((p) => (
-              <NativeSelectOption key={p} value={p}>
-                {p} · {POSITION_NAME[p]}
-              </NativeSelectOption>
-            ))}
-          </NativeSelect>
+          />
         </FormField>
         <FormField label="Posición secundaria (opcional)">
-          <NativeSelect
-            className="w-full"
+          <PositionSelect
+            exclude={form.position}
+            onChange={(next) => set("position2", next)}
+            placeholder="Ninguna"
             value={form.position2}
-            onChange={(e) => set("position2", e.target.value)}
-          >
-            <NativeSelectOption value="">— ninguna —</NativeSelectOption>
-            {POSITIONS.flatMap((pos) =>
-              pos === form.position
-                ? []
-                : [
-                    <NativeSelectOption key={pos} value={pos}>
-                      {pos} · {POSITION_NAME[pos]}
-                    </NativeSelectOption>,
-                  ]
-            )}
-          </NativeSelect>
+          />
         </FormField>
         <FormField label="Pie preferido">
           <NativeSelect
@@ -351,22 +332,14 @@ const IdentitySection = ({
           />
         </FormField>
         <FormField label="Foto (opcional)" className="sm:col-span-2">
-          <div className="space-y-2">
-            <Input
-              type="file"
-              accept="image/*"
-              onChange={onPickPhoto}
-              disabled={uploading}
-            />
-            <Input
-              value={form.photoUrl}
-              onChange={(e) => set("photoUrl", e.target.value)}
-              placeholder={
-                uploading ? "Subiendo…" : "…o pega una URL: https://..."
-              }
-              disabled={uploading}
-            />
-          </div>
+          <PlayerPhotoField
+            disabled={disabled}
+            onChange={(url) => set("photoUrl", url)}
+            onUploadChange={onPhotoUpload}
+            signupPhotoUrl={signupPhotoUrl}
+            upload={photoUpload}
+            value={form.photoUrl}
+          />
         </FormField>
       </div>
     </FormSection>
@@ -520,26 +493,6 @@ const FormActions = ({
           </AlertAction>
         </Alert>
       )}
-    </div>
-  );
-};
-
-const PreviewAside = ({
-  preview,
-  overall,
-}: {
-  readonly preview: Player;
-  readonly overall: number;
-}) => {
-  return (
-    // Vista previa en vivo de la carta que se esta editando.
-    <div className="lg:sticky lg:top-16">
-      <p className="text-muted-foreground mb-2 text-xs font-semibold uppercase">
-        Vista previa · OVR {overall}
-      </p>
-      <div className="mx-auto max-w-[240px]">
-        <FifaCard player={preview} sizes="240px" />
-      </div>
     </div>
   );
 };

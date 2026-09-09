@@ -1,6 +1,8 @@
 import { auth } from "@clerk/nextjs/server";
-import { handleUpload, type HandleUploadBody } from "@vercel/blob/client";
+import { handleUpload } from "@vercel/blob/client";
 import { NextResponse } from "next/server";
+import type { HandleUploadBody } from "@vercel/blob/client";
+import { isAdmin } from "@/lib/admin";
 
 // Límite duro en el servidor: el token firmado solo permite subir hasta esto.
 // El cliente ya comprime a ~300 KB; dejamos margen y cortamos en 500 KB.
@@ -8,36 +10,51 @@ const MAX_BYTES = 500 * 1024;
 const ALLOWED_CONTENT_TYPES = ["image/webp"] as const;
 
 /**
+ * Error tipado para distinguir un 401 de un 400 genérico en el catch.
+ */
+class UnauthorizedError extends Error {
+  name = "UnauthorizedError";
+}
+
+/**
  * Route Handler para Client Uploads de Vercel Blob.
  *
  * Dos responsabilidades (las maneja `handleUpload`):
- *  1. `onBeforeGenerateToken`: se ejecuta ANTES de darle al navegador un token
- *     de subida. Aquí validamos la sesión y fijamos las restricciones (tipo,
+ *  1. `onBeforeGenerateToken`: corre ANTES de darle al navegador un token de
+ *     subida. Aquí se valida la sesión y se fijan las restricciones (tipo,
  *     tamaño). La imagen NO pasa por este endpoint: el navegador sube directo a
  *     Blob con el token firmado.
- *  2. `onUploadCompleted`: callback servidor-a-servidor que Vercel invoca cuando
- *     la subida termina. Es el lugar correcto para persistir la URL en la BD.
  *
- * Por qué validar la sesión aquí: el token de subida da permiso de escritura al
- * Blob store. Si no exiges sesión, cualquiera puede pedir un token y llenar tu
- * almacenamiento (y tu factura). La validación vive en el servidor porque el
- * cliente es manipulable; nunca confíes en él.
+ * No hay `onUploadCompleted`: es opcional y aquí no hay nada que persistir —la
+ * URL la guarda el formulario que la recibe—. Además en localhost no se dispara
+ * (Vercel no alcanza tu máquina), así que colgar de él algo necesario deja un
+ * fallo que solo aparece en un deploy.
+ *
+ * Por qué se valida la sesión aquí: el token da permiso de escritura al store.
+ * Sin ese gate, cualquiera pide un token y llena el almacenamiento (y la
+ * factura). Vive en el servidor porque el cliente es manipulable.
  */
+// eslint-disable-next-line sonarjs/function-name -- el App Router exige que el handler se llame POST
 export async function POST(request: Request): Promise<NextResponse> {
+  // JSON que llega de fuera: `handleUpload` valida su forma y la firma del
+  // token, que es lo único en lo que se puede confiar.
+  // eslint-disable-next-line @typescript-eslint/no-unsafe-type-assertion -- ver arriba
   const body = (await request.json()) as HandleUploadBody;
 
   try {
     const result = await handleUpload({
       body,
       request,
-      onBeforeGenerateToken: async (_pathname, _clientPayload, _multipart) => {
-        // 🔐 AUTENTICACIÓN — integra aquí Auth.js / Clerk / tu sesión propia.
-        // Con Clerk basta `auth()`. Con Auth.js sería `await getServerSession()`.
+      onBeforeGenerateToken: async () => {
+        // El PIN cuenta como sesión: al alta de jugador se llega también con la
+        // cookie de admin y sin cuenta de Clerk, y exigir solo `userId` dejaba a
+        // ese admin sin poder subir la foto. Es la misma regla que aplica
+        // `uploadImage` (`app/actions/uploads.ts`), y se comprueba en el
+        // servidor —cookie de admin o token firmado—, no en el cliente.
         const { userId } = await auth();
-        if (!userId) {
-          // Bloquea subidas anónimas (crítico en producción).
+        if (userId === null && !(await isAdmin())) {
           throw new UnauthorizedError(
-            "Debes iniciar sesión para subir imágenes.",
+            "Debes iniciar sesión o entrar como admin para subir imágenes."
           );
         }
 
@@ -49,27 +66,12 @@ export async function POST(request: Request): Promise<NextResponse> {
           tokenPayload: JSON.stringify({ userId }),
         };
       },
-      onUploadCompleted: async ({ blob, tokenPayload }) => {
-        // ⚠️ Nota: en localhost este callback NO se dispara (Vercel no puede
-        // alcanzar tu máquina). Pruébalo en un deploy o con un túnel (ngrok).
-        const meta: { userId?: string } = tokenPayload
-          ? (JSON.parse(tokenPayload) as { userId?: string })
-          : {};
-
-        // 💾 GUARDA LA URL EN TU BASE DE DATOS AQUÍ.
-        // p.ej.: await db.insert(images).values({ url: blob.url, userId: meta.userId });
-        void meta;
-        void blob;
-      },
     });
 
     return NextResponse.json(result);
-  } catch (err) {
-    const status = err instanceof UnauthorizedError ? 401 : 400;
-    const message = err instanceof Error ? err.message : "Error de subida.";
+  } catch (error) {
+    const status = error instanceof UnauthorizedError ? 401 : 400;
+    const message = Error.isError(error) ? error.message : "Error de subida.";
     return NextResponse.json({ error: message }, { status });
   }
 }
-
-/** Error tipado para distinguir 401 de un 400 genérico en el catch. */
-class UnauthorizedError extends Error {}

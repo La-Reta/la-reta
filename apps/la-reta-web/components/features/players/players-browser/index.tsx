@@ -1,9 +1,7 @@
 "use client";
 
 import { deletePlayers } from "@/app/actions/players";
-import { FifaCard } from "@/components/shared/fifa-card";
 import { Button } from "@/components/ui/button";
-import { Checkbox } from "@/components/ui/checkbox";
 import {
   Empty,
   EmptyDescription,
@@ -30,6 +28,7 @@ import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { PlayersFilterBar } from "./filter-bar";
+import { PlayerGrid } from "./player-grid";
 import { FloatingActionBar } from "./floating-action-bar";
 
 /** Espera a que el usuario deje de teclear antes de reescribir la URL. */
@@ -249,49 +248,7 @@ export const PlayersBrowser = ({
           ) : null}
         </Empty>
       ) : (
-        <div className="3xl:grid-cols-7 4xl:grid-cols-8 grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 2xl:grid-cols-6">
-          {filtered.map((player) => {
-            const isSel = selected.has(player.id);
-            return (
-              <div key={player.id} className="group relative">
-                {/* Selection checkbox — only on hover (or when already selected) */}
-                <label
-                  className={cn(
-                    "bg-background/85 ring-foreground/10 absolute top-2 left-2 z-10 flex cursor-pointer items-center justify-center rounded-md p-1 shadow ring-1 backdrop-blur transition-opacity",
-                    "opacity-0 group-focus-within:opacity-100 group-hover:opacity-100",
-                    isSel && "opacity-100"
-                  )}
-                  aria-label={`Seleccionar ${player.name}`}
-                >
-                  <Checkbox
-                    checked={isSel}
-                    onCheckedChange={() => toggle(player.id)}
-                  />
-                </label>
-                <Link
-                  href={`/players/${player.id}`}
-                  // Marca la dirección: la ficha entra deslizándose desde la
-                  // derecha y la rejilla sale hacia la izquierda.
-                  transitionTypes={["nav-forward"]}
-                  className={cn(
-                    "block rounded-xl transition-transform duration-200 hover:-translate-y-1",
-                    // El foco de teclado necesita un anillo visible: el
-                    // desplazamiento solo no se percibe al tabular.
-                    "focus-visible:ring-ring focus-visible:ring-offset-background focus-visible:-translate-y-1 focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:outline-none",
-                    isSel &&
-                      "ring-primary ring-offset-background ring-2 ring-offset-2"
-                  )}
-                >
-                  <FifaCard
-                    className="card-shine"
-                    player={player}
-                    sizes="(min-width: 1536px) 17vw, (min-width: 1280px) 20vw, (min-width: 1024px) 25vw, (min-width: 640px) 33vw, 50vw"
-                  />
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+        <PlayerGrid onToggle={toggle} players={filtered} selected={selected} />
       )}
 
       {/* Floating bulk-action bar */}

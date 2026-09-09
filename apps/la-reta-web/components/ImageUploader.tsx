@@ -1,18 +1,22 @@
 "use client";
 
+import {
+  ACCEPTED_TYPES,
+  DEFAULT_MAX_SIZE_MB,
+  formatBytes,
+  MAX_LONG_EDGE_PX,
+  reductionPercent,
+  uploadPhoto,
+  type UploadStage,
+} from "@/lib/upload-photo";
 import { useAuth } from "@clerk/nextjs";
-import { upload } from "@vercel/blob/client";
-import imageCompression from "browser-image-compression";
 import * as React from "react";
 
-// Constantes
-const ACCEPTED_TYPES = ["image/jpeg", "image/png", "image/webp"] as const;
-const OUTPUT_TYPE = "image/webp";
-const MAX_LONG_EDGE_PX = 1600;
-const DEFAULT_MAX_SIZE_MB = 0.3;
-const UPLOAD_ENDPOINT = "/api/blob/upload";
+// La tubería (formatos, compresión, endpoint) vive en `lib/upload-photo.ts`:
+// aquí solo queda la interfaz, que es lo único que no comparte con el campo de
+// foto del registro.
 
-type Stage = "idle" | "reading" | "compressing" | "uploading" | "done";
+type Stage = "idle" | UploadStage;
 
 const STAGE_LABEL: Record<Stage, string> = {
   idle: "Listo",
@@ -26,45 +30,6 @@ type Props = {
   readonly onUploadComplete?: (url: string) => void;
   readonly maxSizeMB?: number;
 };
-
-// Helpers puros
-function isAcceptedType(type: string): type is (typeof ACCEPTED_TYPES)[number] {
-  return (ACCEPTED_TYPES as readonly string[]).includes(type);
-}
-
-function formatBytes(bytes: number): string {
-  if (bytes < 1024) return `${bytes} B`;
-  if (bytes < 1024 * 1024) return `${(bytes / 1024).toFixed(1)} KB`;
-  return `${(bytes / (1024 * 1024)).toFixed(2)} MB`;
-}
-
-function reductionPercent(original: number, compressed: number): number {
-  if (original <= 0) return 0;
-  return Math.max(0, Math.round((1 - compressed / original) * 100));
-}
-
-/**
- * Verifica que el archivo sea REALMENTE una imagen decodificándolo, no solo
- * confiando en el MIME declarado (que es falsificable). Si no decodifica, lanza.
- */
-async function assertRealImage(file: File): Promise<void> {
-  const bitmap = await createImageBitmap(file);
-  bitmap.close();
-}
-
-async function compressToWebp(
-  file: File,
-  maxSizeMB: number,
-  onProgress: (percent: number) => void
-): Promise<File> {
-  return imageCompression(file, {
-    maxSizeMB,
-    maxWidthOrHeight: MAX_LONG_EDGE_PX,
-    useWebWorker: true, // no bloquea la UI
-    fileType: OUTPUT_TYPE,
-    onProgress,
-  });
-}
 
 // Componente
 export const ImageUploader = ({
@@ -112,55 +77,27 @@ export const ImageUploader = ({
     if (inputRef.current) inputRef.current.value = "";
   }
 
-  function fail(message: string) {
-    setError(message);
-    setStage("idle");
-    setProgress(0);
-    resetInput();
-  }
-
   async function handleFile(file: File) {
     setError(null);
     setResultUrl(null);
     setOriginalSize(file.size);
-
-    // 1) Validación de tipo (no confiar solo en el atributo `accept`).
-    if (!isAcceptedType(file.type)) {
-      fail("Formato no permitido. Usa JPEG, PNG o WebP.");
-      return;
-    }
+    setPreview(file);
 
     // eslint-disable-next-line react-hooks/todo -- el compilador de React todavía no soporta try/finally; el código es correcto
     try {
-      // 2) Lectura + validación real de imagen.
-      setStage("reading");
-      setProgress(100);
-      await assertRealImage(file);
-
-      // 3) Compresión → WebP (progreso real vía onProgress).
-      setStage("compressing");
-      setProgress(0);
-      const webp = await compressToWebp(file, maxSizeMB, setProgress);
-      setCompressedSize(webp.size);
-      setPreview(webp);
-
-      // 4) Subida directa navegador → Blob (progreso real vía onUploadProgress).
-      setStage("uploading");
-      setProgress(0);
-      const filename = `${crypto.randomUUID()}.webp`;
-      const result = await upload(filename, webp, {
-        access: "public",
-        contentType: OUTPUT_TYPE,
-        handleUploadUrl: UPLOAD_ENDPOINT,
-        onUploadProgress: ({ percentage }) => setProgress(percentage),
+      const result = await uploadPhoto(file, {
+        maxSizeMB,
+        onStage: setStage,
+        onProgress: setProgress,
       });
-
-      setStage("done");
-      setProgress(100);
+      setCompressedSize(result.compressedSize);
       setResultUrl(result.url);
       onUploadComplete?.(result.url);
     } catch (err) {
-      fail(errorMessage(err));
+      setError(errorMessage(err));
+      setStage("idle");
+      setProgress(0);
+      setPreview(null);
     } finally {
       resetInput();
     }
