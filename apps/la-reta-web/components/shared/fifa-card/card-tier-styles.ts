@@ -1,6 +1,6 @@
-import { CardTier } from "@/lib/ratings";
+import type { CardTier } from "@/lib/ratings";
 
-export type TierStyle = {
+export interface TierStyle {
   text: string;
   base: string;
   overlay: string;
@@ -13,7 +13,17 @@ export type TierStyle = {
   statValue: string;
   statLabel: string;
   badgeBg: string;
-};
+}
+
+/**
+ * Tokens que comparten varios tamaños o varios tiers. Extraídos porque el lint
+ * corta a la tercera repetición, y porque un radio o un divisor que difiera
+ * entre tiers por descuido se ve como un fallo de la carta, no como un matiz.
+ */
+const SHELL_RADIUS = "rounded-xl";
+const SUBLABEL_SIZE = "text-[10px]";
+const DIVIDER_SOFT = "bg-white/16";
+const RING_SOFT = "ring-white/10";
 
 export const LIGHT_HALO =
   "[text-shadow:0_1px_2px_rgba(0,0,0,0.2),0_0_8px_rgba(255,255,255,0.18)]";
@@ -21,7 +31,7 @@ export const DARK_HALO = "[text-shadow:0_1px_3px_rgba(0,0,0,0.38)]";
 
 export const SIZE_STYLES = {
   sm: {
-    shell: "rounded-xl",
+    shell: SHELL_RADIUS,
     top: "px-3 pt-3",
     bottom: "px-3 pb-3",
     overall: "text-[2rem]",
@@ -30,19 +40,19 @@ export const SIZE_STYLES = {
     flag: "text-lg",
     fallback: "top-7 text-6xl",
     name: "text-[1.25rem]",
-    subname: "text-[10px]",
+    subname: SUBLABEL_SIZE,
     statsWrap: "gap-x-2 gap-y-1 pt-1.5",
     statValue: "text-[12px]",
     statLabel: "text-[8px]",
     bottomFade: "h-[36%]",
   },
   md: {
-    shell: "rounded-xl",
+    shell: SHELL_RADIUS,
     top: "px-4 pt-4",
     bottom: "px-4 pb-4",
     overall: "text-[2.25rem]",
     position: "text-xs",
-    position2: "text-[10px]",
+    position2: SUBLABEL_SIZE,
     flag: "text-xl",
     fallback: "top-8 text-7xl",
     name: "text-[1.45rem]",
@@ -53,24 +63,31 @@ export const SIZE_STYLES = {
     bottomFade: "h-[38%]",
   },
   lg: {
-    shell: "rounded-xl",
+    shell: SHELL_RADIUS,
     top: "px-4 pt-4",
     bottom: "px-4 pb-4",
     overall: "text-[2.55rem]",
     position: "text-sm",
-    position2: "text-[10px]",
+    position2: SUBLABEL_SIZE,
     flag: "text-xl",
     fallback: "top-8 text-7xl",
     name: "text-[1.2rem]",
     subname: "text-xs",
     statsWrap: "gap-x-3.5 gap-y-1.5 pt-2.5",
     statValue: "text-[14px]",
-    statLabel: "text-[10px]",
+    statLabel: SUBLABEL_SIZE,
     bottomFade: "h-[40%]",
   },
 } as const;
 
-export const TIER_STYLES: Record<CardTier, TierStyle> = {
+/**
+ * `"pending"` no entra en `CardTier` (`lib/ratings.ts`) a propósito: allí un
+ * tier es el resultado de una valoración, y esto es la ausencia de una. Vive
+ * solo aquí, que es donde se pinta.
+ */
+export type CardTierStyleKey = CardTier | "pending";
+
+export const TIER_STYLES: Record<CardTierStyleKey, TierStyle> = {
   special: {
     text: "text-[#f9fbff]",
     base: "linear-gradient(180deg, #173382 0%, #10245a 52%, #0b1434 100%)",
@@ -110,14 +127,38 @@ export const TIER_STYLES: Record<CardTier, TierStyle> = {
       "linear-gradient(135deg, rgba(255,255,255,0.12) 0%, rgba(255,255,255,0) 28%), repeating-linear-gradient(145deg, rgba(255,255,255,0.05) 0 2px, transparent 2px 14px), linear-gradient(180deg, rgba(12,18,28,0.02) 0%, rgba(12,18,28,0.18) 100%)",
     accent: "text-[#ffffff]",
     accentSoft: "text-[#f5f8fc]",
-    divider: "bg-white/16",
-    ring: "ring-white/10",
+    divider: DIVIDER_SOFT,
+    ring: RING_SOFT,
     frame:
       "shadow-[inset_0_0_0_1px_rgba(255,255,255,0.32),0_18px_32px_-24px_rgba(34,41,52,0.42)]",
     stripe: "from-white/0 via-white/8 to-white/0",
     statValue: "text-white",
     statLabel: "text-[#e6edf7]",
     badgeBg: "bg-white/9",
+  },
+  /**
+   * Una solicitud todavía no tiene nivel: los atributos los pone el admin al dar
+   * de alta. Bronce/plata/oro **son** niveles, así que ninguno vale aquí —
+   * bronce insinuaría la valoración más baja y nadie ha valorado nada.
+   *
+   * Pizarra neutra, con la misma gramática que los demás (base, overlay de
+   * trama, franja) para que sea la misma carta y no otra cosa.
+   */
+  pending: {
+    text: "text-slate-50",
+    base: "linear-gradient(180deg, #5b6472 0%, #464e5a 52%, #2f353e 100%)",
+    overlay:
+      "linear-gradient(135deg, rgba(255,255,255,0.09) 0%, rgba(255,255,255,0) 28%), repeating-linear-gradient(145deg, rgba(255,255,255,0.035) 0 2px, transparent 2px 14px), linear-gradient(180deg, rgba(12,16,22,0.02) 0%, rgba(12,16,22,0.2) 100%)",
+    accent: "text-slate-200",
+    accentSoft: "text-slate-100",
+    divider: DIVIDER_SOFT,
+    ring: RING_SOFT,
+    frame:
+      "shadow-[inset_0_0_0_1px_rgba(226,232,240,0.26),0_18px_32px_-24px_rgba(15,23,42,0.5)]",
+    stripe: "from-white/0 via-white/6 to-white/0",
+    statValue: "text-slate-50",
+    statLabel: "text-slate-200",
+    badgeBg: "bg-white/8",
   },
   bronze: {
     text: "text-[#fffaf6]",
@@ -126,8 +167,8 @@ export const TIER_STYLES: Record<CardTier, TierStyle> = {
       "linear-gradient(135deg, rgba(255,255,255,0.1) 0%, rgba(255,255,255,0) 28%), repeating-linear-gradient(145deg, rgba(255,255,255,0.04) 0 2px, transparent 2px 14px), linear-gradient(180deg, rgba(35,18,10,0.02) 0%, rgba(35,18,10,0.18) 100%)",
     accent: "text-[#fff2e8]",
     accentSoft: "text-[#fff8f4]",
-    divider: "bg-white/16",
-    ring: "ring-white/10",
+    divider: DIVIDER_SOFT,
+    ring: RING_SOFT,
     frame:
       "shadow-[inset_0_0_0_1px_rgba(255,232,220,0.32),0_18px_32px_-24px_rgba(65,31,16,0.42)]",
     stripe: "from-white/0 via-white/7 to-white/0",

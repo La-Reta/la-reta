@@ -1,4 +1,4 @@
-import { STAT_ABBR, STAT_KEYS } from "@/lib/constants";
+import { STAT_ABBR, STAT_KEYS, type StatKey } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
 import { initials } from "@/lib/format";
 import { cardTier } from "@/lib/ratings";
@@ -12,6 +12,24 @@ import {
   TIER_STYLES,
 } from "./card-tier-styles";
 
+/**
+ * Lo que la carta necesita de verdad.
+ *
+ * Las notas van opcionales porque **una solicitud de registro todavía no las
+ * tiene** —las pone el admin al dar de alta— y ese caso también quiere ver su
+ * carta. `Player` cumple esta forma tal cual, así que quien ya la usaba no
+ * cambia nada.
+ *
+ * Sin `overall` la carta se pinta "pendiente": marco neutro, un guion donde va
+ * el OVR y una línea en lugar de los atributos. Lo decide el dato y no un flag
+ * aparte, que es lo que evita el caso imposible de "pendiente con notas".
+ */
+export type FifaCardPlayer = Pick<
+  Player,
+  "name" | "displayName" | "position" | "position2" | "photoUrl"
+> &
+  Partial<Pick<Player, "overall" | StatKey>>;
+
 export const FifaCard = ({
   player,
   className,
@@ -19,7 +37,7 @@ export const FifaCard = ({
   size = "lg",
   showSubname: showSubnameProp = false,
 }: {
-  readonly player: Player;
+  readonly player: FifaCardPlayer;
   readonly className?: string;
   /**
    * Ancho al que se pinta la carta, en la sintaxis de `sizes` de next/image.
@@ -41,7 +59,9 @@ export const FifaCard = ({
   const showName = size === "lg";
   const showSubname = size !== "sm" && showSubnameProp;
   const showSecondaryPosition = size !== "sm" && Boolean(player.position2);
-  const tier = cardTier(player.overall);
+  // Sin nota no hay nivel: ni tier ni número. Ver `FifaCardPlayer`.
+  const rated = player.overall != null;
+  const tier = rated ? cardTier(player.overall ?? 0) : "pending";
   const s = TIER_STYLES[tier];
   const z = SIZE_STYLES[size];
   const textShadow = tier === "gold" ? LIGHT_HALO : DARK_HALO;
@@ -116,10 +136,22 @@ export const FifaCard = ({
         )}
       >
         <div className="flex flex-col items-end gap-1 leading-none">
+          {rated ? null : (
+            <span
+              className={cn(
+                "font-semibold tracking-widest uppercase opacity-70",
+                s.statLabel,
+                z.statLabel
+              )}
+            >
+              OVR
+            </span>
+          )}
           <span
             className={cn("font-black tracking-tight", s.accent, z.overall)}
           >
-            {player.overall}
+            {/* Un guion y no un 0: cero es una nota, y aquí no hay ninguna. */}
+            {rated ? player.overall : "—"}
           </span>
         </div>
       </div>
@@ -167,7 +199,22 @@ export const FifaCard = ({
           ) : null}
         </div>
 
-        {showStats ? (
+        {showStats && !rated ? (
+          <>
+            <div className={cn("mt-2 h-px w-full", s.divider)} />
+            <p
+              className={cn(
+                "pt-2 leading-snug font-semibold text-balance",
+                s.statLabel,
+                z.statLabel
+              )}
+            >
+              Tus atributos los define el equipo al darte de alta
+            </p>
+          </>
+        ) : null}
+
+        {showStats && rated ? (
           <>
             <div className={cn("mt-2 h-px w-full", s.divider)} />
             <div className={cn("grid grid-cols-3", z.statsWrap)}>
