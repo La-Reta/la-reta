@@ -1,8 +1,8 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import type { TeamKey } from "@/lib/teams";
 import type { Position } from "@/lib/constants";
+import type { TeamKey } from "@/lib/teams";
 import { db, generatedRetaPlayers, generatedRetas } from "@/lib/db";
 import { splitSignature } from "@/lib/team-balancer";
 import { defaultTeamName } from "@/lib/teams";

@@ -1,5 +1,5 @@
-import type { Position, PositionGroup } from "@/lib/constants";
 import type { Player } from "@/lib/db/schema";
+import type { Position, PositionGroup } from "@/lib/constants";
 import { POSITIONS, positionGroup } from "@/lib/constants";
 import { playerPositions } from "@/lib/format";
 import { overallForLine } from "@/lib/ratings";

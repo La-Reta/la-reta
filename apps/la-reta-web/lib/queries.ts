@@ -16,8 +16,7 @@ import type {
 import type { VoteCategory } from "@/lib/match-votes";
 import type { RecentSplit } from "@/lib/team-balancer";
 import type { TeamKey } from "@/lib/teams";
-import { isTeamKey } from "@/lib/teams";
-import { candidateKey } from "@/lib/match-votes";
+import { rotatingWords } from "@/constants/rotatingWords";
 import {
   casacaAssignments,
   commentReactions,
@@ -37,7 +36,8 @@ import {
   reports,
   retaWords,
 } from "@/lib/db";
-import { rotatingWords } from "@/constants/rotatingWords";
+import { candidateKey } from "@/lib/match-votes";
+import { isTeamKey } from "@/lib/teams";
 import "server-only";
 
 /**
